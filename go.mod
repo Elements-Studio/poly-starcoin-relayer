@@ -7,3 +7,5 @@ require (
 	github.com/polynetwork/poly-go-sdk v0.0.0-20210114120411-3dcba035134f // indirect
 	github.com/starcoinorg/starcoin-go v0.0.0-20211022100808-4b435d900b00 // indirect
 )
+
+replace "github.com/starcoinorg/starcoin-go" => "../../starcoinorg/starcoin-go"
