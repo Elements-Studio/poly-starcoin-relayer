@@ -58,8 +58,8 @@ type PolyConfig struct {
 type StarcoinConfig struct {
 	SideChainId         uint64
 	RestURL             string
-	ECCMContractAddress string
-	ECCDContractAddress string
+	ECCMContractAddress string //todo rename to CCM...
+	ECCDContractAddress string //todo rename to CCD...
 	KeyStorePath        string
 	KeyStorePwdSet      map[string]string
 	BlockConfig         uint64

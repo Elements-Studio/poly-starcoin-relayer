@@ -2,10 +2,12 @@ package manager
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
@@ -23,13 +25,6 @@ import (
 	autils "github.com/polynetwork/poly/native/service/utils"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
-
-type StarcoinManager struct {
-	client      stcclient.StarcoinClient
-	polySdk     polysdk.PolySdk
-	config      config.ServiceConfig
-	header4sync [][]byte
-}
 
 type CrossTransfer struct {
 	txIndex string
@@ -74,6 +69,17 @@ func (this *CrossTransfer) Deserialization(source *common.ZeroCopySource) error 
 	this.toChain = toChain
 	this.height = height
 	return nil
+}
+
+type StarcoinManager struct {
+	client        stcclient.StarcoinClient
+	polySdk       polysdk.PolySdk
+	config        config.ServiceConfig
+	header4sync   [][]byte
+	currentHeight uint64
+	forceHeight   uint64
+	restClient    tools.RestClient
+	exitChan      chan int
 }
 
 func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
@@ -185,4 +191,56 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 		log.Infof("fetchLockDepositEvent -  height: %d", height)
 	}
 	return true
+}
+
+func (this *StarcoinManager) MonitorDeposit() {
+	monitorTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
+	for {
+		select {
+		case <-monitorTicker.C:
+			height, err := tools.GetStarcoinNodeHeight(this.config.StarcoinConfig.RestURL, this.restClient)
+			if err != nil {
+				log.Infof("MonitorDeposit - cannot get eth node height, err: %s", err)
+				continue
+			}
+			snycheight := this.findSyncedHeight()
+			log.Log.Info("MonitorDeposit from eth - snyced eth height", snycheight, "eth height", height, "diff", height-snycheight)
+			//this.handleLockDepositEvents(snycheight) //todo handle ...
+		case <-this.exitChan:
+			return
+		}
+	}
+}
+
+func (this *StarcoinManager) init() error {
+	// get latest height
+	latestHeight := this.findSyncedHeight()
+	if latestHeight == 0 {
+		return fmt.Errorf("init - the genesis block has not synced!")
+	}
+	if this.forceHeight > 0 && this.forceHeight < latestHeight {
+		this.currentHeight = this.forceHeight
+	} else {
+		this.currentHeight = latestHeight
+	}
+	log.Infof("EthereumManager init - start height: %d", this.currentHeight)
+	return nil
+}
+
+func (this *StarcoinManager) findSyncedHeight() uint64 {
+	// try to get key
+	var sideChainIdBytes [8]byte
+	binary.LittleEndian.PutUint64(sideChainIdBytes[:], this.config.StarcoinConfig.SideChainId)
+	contractAddress := autils.HeaderSyncContractAddress
+	key := append([]byte(scom.CURRENT_HEADER_HEIGHT), sideChainIdBytes[:]...)
+	// try to get storage
+	result, err := this.polySdk.GetStorage(contractAddress.ToHexString(), key)
+	if err != nil {
+		return 0
+	}
+	if result == nil || len(result) == 0 {
+		return 0
+	} else {
+		return binary.LittleEndian.Uint64(result)
+	}
 }
