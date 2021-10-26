@@ -2,15 +2,20 @@ package manager
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ontio/ontology-crypto/keypair"
+	"github.com/ontio/ontology-crypto/signature"
 	"github.com/polynetwork/bridge-common/abi/eccd_abi" // remove this
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
@@ -140,7 +145,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 	}
 	if cnt == 0 && isEpoch && isCurr {
 		sender := this.selectSender()
-		return sender.commitHeader(hdr, pubkList)
+		return sender.changeBookKeeper(hdr, pubkList) // commitHeader
 	}
 
 	return true
@@ -149,7 +154,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 	blkInfo := &vconfig.VbftBlockInfo{}
 	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
-		return false, nil, fmt.Errorf("commitHeader - unmarshal blockInfo error: %s", err)
+		return false, nil, fmt.Errorf("IsEpoch - unmarshal blockInfo error: %s", err)
 	}
 	if hdr.NextBookkeeper == common.ADDRESS_EMPTY || blkInfo.NewChainConfig == nil {
 		return false, nil, nil
@@ -201,4 +206,70 @@ func (this *PolyManager) findCurEpochStartHeight() uint32 {
 	return uint32(height)
 }
 
-type StarcoinSender struct{}
+type StarcoinSender struct {
+	starcoinClient stcclient.StarcoinClient
+	seqNumManager  tools.SeqNumManager
+}
+
+// commitHeader
+func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList []byte) bool {
+	headerdata := header.GetMessage()
+	var (
+		txData []byte
+		txErr  error
+		sigs   []byte
+	)
+	gasPrice, err := this.ethClient.SuggestGasPrice(context.Background()) //todo starcoin...
+	if err != nil {
+		log.Errorf("changeBookKeeper - get suggest sas price failed error: %s", err.Error())
+		return false
+	}
+	for _, sig := range header.SigData {
+		temp := make([]byte, len(sig))
+		copy(temp, sig)
+		newsig, _ := signature.ConvertToEthCompatible(temp) //todo starcoin...
+		sigs = append(sigs, newsig...)
+	}
+
+	txData, txErr = this.contractAbi.Pack("changeBookKeeper", headerdata, pubkList, sigs)
+	if txErr != nil {
+		log.Errorf("changeBookKeeper - err:" + err.Error())
+		return false
+	}
+
+	contractaddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCMContractAddress)
+	callMsg := ethereum.CallMsg{
+		From: this.acc.Address, To: &contractaddr, Gas: 0, GasPrice: gasPrice,
+		Value: big.NewInt(0), Data: txData,
+	}
+
+	gasLimit, err := this.ethClient.EstimateGas(context.Background(), callMsg)
+	if err != nil {
+		log.Errorf("changeBookKeeper - estimate gas limit error: %s", err.Error())
+		return false
+	}
+
+	nonce := this.seqNumManager.GetAccountSequenceNumber(this.acc.Address)
+	tx := types.NewTransaction(nonce, contractaddr, big.NewInt(0), gasLimit, gasPrice, txData)
+	signedtx, err := this.keyStore.SignTransaction(tx, this.acc)
+	if err != nil {
+		log.Errorf("changeBookKeeper - sign raw tx error: %s", err.Error())
+		return false
+	}
+	if err = this.ethClient.SendTransaction(context.Background(), signedtx); err != nil {
+		log.Errorf("changeBookKeeper - send transaction error:%s\n", err.Error())
+		return false
+	}
+
+	hash := header.Hash()
+	txhash := signedtx.Hash()
+	isSuccess := this.waitTransactionConfirm(fmt.Sprintf("header: %d", header.Height), txhash)
+	if isSuccess {
+		log.Infof("successful to relay poly header to ethereum: (header_hash: %s, height: %d, eth_txhash: %s, nonce: %d, eth_explorer: %s)",
+			hash.ToHexString(), header.Height, txhash.String(), nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash.String())
+	} else {
+		log.Errorf("failed to relay poly header to ethereum: (header_hash: %s, height: %d, eth_txhash: %s, nonce: %d, eth_explorer: %s)",
+			hash.ToHexString(), header.Height, txhash.String(), nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash.String())
+	}
+	return true
+}

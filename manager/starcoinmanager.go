@@ -26,51 +26,6 @@ import (
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
-type CrossTransfer struct {
-	txIndex string
-	txId    []byte
-	value   []byte
-	toChain uint32
-	height  uint64
-}
-
-func (this *CrossTransfer) Serialization(sink *common.ZeroCopySink) {
-	sink.WriteString(this.txIndex)
-	sink.WriteVarBytes(this.txId)
-	sink.WriteVarBytes(this.value)
-	sink.WriteUint32(this.toChain)
-	sink.WriteUint64(this.height)
-}
-
-func (this *CrossTransfer) Deserialization(source *common.ZeroCopySource) error {
-	txIndex, eof := source.NextString()
-	if eof {
-		return fmt.Errorf("Waiting deserialize txIndex error")
-	}
-	txId, eof := source.NextVarBytes()
-	if eof {
-		return fmt.Errorf("Waiting deserialize txId error")
-	}
-	value, eof := source.NextVarBytes()
-	if eof {
-		return fmt.Errorf("Waiting deserialize value error")
-	}
-	toChain, eof := source.NextUint32()
-	if eof {
-		return fmt.Errorf("Waiting deserialize toChain error")
-	}
-	height, eof := source.NextUint64()
-	if eof {
-		return fmt.Errorf("Waiting deserialize height error")
-	}
-	this.txIndex = txIndex
-	this.txId = txId
-	this.value = value
-	this.toChain = toChain
-	this.height = height
-	return nil
-}
-
 type StarcoinManager struct {
 	client        stcclient.StarcoinClient
 	polySdk       polysdk.PolySdk
@@ -243,4 +198,49 @@ func (this *StarcoinManager) findSyncedHeight() uint64 {
 	} else {
 		return binary.LittleEndian.Uint64(result)
 	}
+}
+
+type CrossTransfer struct {
+	txIndex string
+	txId    []byte
+	value   []byte
+	toChain uint32
+	height  uint64
+}
+
+func (this *CrossTransfer) Serialization(sink *common.ZeroCopySink) {
+	sink.WriteString(this.txIndex)
+	sink.WriteVarBytes(this.txId)
+	sink.WriteVarBytes(this.value)
+	sink.WriteUint32(this.toChain)
+	sink.WriteUint64(this.height)
+}
+
+func (this *CrossTransfer) Deserialization(source *common.ZeroCopySource) error {
+	txIndex, eof := source.NextString()
+	if eof {
+		return fmt.Errorf("Waiting deserialize txIndex error")
+	}
+	txId, eof := source.NextVarBytes()
+	if eof {
+		return fmt.Errorf("Waiting deserialize txId error")
+	}
+	value, eof := source.NextVarBytes()
+	if eof {
+		return fmt.Errorf("Waiting deserialize value error")
+	}
+	toChain, eof := source.NextUint32()
+	if eof {
+		return fmt.Errorf("Waiting deserialize toChain error")
+	}
+	height, eof := source.NextUint64()
+	if eof {
+		return fmt.Errorf("Waiting deserialize height error")
+	}
+	this.txIndex = txIndex
+	this.txId = txId
+	this.value = value
+	this.toChain = toChain
+	this.height = height
+	return nil
 }
