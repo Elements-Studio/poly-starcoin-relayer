@@ -45,12 +45,12 @@ import (
 
 type RestClient struct {
 	Addr       string
-	restClient *http.Client
+	httpClient *http.Client
 }
 
 func NewRestClient() *RestClient {
 	return &RestClient{
-		restClient: &http.Client{
+		httpClient: &http.Client{
 			Transport: &http.Transport{
 				MaxIdleConnsPerHost:   5,
 				DisableKeepAlives:     false,
@@ -69,12 +69,12 @@ func (self *RestClient) SetAddr(addr string) *RestClient {
 }
 
 func (self *RestClient) SetHttpClient(httpClient *http.Client) *RestClient {
-	self.restClient = httpClient
+	self.httpClient = httpClient
 	return self
 }
 
 func (self *RestClient) SendPostRequest(addr string, data []byte) ([]byte, error) {
-	resp, err := self.restClient.Post(addr, "application/json", strings.NewReader(string(data)))
+	resp, err := self.httpClient.Post(addr, "application/json", strings.NewReader(string(data)))
 	if err != nil {
 		return nil, fmt.Errorf("http post request:%s error:%s", data, err)
 	}

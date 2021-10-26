@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+
+	"github.com/starcoinorg/starcoin-go/types"
 )
 
 type jsonRpcError struct {
@@ -55,4 +57,14 @@ func GetStarcoinNodeHeight(url string, restClient *RestClient) (uint64, error) {
 	} else {
 		return height, nil
 	}
+}
+
+type StarcoinKeyStore struct {
+	privateKey *types.Ed25519PrivateKey
+	chainId    int
+}
+
+type StarcoinAccount struct {
+	Address types.AccountAddress `json:"address"` // Starcoin account address derived from the key
+	//URL     URL            `json:"url"`     // Optional resource locator within a backend
 }
