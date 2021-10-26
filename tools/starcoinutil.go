@@ -37,23 +37,23 @@ func GetStarcoinNodeHeight(url string, restClient *RestClient) (uint64, error) {
 	}
 	reqData, err := json.Marshal(req)
 	if err != nil {
-		return 0, fmt.Errorf("GetNodeHeight: marshal req err: %s", err)
+		return 0, fmt.Errorf("GetStarcoinNodeHeight: marshal req err: %s", err)
 	}
 	rspData, err := restClient.SendPostRequest(url, reqData)
 	if err != nil {
-		return 0, fmt.Errorf("GetNodeHeight err: %s", err)
+		return 0, fmt.Errorf("GetStarcoinNodeHeight err: %s", err)
 	}
 	rsp := &starcoinHeightRsp{}
 	err = json.Unmarshal(rspData, rsp)
 	if err != nil {
-		return 0, fmt.Errorf("GetNodeHeight, unmarshal resp err: %s", err)
+		return 0, fmt.Errorf("GetStarcoinNodeHeight, unmarshal resp err: %s", err)
 	}
 	if rsp.Error != nil {
-		return 0, fmt.Errorf("GetNodeHeight, unmarshal resp err: %s", rsp.Error.Message)
+		return 0, fmt.Errorf("GetStarcoinNodeHeight, unmarshal resp err: %s", rsp.Error.Message)
 	}
 	height, err := strconv.ParseUint(rsp.Result, 0, 64)
 	if err != nil {
-		return 0, fmt.Errorf("GetNodeHeight, parse resp height %s failed", rsp.Result)
+		return 0, fmt.Errorf("GetStarcoinNodeHeight, parse resp height %s failed", rsp.Result)
 	} else {
 		return height, nil
 	}
