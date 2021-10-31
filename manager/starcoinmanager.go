@@ -273,7 +273,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 		}
 		sink := common.NewZeroCopySink(nil)
 		crossTx.Serialization(sink)
-		err = this.db.PutRetry(sink.Bytes())
+		err = this.db.PutRetry(sink.Bytes()) //todo db...
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - this.db.PutRetry error: %s", err)
 		}

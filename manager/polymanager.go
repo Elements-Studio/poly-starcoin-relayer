@@ -24,6 +24,7 @@ import (
 	"github.com/polynetwork/bridge-common/abi/eccd_abi" // remove this
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
+	vconfig "github.com/polynetwork/poly/consensus/vbft/config"
 	polytypes "github.com/polynetwork/poly/core/types"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
@@ -490,26 +491,25 @@ func (this *StarcoinSender) Balance() (*big.Int, error) {
 	return balance, nil
 }
 
-// TODO: check the status of tx
-func (this *StarcoinSender) waitTransactionConfirm(polyTxHash string, hash ethcommon.Hash) bool { //todo starcoin...
-	for {
-		time.Sleep(time.Second * 1)
-		_, ispending, err := this.ethClient.TransactionByHash(context.Background(), hash)
-		if err != nil {
-			continue
-		}
-		log.Debugf("( starcoin_transaction %s, poly_tx %s ) is pending: %v", hash.String(), polyTxHash, ispending)
-		if ispending == true {
-			continue
-		} else {
-			receipt, err := this.ethClient.TransactionReceipt(context.Background(), hash)
-			if err != nil {
-				continue
-			}
-			return receipt.Status == types.ReceiptStatusSuccessful
-		}
-	}
-}
+// func (this *StarcoinSender) waitTransactionConfirm(polyTxHash string, hash ethcommon.Hash) bool { //todo starcoin...
+// 	for {
+// 		time.Sleep(time.Second * 1)
+// 		_, ispending, err := this.ethClient.TransactionByHash(context.Background(), hash)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		log.Debugf("( starcoin_transaction %s, poly_tx %s ) is pending: %v", hash.String(), polyTxHash, ispending)
+// 		if ispending == true {
+// 			continue
+// 		} else {
+// 			receipt, err := this.ethClient.TransactionReceipt(context.Background(), hash)
+// 			if err != nil {
+// 				continue
+// 			}
+// 			return receipt.Status == types.ReceiptStatusSuccessful
+// 		}
+// 	}
+// }
 
 type StarcoinTxInfo struct {
 	txData       []byte

@@ -1,10 +1,15 @@
 package tools
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
+	"time"
 
+	"github.com/elements-studio/poly-starcoin-relayer/log"
+	stcclient "github.com/starcoinorg/starcoin-go/client"
 	"github.com/starcoinorg/starcoin-go/types"
 )
 
@@ -67,4 +72,36 @@ type StarcoinKeyStore struct {
 type StarcoinAccount struct {
 	Address types.AccountAddress `json:"address"` // Starcoin account address derived from the key
 	//URL     URL            `json:"url"`     // Optional resource locator within a backend
+}
+
+func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeout time.Duration) (bool, error) {
+	monitorTicker := time.NewTicker(time.Second)
+	exitTicker := time.NewTicker(timeout)
+	for {
+		select {
+		case <-monitorTicker.C:
+			pendingTx, err := client.GetPendingTransactionByHash(context.Background(), hash)
+			//log.Debugf("%v, %v", pendingTx, err)
+			if err != nil {
+				log.Debugf("GetPendingTransactionByHash error, %v", err)
+				continue
+			}
+			if !(pendingTx == nil || pendingTx.Timestamp == 0) {
+				log.Debugf("(starcoin_transaction %s) is pending", hash)
+				continue
+			}
+			tx, err := client.GetTransactionInfoByHash(context.Background(), hash)
+			if err != nil {
+				continue
+			}
+			//log.Debug("Transaction status: " + tx.Status)
+			if strings.EqualFold("Executed", tx.Status) {
+				return true, nil
+			} else {
+				continue //todo return false on some statuses???
+			}
+		case <-exitTicker.C:
+			return false, fmt.Errorf("WaitTransactionConfirm exceed timeout %v", timeout)
+		}
+	}
 }
