@@ -28,7 +28,6 @@ import (
 )
 
 const MAX_NUM = 1000
-const KEY_POLY_HEIGHT = "poly_height"
 
 var (
 	BKTStarcoinTxCheck = []byte("StarcoinTxCheck")
@@ -220,12 +219,12 @@ func (w *BoltDB) UpdatePolyHeight(h uint32) error {
 	})
 }
 
-func (w *BoltDB) GetPolyHeight() uint32 {
+func (w *BoltDB) GetPolyHeight() (uint32, error) {
 	w.rwlock.RLock()
 	defer w.rwlock.RUnlock()
 
 	var h uint32
-	_ = w.db.View(func(tx *bolt.Tx) error {
+	err := w.db.View(func(tx *bolt.Tx) error {
 		bkt := tx.Bucket(BKTHeight)
 		raw := bkt.Get([]byte(KEY_POLY_HEIGHT))
 		if len(raw) == 0 {
@@ -235,7 +234,10 @@ func (w *BoltDB) GetPolyHeight() uint32 {
 		h = binary.LittleEndian.Uint32(raw)
 		return nil
 	})
-	return h
+	if err != nil {
+		return 0, err
+	}
+	return h, nil
 }
 
 func (w *BoltDB) Close() {
