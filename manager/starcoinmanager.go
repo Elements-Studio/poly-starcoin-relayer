@@ -273,9 +273,9 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 		}
 		sink := common.NewZeroCopySink(nil)
 		crossTx.Serialization(sink)
-		err = this.db.PutRetry(sink.Bytes()) //todo db...
+		err = this.db.PutStarcoinTxRetry(sink.Bytes()) //todo db...
 		if err != nil {
-			log.Errorf("fetchLockDepositEvents - this.db.PutRetry error: %s", err)
+			log.Errorf("fetchLockDepositEvents - this.db.PutStarcoinTxRetry error: %s", err)
 		}
 		log.Infof("fetchLockDepositEvent -  height: %d", height)
 	}
@@ -302,9 +302,9 @@ func (this *StarcoinManager) MonitorDeposit() {
 }
 
 func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
-	retryList, err := this.db.GetAllRetry()
+	retryList, err := this.db.GetAllStarcoinTxRetry()
 	if err != nil {
-		return fmt.Errorf("handleLockDepositEvents - this.db.GetAllRetry error: %s", err)
+		return fmt.Errorf("handleLockDepositEvents - this.db.GetAllStarcoinTxRetry error: %s", err)
 	}
 	for _, v := range retryList {
 		time.Sleep(time.Second * 1)
@@ -340,8 +340,8 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 				log.Infof("handleLockDepositEvents - invokeNativeContract error: %s", err)
 				continue
 			} else {
-				if err := this.db.DeleteRetry(v); err != nil {
-					log.Errorf("handleLockDepositEvents - this.db.DeleteRetry error: %s", err)
+				if err := this.db.DeleteStarcoinTxRetry(v); err != nil {
+					log.Errorf("handleLockDepositEvents - this.db.DeleteStarcoinTxRetry error: %s", err)
 				}
 				if strings.Contains(err.Error(), "tx already done") {
 					log.Debugf("handleLockDepositEvents - eth_tx %s already on poly", ethcommon.BytesToHash(crosstx.txId).String())
@@ -352,13 +352,13 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 			}
 		}
 		//4. put to check db for checking
-		err = this.db.PutCheck(txHash, v)
+		err = this.db.PutStarcoinTxCheck(txHash, v)
 		if err != nil {
-			log.Errorf("handleLockDepositEvents - this.db.PutCheck error: %s", err)
+			log.Errorf("handleLockDepositEvents - this.db.PutStarcoinTxCheck error: %s", err)
 		}
-		err = this.db.DeleteRetry(v)
+		err = this.db.DeleteStarconTxRetry(v)
 		if err != nil {
-			log.Errorf("handleLockDepositEvents - this.db.PutCheck error: %s", err)
+			log.Errorf("handleLockDepositEvents - this.db.DeleteStarconTxRetry error: %s", err)
 		}
 		log.Infof("handleLockDepositEvents - syncProofToAlia txHash is %s", txHash)
 	}
@@ -397,14 +397,14 @@ func (this *StarcoinManager) CheckDeposit() {
 	}
 }
 func (this *StarcoinManager) checkLockDepositEvents() error {
-	checkMap, err := this.db.GetAllCheck()
+	checkMap, err := this.db.GetAllStarcoinTxCheck()
 	if err != nil {
-		return fmt.Errorf("checkLockDepositEvents - this.db.GetAllCheck error: %s", err)
+		return fmt.Errorf("checkLockDepositEvents - this.db.GetAllStarcoinTxCheck error: %s", err)
 	}
 	for k, v := range checkMap {
 		event, err := this.polySdk.GetSmartContractEvent(k)
 		if err != nil {
-			log.Errorf("checkLockDepositEvents - this.aliaSdk.GetSmartContractEvent error: %s", err)
+			log.Errorf("checkLockDepositEvents - this.polySdk.GetSmartContractEvent error: %s", err)
 			continue
 		}
 		if event == nil {
@@ -412,14 +412,14 @@ func (this *StarcoinManager) checkLockDepositEvents() error {
 		}
 		if event.State != 1 {
 			log.Infof("checkLockDepositEvents - state of poly tx %s is not success", k)
-			err := this.db.PutRetry(v)
+			err := this.db.PutStarcoinTxRetry(v)
 			if err != nil {
-				log.Errorf("checkLockDepositEvents - this.db.PutRetry error:%s", err)
+				log.Errorf("checkLockDepositEvents - this.db.PutStarcoinTxRetry error:%s", err)
 			}
 		}
-		err = this.db.DeleteCheck(k)
+		err = this.db.DeleteStarcoinTxCheck(k)
 		if err != nil {
-			log.Errorf("checkLockDepositEvents - this.db.DeleteRetry error:%s", err)
+			log.Errorf("checkLockDepositEvents - this.db.DeleteStarcoinTxCheck error:%s", err)
 		}
 	}
 	return nil
