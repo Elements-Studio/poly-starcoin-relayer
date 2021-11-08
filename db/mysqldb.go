@@ -23,7 +23,7 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 		return nil, err
 	}
 	// Migrate the schema
-	db.AutoMigrate(&ChainHeight{})
+	db.AutoMigrate(&ChainHeight{}, &StarcoinTxRetry{}, &StarcoinTxCheck{})
 
 	w := new(MySqlDB)
 	w.db = db
