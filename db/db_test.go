@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
@@ -62,4 +63,11 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 	for _, v := range m {
 		testDB.DeleteStarcoinTxRetry(v)
 	}
+}
+
+func TestPutPolyTx(t *testing.T) {
+	uuid, _ := uuid.NewUUID()
+	v, _ := uuid.MarshalBinary()
+	idx, _ := testDB.PutPolyTx(hex.EncodeToString(v))
+	fmt.Println(idx)
 }

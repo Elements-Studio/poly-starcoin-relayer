@@ -22,5 +22,7 @@ type DB interface {
 
 	GetPolyHeight() (uint32, error)
 
+	PutPolyTx(txHash string) (uint64, error)
+
 	Close()
 }
