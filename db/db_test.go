@@ -2,7 +2,10 @@ package db
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -24,10 +27,39 @@ func TestUpdatePolyHeight(t *testing.T) {
 	fmt.Println(err)
 }
 
-func TestGet(t *testing.T) {
+func GetPolyHeight(t *testing.T) {
 	h, err := testDB.GetPolyHeight()
 	if err != nil {
 		t.FailNow()
 	}
 	fmt.Println(h)
+}
+
+func TestPutStarcoinTxCheck(t *testing.T) {
+	uuid, _ := uuid.NewUUID()
+	k := strings.Replace(uuid.String(), "-", "", -1)
+	v, _ := uuid.MarshalBinary()
+	testDB.PutStarcoinTxCheck(k, v)
+}
+
+func TestGetAndDeleteAllStarcoinTxCheck(t *testing.T) {
+	m, _ := testDB.GetAllStarcoinTxCheck()
+	fmt.Println(m)
+	for k, _ := range m {
+		testDB.DeleteStarcoinTxCheck(k)
+	}
+}
+
+func TestPutStarcoinTxRetry(t *testing.T) {
+	uuid, _ := uuid.NewUUID()
+	v, _ := uuid.MarshalBinary()
+	testDB.PutStarcoinTxRetry(v)
+}
+
+func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
+	m, _ := testDB.GetAllStarcoinTxRetry()
+	fmt.Println(m)
+	for _, v := range m {
+		testDB.DeleteStarcoinTxRetry(v)
+	}
 }

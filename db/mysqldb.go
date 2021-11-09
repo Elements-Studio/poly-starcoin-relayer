@@ -1,8 +1,10 @@
 package db
 
 import (
+	"encoding/hex"
 	"errors"
 
+	"golang.org/x/crypto/sha3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -31,28 +33,61 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 }
 
 func (w *MySqlDB) PutStarcoinTxCheck(txHash string, v []byte) error {
-	return nil //todo
+	tx := StarcoinTxCheck{
+		TxHash: txHash,
+		TxData: hex.EncodeToString(v),
+	}
+	return w.db.Create(tx).Error
 }
 
 func (w *MySqlDB) DeleteStarcoinTxCheck(txHash string) error {
-	return nil //todo
+	tx := StarcoinTxCheck{
+		TxHash: txHash,
+	}
+	return w.db.Delete(tx).Error
 }
 
 // Put Starcoin cross-chain Tx.(to poly) Retry
 func (w *MySqlDB) PutStarcoinTxRetry(k []byte) error {
-	return nil //todo
+	hash := sha3.Sum256(k)
+	tx := StarcoinTxRetry{
+		TxHash: hex.EncodeToString(hash[:]),
+		TxData: hex.EncodeToString(k),
+	}
+	return w.db.Create(tx).Error
 }
 
 func (w *MySqlDB) DeleteStarcoinTxRetry(k []byte) error {
-	return nil //todo
+	hash := sha3.Sum256(k)
+	tx := StarcoinTxRetry{
+		TxHash: hex.EncodeToString(hash[:]),
+	}
+	return w.db.Delete(tx).Error
 }
 
 func (w *MySqlDB) GetAllStarcoinTxCheck() (map[string][]byte, error) {
-	return nil, nil //todo
+	var list []StarcoinTxCheck
+	if err := w.db.Find(&list).Error; err != nil {
+		return nil, err
+	}
+	m := make(map[string][]byte, len(list))
+	for _, v := range list {
+		m[v.TxHash], _ = hex.DecodeString(v.TxData)
+	}
+	return m, nil
 }
 
 func (w *MySqlDB) GetAllStarcoinTxRetry() ([][]byte, error) {
-	return nil, nil //todo
+	var list []StarcoinTxRetry
+	if err := w.db.Find(&list).Error; err != nil {
+		return nil, err
+	}
+	m := make([][]byte, len(list))
+	for _, v := range list {
+		bs, _ := hex.DecodeString(v.TxData)
+		m = append(m, bs)
+	}
+	return m, nil
 }
 
 // Update poly height synced to Starcoin
