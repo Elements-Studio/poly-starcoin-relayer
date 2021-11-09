@@ -1,0 +1,22 @@
+---
+# import types from:
+# starcoin_types.yml
+# onchain_events.yml
+
+#     struct CrossChainEvent has store, drop {
+#        sender: vector<u8>,
+#        txId: vector<u8>,
+#        proxyOrAssetContract: vector<u8>,
+#        toChainId: u64,
+#        toContract: vector<u8>,
+#        rawData: vector<u8>,
+#    }
+
+CrossChainEvent:
+  STRUCT:
+    - sender: BYTES
+    - txId: BYTES
+    - proxyOrAssetContract: BYTES
+    - toChainId: U64
+    - toContract: BYTES
+    - rawData: BYTES
