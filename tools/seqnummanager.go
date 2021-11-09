@@ -17,6 +17,7 @@
 package tools
 
 import (
+	"context"
 	"encoding/hex"
 	"sort"
 	"sync"
@@ -61,7 +62,7 @@ func (this *SeqNumManager) GetAddressSeqNum(address types.AccountAddress) uint64
 	seqNum, ok := this.addressSeqNum[address]
 	if !ok {
 		// get seqNum from eth network
-		uintSeqNum, err := this.starcoinClient.GetAccountSequenceNumber("0x" + hex.EncodeToString(address[:]))
+		uintSeqNum, err := this.starcoinClient.GetAccountSequenceNumber(context.Background(), "0x"+hex.EncodeToString(address[:]))
 		if err != nil {
 			log.Errorf("GetAddressSeqNum: cannot get account %s seqNum, err: %s, set it to nil!",
 				address, err)
