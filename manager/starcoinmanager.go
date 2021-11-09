@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
+	"github.com/elements-studio/poly-starcoin-relayer/db"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -20,7 +21,7 @@ import (
 	"github.com/ontio/ontology/smartcontract/service/native/cross_chain/cross_chain_manager"
 	//"github.com/polynetwork/bridge-common/abi/eccm_abi" //todo remove this
 
-	evttypes "github.com/elements-studio/poly-starcoin-relayer/bifrost/types"
+	evttypes "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
@@ -31,15 +32,16 @@ import (
 )
 
 type StarcoinManager struct {
-	client        stcclient.StarcoinClient
-	polySdk       polysdk.PolySdk
+	client        *stcclient.StarcoinClient
+	polySdk       *polysdk.PolySdk
 	polySigner    *polysdk.Account
-	config        config.ServiceConfig
+	config        *config.ServiceConfig
 	header4sync   [][]byte
 	currentHeight uint64
 	forceHeight   uint64
-	restClient    tools.RestClient
+	restClient    *tools.RestClient
 	exitChan      chan int
+	db            db.DB
 }
 
 func (this *StarcoinManager) init() error {
@@ -58,7 +60,7 @@ func (this *StarcoinManager) init() error {
 }
 
 func (this *StarcoinManager) MonitorChain() {
-	fetchBlockTicker := time.NewTicker(time.Duration(this.config.ETHConfig.MonitorInterval) * time.Second)
+	fetchBlockTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
 	var blockHandleResult bool
 	for {
 		select {
@@ -68,12 +70,12 @@ func (this *StarcoinManager) MonitorChain() {
 				log.Infof("StarcoinManager.MonitorChain - cannot get node height, err: %s", err)
 				continue
 			}
-			if height-this.currentHeight <= config.ETH_USEFUL_BLOCK_NUM {
+			if height-this.currentHeight <= config.STARCOIN_USEFUL_BLOCK_NUM {
 				continue
 			}
 			log.Infof("StarcoinManager.MonitorChain - eth height is %d", height)
 			blockHandleResult = true
-			for this.currentHeight < height-config.ETH_USEFUL_BLOCK_NUM {
+			for this.currentHeight < height-config.STARCOIN_USEFUL_BLOCK_NUM {
 				if this.currentHeight%10 == 0 {
 					log.Infof("handle confirmed eth Block height: %d", this.currentHeight)
 				}
@@ -101,7 +103,7 @@ func (this *StarcoinManager) MonitorChain() {
 
 func (this *StarcoinManager) commitHeader() int {
 	tx, err := this.polySdk.Native.Hs.SyncBlockHeader(
-		this.config.ETHConfig.SideChainId,
+		this.config.StarcoinConfig.SideChainId,
 		this.polySigner.Address,
 		this.header4sync,
 		this.polySigner,
@@ -134,11 +136,11 @@ func (this *StarcoinManager) commitHeader() int {
 func (this *StarcoinManager) rollBackToCommAncestor() {
 	for ; ; this.currentHeight-- {
 		raw, err := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
-			append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(this.config.ETHConfig.SideChainId)...), autils.GetUint64Bytes(this.currentHeight)...))
+			append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), autils.GetUint64Bytes(this.currentHeight)...))
 		if len(raw) == 0 || err != nil {
 			continue
 		}
-		hdr, err := this.client.HeaderByNumber(context.Background(), big.NewInt(int64(this.currentHeight))) //todo starcoin get headerByNumber method...
+		hdr, err := this.client.GetBlockByNumber(context.Background(), big.NewInt(int64(this.currentHeight))) //todo starcoin get headerByNumber method...
 		if err != nil {
 			log.Errorf("rollBackToCommAncestor - failed to get header by number, so we wait for one second to retry: %v", err)
 			time.Sleep(time.Second)
@@ -172,7 +174,7 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	// 	return false
 	// }
 	// rawHdr, _ := hdr.MarshalJSON()
-	block, err := this.client.GetBlockByNumber(int(height))
+	block, err := this.client.GetBlockByNumber(context.Background(), int(height))
 	if err != nil {
 		log.Errorf("handleBlockHeader - GetBlockByNumber on height :%d failed", height)
 		return false
@@ -205,7 +207,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 		ToBlock:   height,
 	}
 
-	events, err := this.client.GetEvents(eventFilter)
+	events, err := this.client.GetEvents(context.Background(), eventFilter)
 	//events, err := lockContract.FilterCrossChainEvent(opt, nil) // todo get events from starcoin
 	if err != nil {
 		log.Errorf("fetchLockDepositEvents - FilterCrossChainEvent error :%s", err.Error())
@@ -223,7 +225,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 			log.Errorf("fetchLockDepositEvents - hex.DecodeString error :%s", err.Error())
 			return false
 		}
-		ccDepositEvt, err := evttypes.BcsDeserializeCrossChainDepositEvent(evtData)
+		ccDepositEvt, err := evttypes.BcsDeserializeCrossChainEvent(evtData)
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - BcsDeserializeCrossChainDepositEvent error :%s", err.Error())
 			return false
@@ -254,21 +256,26 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 			}
 		}
 		param := &common2.MakeTxParam{}
-		_ = param.Deserialization(common.NewZeroCopySource([]byte(evt.Rawdata)))
+		_ = param.Deserialization(common.NewZeroCopySource([]byte(ccDepositEvt.RawData)))
 		raw, _ := this.polySdk.GetStorage(autils.CrossChainManagerContractAddress.ToHexString(),
 			append(append([]byte(cross_chain_manager.DONE_TX), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), param.CrossChainID...))
 		if len(raw) != 0 {
 			log.Debugf("fetchLockDepositEvents - ccid %s (tx_hash: %s) already on poly",
-				hex.EncodeToString(param.CrossChainID), evt.Raw.TxHash.Hex())
+				hex.EncodeToString(param.CrossChainID), evt.TransactionHash)
 			continue
 		}
 		index := big.NewInt(0)
-		index.SetBytes(evt.TxId)
+		index.SetBytes(ccDepositEvt.TxId)
+		txHash, err := tools.HexToBytes(evt.TransactionHash)
+		if err != nil {
+			log.Errorf("fetchLockDepositEvents - tools.HexToBytes error: %s", err)
+			return false
+		}
 		crossTx := &CrossTransfer{
 			txIndex: tools.EncodeBigInt(index),
-			txId:    evt.Raw.TxHash.Bytes(),
-			toChain: uint32(evt.ToChainId),
-			value:   []byte(evt.Rawdata),
+			txId:    txHash,
+			toChain: uint32(ccDepositEvt.ToChainId),
+			value:   []byte(ccDepositEvt.RawData),
 			height:  height,
 		}
 		sink := common.NewZeroCopySink(nil)
@@ -321,14 +328,14 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 			log.Errorf("handleLockDepositEvents - MappingKeyAt error:%s\n", err.Error())
 			continue
 		}
-		if refHeight <= crosstx.height+this.config.ETHConfig.BlockConfig {
+		if refHeight <= crosstx.height+this.config.StarcoinConfig.BlockConfig {
 			continue
 		}
 		height := int64(refHeight - this.config.StarcoinConfig.BlockConfig)
-		heightHex := hexutil.EncodeBig(big.NewInt(height))
+		heightHex := hexutil.EncodeBig(big.NewInt(height)) //todo starcoin version
 		proofKey := hexutil.Encode(keyBytes)
 		//2. get proof
-		proof, err := tools.GetProof(this.config.ETHConfig.RestURL, this.config.ETHConfig.ECCDContractAddress, proofKey, heightHex, this.restClient)
+		proof, err := tools.GetProof(this.config.StarcoinConfig.RestURL, this.config.StarcoinConfig.ECCDContractAddress, proofKey, heightHex, this.restClient)
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - error :%s\n", err.Error())
 			continue
@@ -344,9 +351,9 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 					log.Errorf("handleLockDepositEvents - this.db.DeleteStarcoinTxRetry error: %s", err)
 				}
 				if strings.Contains(err.Error(), "tx already done") {
-					log.Debugf("handleLockDepositEvents - eth_tx %s already on poly", ethcommon.BytesToHash(crosstx.txId).String())
+					log.Debugf("handleLockDepositEvents - eth_tx %s already on poly", tools.EncodeToHex(crosstx.txId))
 				} else {
-					log.Errorf("handleLockDepositEvents - invokeNativeContract error for eth_tx %s: %s", ethcommon.BytesToHash(crosstx.txId).String(), err)
+					log.Errorf("handleLockDepositEvents - invokeNativeContract error for eth_tx %s: %s", tools.EncodeToHex(crosstx.txId), err)
 				}
 				continue
 			}
@@ -356,7 +363,7 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - this.db.PutStarcoinTxCheck error: %s", err)
 		}
-		err = this.db.DeleteStarconTxRetry(v)
+		err = this.db.DeleteStarcoinTxRetry(v)
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - this.db.DeleteStarconTxRetry error: %s", err)
 		}
@@ -365,14 +372,15 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 	return nil
 }
 
+//todo starcoin version...
 func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []byte, txhash []byte) (string, error) {
 	log.Debugf("commit proof, height: %d, proof: %s, value: %s, txhash: %s", height, string(proof), hex.EncodeToString(value), hex.EncodeToString(txhash))
 	tx, err := this.polySdk.Native.Ccm.ImportOuterTransfer(
-		this.config.ETHConfig.SideChainId,
+		this.config.StarcoinConfig.SideChainId,
 		value,
 		height,
 		proof,
-		ethcommon.Hex2Bytes(this.polySigner.Address.ToHexString()), //todo starcoin...
+		ethcommon.Hex2Bytes(this.polySigner.Address.ToHexString()),
 		[]byte{},
 		this.polySigner)
 	if err != nil {
@@ -385,7 +393,7 @@ func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []by
 }
 
 func (this *StarcoinManager) CheckDeposit() {
-	checkTicker := time.NewTicker(time.Duration(this.config.ETHConfig.MonitorInterval) * time.Second)
+	checkTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
 	for {
 		select {
 		case <-checkTicker.C:
