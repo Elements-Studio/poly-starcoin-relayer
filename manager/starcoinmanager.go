@@ -17,9 +17,7 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
-	//"github.com/ethereum/go-ethereum/accounts/abi/bind" //todo remove this
 	"github.com/ontio/ontology/smartcontract/service/native/cross_chain/cross_chain_manager"
-	//"github.com/polynetwork/bridge-common/abi/eccm_abi" //todo remove this
 
 	evttypes "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	polysdk "github.com/polynetwork/poly-go-sdk"
@@ -73,11 +71,11 @@ func (this *StarcoinManager) MonitorChain() {
 			if height-this.currentHeight <= config.STARCOIN_USEFUL_BLOCK_NUM {
 				continue
 			}
-			log.Infof("StarcoinManager.MonitorChain - eth height is %d", height)
+			log.Infof("StarcoinManager.MonitorChain - starcoin height is %d", height)
 			blockHandleResult = true
 			for this.currentHeight < height-config.STARCOIN_USEFUL_BLOCK_NUM {
 				if this.currentHeight%10 == 0 {
-					log.Infof("handle confirmed eth Block height: %d", this.currentHeight)
+					log.Infof("handle confirmed starcoin Block height: %d", this.currentHeight)
 				}
 				blockHandleResult = this.handleNewBlock(this.currentHeight + 1)
 				if blockHandleResult == false {
@@ -140,14 +138,14 @@ func (this *StarcoinManager) rollBackToCommAncestor() {
 		if len(raw) == 0 || err != nil {
 			continue
 		}
-		hdr, err := this.client.GetBlockByNumber(context.Background(), big.NewInt(int64(this.currentHeight))) //todo starcoin get headerByNumber method...
+		hdr, err := this.client.HeaderByNumber(context.Background(), this.currentHeight)
 		if err != nil {
 			log.Errorf("rollBackToCommAncestor - failed to get header by number, so we wait for one second to retry: %v", err)
 			time.Sleep(time.Second)
 			this.currentHeight++
 		}
-		if bytes.Equal(hdr.Hash().Bytes(), raw) {
-			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(number: %d)", hdr.Hash().String(), this.currentHeight)
+		if bytes.Equal(hdr.Hash(), raw) {
+			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(number: %d)", hex.EncodeToString(hdr.Hash()), this.currentHeight)
 			break
 		}
 	}
@@ -181,10 +179,9 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	}
 	hdr := block.BlockHeader
 	rawHdr, _ := json.Marshal(hdr)
-	var hdrHashBytes []byte //todo hdr.Hash().Bytes()
 	raw, _ := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
-	if len(raw) == 0 || !bytes.Equal(raw, hdrHashBytes) {
+	if len(raw) == 0 || !bytes.Equal(raw, hdr.Hash()) {
 		this.header4sync = append(this.header4sync, rawHdr)
 	}
 	return true
@@ -232,7 +229,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 		}
 		var isTarget bool
 		if len(this.config.TargetContracts) > 0 {
-			var toContractStr string //todo toContractStr := evt.ProxyOrAssetContract.String()
+			var toContractStr string //todo toContractStr := ccDepositEvt.ProxyOrAssetContract.String()
 			for _, v := range this.config.TargetContracts {
 				toChainIdArr, ok := v[toContractStr]
 				if ok {
@@ -266,9 +263,9 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 		}
 		index := big.NewInt(0)
 		index.SetBytes(ccDepositEvt.TxId)
-		txHash, err := tools.HexToBytes(evt.TransactionHash)
+		txHash, err := tools.HexWithPrefixToBytes(evt.TransactionHash)
 		if err != nil {
-			log.Errorf("fetchLockDepositEvents - tools.HexToBytes error: %s", err)
+			log.Errorf("fetchLockDepositEvents - tools.HexWithPrefixToBytes error: %s", err)
 			return false
 		}
 		crossTx := &CrossTransfer{
@@ -280,7 +277,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 		}
 		sink := common.NewZeroCopySink(nil)
 		crossTx.Serialization(sink)
-		err = this.db.PutStarcoinTxRetry(sink.Bytes()) //todo db...
+		err = this.db.PutStarcoinTxRetry(sink.Bytes())
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - this.db.PutStarcoinTxRetry error: %s", err)
 		}
@@ -296,12 +293,12 @@ func (this *StarcoinManager) MonitorDeposit() {
 		case <-monitorTicker.C:
 			height, err := tools.GetStarcoinNodeHeight(this.config.StarcoinConfig.RestURL, this.restClient)
 			if err != nil {
-				log.Infof("MonitorDeposit - cannot get eth node height, err: %s", err)
+				log.Infof("MonitorDeposit - cannot get starcoin node height, err: %s", err)
 				continue
 			}
 			snycheight := this.findSyncedHeight()
-			log.Log.Info("MonitorDeposit from eth - snyced eth height", snycheight, "eth height", height, "diff", height-snycheight)
-			this.handleLockDepositEvents(snycheight) //todo handle ...
+			log.Log.Info("MonitorDeposit from starcoin - snyced starcoin height", snycheight, "starcoin height", height, "diff", height-snycheight)
+			this.handleLockDepositEvents(snycheight)
 		case <-this.exitChan:
 			return
 		}
@@ -323,7 +320,7 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		}
 		//1. decode events
 		key := crosstx.txIndex
-		keyBytes, err := eth.MappingKeyAt(key, "01")
+		keyBytes, err := eth.MappingKeyAt(key, "01") //todo starcoin version...
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - MappingKeyAt error:%s\n", err.Error())
 			continue
@@ -332,7 +329,7 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 			continue
 		}
 		height := int64(refHeight - this.config.StarcoinConfig.BlockConfig)
-		heightHex := hexutil.EncodeBig(big.NewInt(height)) //todo starcoin version
+		heightHex := hexutil.EncodeBig(big.NewInt(height))
 		proofKey := hexutil.Encode(keyBytes)
 		//2. get proof
 		proof, err := tools.GetProof(this.config.StarcoinConfig.RestURL, this.config.StarcoinConfig.ECCDContractAddress, proofKey, heightHex, this.restClient)
@@ -372,22 +369,25 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 	return nil
 }
 
-//todo starcoin version...
 func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []byte, txhash []byte) (string, error) {
 	log.Debugf("commit proof, height: %d, proof: %s, value: %s, txhash: %s", height, string(proof), hex.EncodeToString(value), hex.EncodeToString(txhash))
+	relayAddr, err := tools.HexToBytes(this.polySigner.Address.ToHexString())
+	if err != nil {
+		return "", err
+	}
 	tx, err := this.polySdk.Native.Ccm.ImportOuterTransfer(
 		this.config.StarcoinConfig.SideChainId,
 		value,
 		height,
 		proof,
-		ethcommon.Hex2Bytes(this.polySigner.Address.ToHexString()),
+		relayAddr,
 		[]byte{},
 		this.polySigner)
 	if err != nil {
 		return "", err
 	} else {
 		log.Infof("commitProof - send transaction to poly chain: ( poly_txhash: %s, eth_txhash: %s, height: %d )",
-			tx.ToHexString(), ethcommon.BytesToHash(txhash).String(), height)
+			tx.ToHexString(), tools.EncodeToHex(txhash), height)
 		return tx.ToHexString(), nil
 	}
 }
