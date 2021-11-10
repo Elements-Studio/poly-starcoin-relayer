@@ -33,3 +33,14 @@ func HexToBytes(str string) ([]byte, error) {
 	}
 	return hex.DecodeString(str[2:])
 }
+
+func GetExplorerUrl(chainId int) string {
+	switch chainId {
+	case 1:
+		return "https://stcscan.io/main/transactions/detail/"
+	case 254:
+		return "https://stcscan.io/barnard/transactions/detail/"
+	default:
+		return "no url"
+	}
+}
