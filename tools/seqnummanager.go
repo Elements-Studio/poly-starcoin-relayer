@@ -98,7 +98,7 @@ func (this *SeqNumManager) DecreaseAddressSeqNum(address types.AccountAddress) {
 	}
 }
 
-// clear seqNum per
+// clear seqNum
 func (this *SeqNumManager) clearSeqNum() {
 	for {
 		<-time.After(clear_seqNum_interval)
