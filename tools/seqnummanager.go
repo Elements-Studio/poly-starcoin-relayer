@@ -31,7 +31,7 @@ import (
 const clear_seqNum_interval = 10 * time.Minute
 
 type SeqNumManager struct {
-	addressSeqNum  map[types.AccountAddress]uint64
+	accountSeqNum  map[types.AccountAddress]uint64
 	returnedSeqNum map[types.AccountAddress]SortedSeqNumArr
 	starcoinClient *stcclient.StarcoinClient
 	lock           sync.Mutex
@@ -39,7 +39,7 @@ type SeqNumManager struct {
 
 func NewSeqNumManager(starcoinClient *stcclient.StarcoinClient) *SeqNumManager {
 	SeqNumManager := &SeqNumManager{
-		addressSeqNum:  make(map[types.AccountAddress]uint64),
+		accountSeqNum:  make(map[types.AccountAddress]uint64),
 		starcoinClient: starcoinClient,
 		returnedSeqNum: make(map[types.AccountAddress]SortedSeqNumArr),
 	}
@@ -48,7 +48,7 @@ func NewSeqNumManager(starcoinClient *stcclient.StarcoinClient) *SeqNumManager {
 }
 
 // return account seqNum, and than seqNum++
-func (this *SeqNumManager) GetAddressSeqNum(address types.AccountAddress) uint64 {
+func (this *SeqNumManager) GetAccountSeqNum(address types.AccountAddress) uint64 {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 
@@ -59,7 +59,7 @@ func (this *SeqNumManager) GetAddressSeqNum(address types.AccountAddress) uint64
 	}
 
 	// return a new point
-	seqNum, ok := this.addressSeqNum[address]
+	seqNum, ok := this.accountSeqNum[address]
 	if !ok {
 		// get seqNum from eth network
 		uintSeqNum, err := this.starcoinClient.GetAccountSequenceNumber(context.Background(), "0x"+hex.EncodeToString(address[:]))
@@ -67,11 +67,11 @@ func (this *SeqNumManager) GetAddressSeqNum(address types.AccountAddress) uint64
 			log.Errorf("GetAddressSeqNum: cannot get account %s seqNum, err: %s, set it to nil!",
 				address, err)
 		}
-		this.addressSeqNum[address] = uintSeqNum
+		this.accountSeqNum[address] = uintSeqNum
 		seqNum = uintSeqNum
 	}
 	// increase record
-	this.addressSeqNum[address]++
+	this.accountSeqNum[address]++
 	return seqNum
 }
 
@@ -88,13 +88,13 @@ func (this *SeqNumManager) ReturnSeqNum(addr types.AccountAddress, seqNum uint64
 	this.returnedSeqNum[addr] = arr
 }
 
-func (this *SeqNumManager) DecreaseAddressSeqNum(address types.AccountAddress) {
+func (this *SeqNumManager) DecreaseAccountSeqNum(address types.AccountAddress) {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 
-	seqNum, ok := this.addressSeqNum[address]
+	seqNum, ok := this.accountSeqNum[address]
 	if ok && seqNum > 0 {
-		this.addressSeqNum[address]--
+		this.accountSeqNum[address]--
 	}
 }
 
@@ -103,8 +103,8 @@ func (this *SeqNumManager) clearSeqNum() {
 	for {
 		<-time.After(clear_seqNum_interval)
 		this.lock.Lock()
-		for addr, _ := range this.addressSeqNum {
-			delete(this.addressSeqNum, addr)
+		for addr, _ := range this.accountSeqNum {
+			delete(this.accountSeqNum, addr)
 		}
 		this.lock.Unlock()
 		//log.Infof("clearSeqNum: clear all cache seqNum")

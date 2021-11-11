@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/elements-studio/poly-starcoin-relayer/log"
@@ -56,15 +55,16 @@ type PolyConfig struct {
 }
 
 type StarcoinConfig struct {
-	SideChainId         uint64
-	RestURL             string
-	ECCMContractAddress string //todo rename to CCM...
-	ECCDContractAddress string //todo rename to CCD...
-	KeyStorePath        string
-	KeyStorePwdSet      map[string]string
-	BlockConfig         uint64
-	HeadersPerBatch     int
-	MonitorInterval     uint64
+	SideChainId        uint64
+	RestURL            string
+	CCMContractAddress string
+	CCDContractAddress string
+	// KeyStorePath       string
+	// KeyStorePwdSet     map[string]string
+	PrivateKeys     []string
+	BlockConfig     uint64
+	HeadersPerBatch int
+	MonitorInterval uint64
 }
 
 func ReadFile(fileName string) ([]byte, error) {
@@ -98,10 +98,10 @@ func NewServiceConfig(configFilePath string) *ServiceConfig {
 		return nil
 	}
 
-	for k, v := range servConfig.StarcoinConfig.KeyStorePwdSet {
-		delete(servConfig.StarcoinConfig.KeyStorePwdSet, k)
-		servConfig.StarcoinConfig.KeyStorePwdSet[strings.ToLower(k)] = v
-	}
+	// for k, v := range servConfig.StarcoinConfig.KeyStorePwdSet {
+	// 	delete(servConfig.StarcoinConfig.KeyStorePwdSet, k)
+	// 	servConfig.StarcoinConfig.KeyStorePwdSet[strings.ToLower(k)] = v
+	// }
 
 	return servConfig
 }

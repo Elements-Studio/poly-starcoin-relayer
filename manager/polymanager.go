@@ -12,23 +12,24 @@ import (
 	"time"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
+	"github.com/elements-studio/poly-starcoin-relayer/db"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
+	poly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/lib"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
-	"github.com/ethereum/go-ethereum"
 
-	//ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology-crypto/signature"
-	"github.com/polynetwork/bridge-common/abi/eccd_abi" // remove this
+
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
 	vconfig "github.com/polynetwork/poly/consensus/vbft/config"
 	polytypes "github.com/polynetwork/poly/core/types"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
-	stctypes "github.com/starcoinorg/starcoin-go/types"
+	diemtypes "github.com/starcoinorg/starcoin-go/types"
+	//ethtypes "github.com/ethereum/go-ethereum/core/types"
+	//"github.com/polynetwork/bridge-common/abi/eccd_abi"
 )
 
 const (
@@ -42,6 +43,61 @@ type PolyManager struct {
 	exitChan       chan int
 	starcoinClient *stcclient.StarcoinClient
 	senders        []*StarcoinSender
+	db             db.DB
+}
+
+func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, polySdk *polysdk.PolySdk, stcclient *stcclient.StarcoinClient, db db.DB) (*PolyManager, error) {
+	//contractabi, err := abi.JSON(strings.NewReader(eccm_abi.EthCrossChainManagerABI))
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// chainId, err := ethereumsdk.ChainID(context.Background())
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// ks := tools.NewEthKeyStore(servCfg.ETHConfig, chainId)
+	// accArr := ks.GetAccounts()
+	// if len(servCfg.ETHConfig.KeyStorePwdSet) == 0 {
+	// 	fmt.Println("please input the passwords for ethereum keystore: ")
+	// 	for _, v := range accArr {
+	// 		fmt.Printf("For address %s. ", v.Address.String())
+	// 		raw, err := password.GetPassword()
+	// 		if err != nil {
+	// 			log.Fatalf("failed to input password: %v", err)
+	// 			panic(err)
+	// 		}
+	// 		servCfg.ETHConfig.KeyStorePwdSet[strings.ToLower(v.Address.String())] = string(raw)
+	// 	}
+	// }
+	// if err = ks.UnlockKeys(servCfg.ETHConfig); err != nil {
+	// 	return nil, err
+	// }
+	accArr := []string{} //config.StarcoinConfig.PrivateKeys
+	senders := make([]*StarcoinSender, len(accArr))
+	for i, v := range senders {
+		v = &StarcoinSender{}
+		//v.acc = accArr[i]
+
+		v.starcoinClient = stcclient
+		//v.keyStore = ks
+		v.config = servCfg
+		// v.polySdk = polySdk
+		// v.contractAbi = &contractabi
+		// v.nonceManager = tools.NewNonceManager(ethereumsdk)
+		v.cmap = make(map[string]chan *StarcoinTxInfo)
+
+		senders[i] = v
+	}
+	return &PolyManager{
+		exitChan:      make(chan int),
+		config:        servCfg,
+		polySdk:       polySdk,
+		currentHeight: startblockHeight,
+		//contractAbi:   &contractabi,
+		db: db,
+		//ethClient:     ethereumsdk,
+		senders: senders,
+	}, nil
 }
 
 func (this *PolyManager) init() bool {
@@ -49,7 +105,7 @@ func (this *PolyManager) init() bool {
 		log.Infof("PolyManager init - start height from flag: %d", this.currentHeight)
 		return true
 	}
-	this.currentHeight = this.db.GetPolyHeight() // todo db module...
+	this.currentHeight, _ = this.db.GetPolyHeight() // todo db error...
 	curEpochStart := this.findCurEpochStartHeight()
 	if curEpochStart > this.currentHeight {
 		this.currentHeight = curEpochStart
@@ -159,7 +215,8 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 				}
 				var isTarget bool
 				if len(this.config.TargetContracts) > 0 {
-					toContractStr := ethcommon.BytesToAddress(param.MakeTxParam.ToContractAddress).String() //todo starcoin contract address...
+					//toContractStr := ethcommon.BytesToAddress(param.MakeTxParam.ToContractAddress).String()
+					toContractStr := string(param.MakeTxParam.ToContractAddress) //todo starcoin module(address and name)?...
 					for _, v := range this.config.TargetContracts {
 						toChainIdArr, ok := v[toContractStr]
 						if ok {
@@ -185,7 +242,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 				cnt++
 				sender := this.selectSender()
 				log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )",
-					sender.acc.Address.String(), event.TxHash, height)
+					tools.EncodeToHex(sender.acc.Address[:]), event.TxHash, height)
 				// temporarily ignore the error for tx
 				sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
 				//if !sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath) {
@@ -211,12 +268,13 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 		return false, nil, nil
 	}
 
-	eccdAddr := ethcommon.HexToAddress(this.config.StarcoinConfig.ECCDContractAddress) //todo starcoin...
-	eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)               //todo starcoin...
-	if err != nil {
-		return false, nil, fmt.Errorf("failed to new eccm: %v", err)
-	}
-	rawKeepers, err := eccd.GetCurEpochConPubKeyBytes(nil)
+	//eccdAddr := ethcommon.HexToAddress(this.config.StarcoinConfig.CCDContractAddress)
+	//eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)
+	ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDContractAddress)
+	// if err != nil {
+	// 	return false, nil, fmt.Errorf("failed to new CCD: %v", err)
+	// }
+	rawKeepers, err := ccd.getCurEpochConPubKeyBytes()
 	if err != nil {
 		return false, nil, fmt.Errorf("failed to get current epoch keepers: %v", err)
 	}
@@ -243,13 +301,14 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 }
 
 func (this *PolyManager) findCurEpochStartHeight() uint32 {
-	var address string                                                      //todo ethcommon.HexToAddress(this.config.StarcoinConfig.ECCDContractAddress)
-	instance, err := eccd_abi.NewEthCrossChainData(address, this.ethClient) //todo get starcoin on-chain contract proxy
-	if err != nil {
-		log.Errorf("findCurEpochStartHeight - new eth cross chain failed: %s", err.Error())
-		return 0
-	}
-	height, err := instance.GetCurEpochStartHeight(nil)
+	//ethcommon.HexToAddress(this.config.StarcoinConfig.ECCDContractAddress)
+	//instance, err := eccd_abi.NewEthCrossChainData(address, this.ethClient)
+	instance := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDContractAddress)
+	// if err != nil {
+	// 	log.Errorf("findCurEpochStartHeight - new eth cross chain failed: %s", err.Error())
+	// 	return 0
+	// }
+	height, err := instance.getCurEpochStartHeight()
 	if err != nil {
 		log.Errorf("findCurEpochStartHeight - GetCurEpochStartHeight failed: %s", err.Error())
 		return 0
@@ -270,7 +329,7 @@ func (this *PolyManager) selectSender() *StarcoinSender {
 	RETRY:
 		bal, err := v.Balance()
 		if err != nil {
-			log.Errorf("failed to get balance for %s: %v", v.acc.Address.String(), err)
+			log.Errorf("failed to get balance for %s: %v", tools.EncodeToHex(v.acc.Address[:]), err)
 			time.Sleep(time.Second)
 			goto RETRY
 		}
@@ -288,13 +347,24 @@ func (this *PolyManager) selectSender() *StarcoinSender {
 }
 
 type StarcoinSender struct {
-	starcoinClient stcclient.StarcoinClient
-	seqNumManager  tools.SeqNumManager
-	keyStore       tools.StarcoinKeyStore
+	starcoinClient *stcclient.StarcoinClient
+	seqNumManager  *tools.SeqNumManager
+	keyStore       *tools.StarcoinKeyStore
 	acc            tools.StarcoinAccount
 	config         *config.ServiceConfig
 	cmap           map[string]chan *StarcoinTxInfo
 }
+
+// type EthSender struct {
+// 	acc          accounts.Account
+// 	keyStore     *tools.EthKeyStore
+// 	cmap         map[string]chan *EthTxInfo
+// 	nonceManager *tools.NonceManager
+// 	ethClient    *ethclient.Client
+// 	polySdk      *sdk.PolySdk
+// 	config       *config.ServiceConfig
+// 	contractAbi  *abi.ABI
+// }
 
 func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
 	var (
@@ -317,14 +387,15 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 		}
 	}
 
-	eccdAddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCDContractAddress)
-	eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)
-	if err != nil {
-		panic(fmt.Errorf("failed to new CCM: %v", err))
-	}
+	// eccdAddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCDContractAddress)
+	// eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)
+	ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDContractAddress)
+	// if err != nil {
+	// 	panic(fmt.Errorf("failed to new CCM: %v", err))
+	// }
 	fromTx := [32]byte{}
 	copy(fromTx[:], param.TxHash[:32])
-	res, _ := eccd.CheckIfFromChainTxExist(nil, param.FromChainID, fromTx)
+	res, _ := ccd.checkIfFromChainTxExist(param.FromChainID, fromTx[:])
 	if res {
 		log.Debugf("already relayed to starcoin: ( from_chain_id: %d, from_txhash: %x,  param.Txhash: %x)",
 			param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)
@@ -338,29 +409,32 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 		rawAnchor = anchorHeader.GetMessage()
 	}
 	headerData = header.GetMessage()
-	txData, err := this.contractAbi.Pack("verifyHeaderAndExecuteTx",
-		rawAuditPath, // Poly chain tx merkle proof
-		headerData,   // The header containing crossStateRoot to verify the above tx merkle proof
-		rawProof,     // The header merkle proof used to verify rawHeader
-		rawAnchor,    // Any header in current epoch consensus of Poly chain
-		sigs)
+	// txData, err := this.contractAbi.Pack("verifyHeaderAndExecuteTx",
+	// 	rawAuditPath, // Poly chain tx merkle proof
+	// 	headerData,   // The header containing crossStateRoot to verify the above tx merkle proof
+	// 	rawProof,     // The header merkle proof used to verify rawHeader
+	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
+	// 	sigs)
+	//todo encode contract address...
+	txPayload := poly.EncodeVerifyHeaderAndExecuteTxScriptFunction(rawAuditPath, headerData, rawProof, rawAnchor, sigs)
 
-	if err != nil {
-		log.Errorf("commitDepositEventsWithHeader - err:" + err.Error())
-		return false
-	}
+	// if err != nil {
+	// 	log.Errorf("commitDepositEventsWithHeader - err:" + err.Error())
+	// 	return false
+	// }
 
-	gasPrice, err := this.ethClient.SuggestGasPrice(context.Background())
+	gasPrice, err := this.starcoinClient.GetGasUnitPrice(context.Background())
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - get suggest sas price failed error: %s", err.Error())
 		return false
 	}
-	contractaddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCMContractAddress)
-	callMsg := ethereum.CallMsg{
-		From: this.acc.Address, To: &contractaddr, Gas: 0, GasPrice: gasPrice,
-		Value: big.NewInt(0), Data: txData,
-	}
-	gasLimit, err := this.ethClient.EstimateGas(context.Background(), callMsg)
+	// contractaddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCMContractAddress)
+	// callMsg := ethereum.CallMsg{
+	// 	From: this.acc.Address, To: &contractaddr, Gas: 0, GasPrice: gasPrice,
+	// 	Value: big.NewInt(0), Data: txData,
+	// }
+	// this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT)
+	// gasLimit, err := this.starcoinClient.EstimateGasByDryRunRaw(context.Background(), callMsg)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - estimate gas limit error: %s", err.Error())
 		return false
@@ -373,19 +447,20 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 		this.cmap[k] = c
 		go func() {
 			for v := range c {
-				if err = this.sendTxToEth(v); err != nil {
-					log.Errorf("failed to send tx to starcoin: error: %v, txData: %s", err, hex.EncodeToString(v.txData))
+				if err = this.sendTxToStarcoin(v); err != nil {
+					txBytes, _ := v.txPayload.BcsSerialize()
+					log.Errorf("failed to send tx to starcoin: error: %v, txData: %s", err, hex.EncodeToString(txBytes))
 				}
 			}
 		}()
 	}
 	//TODO: could be blocked
 	c <- &StarcoinTxInfo{
-		txData:       txData,
-		contractAddr: contractaddr,
-		gasPrice:     gasPrice,
-		gasLimit:     gasLimit,
-		polyTxHash:   polyTxHash,
+		txPayload: txPayload,
+		//contractAddr: contractaddr,
+		gasPrice:   gasPrice,
+		gasLimit:   stcclient.DEFAULT_MAX_GAS_AMOUNT, //gasLimit,
+		polyTxHash: polyTxHash,
 	}
 	return true
 }
@@ -394,11 +469,12 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList []byte) bool {
 	headerdata := header.GetMessage()
 	var (
-		txData []byte
-		txErr  error
-		sigs   []byte
+		// txData []byte
+		// txErr  error
+		sigs []byte
 	)
-	gasPrice, err := this.ethClient.SuggestGasPrice(context.Background()) //todo starcoin...
+	gasPrice, err := this.starcoinClient.GetGasUnitPrice(context.Background()) //this.ethClient.SuggestGasPrice(context.Background())
+
 	if err != nil {
 		log.Errorf("changeBookKeeper - get suggest sas price failed error: %s", err.Error())
 		return false
@@ -410,71 +486,96 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 		sigs = append(sigs, newsig...)
 	}
 
-	txData, txErr = this.contractAbi.Pack("changeBookKeeper", headerdata, pubkList, sigs)
-	if txErr != nil {
-		log.Errorf("changeBookKeeper - err:" + err.Error())
-		return false
-	}
+	// txData, txErr = this.contractAbi.Pack("changeBookKeeper", headerdata, pubkList, sigs)
+	// if txErr != nil {
+	// 	log.Errorf("changeBookKeeper - err:" + err.Error())
+	// 	return false
+	// }
+	// contractaddr := ethcommon.HexToAddress(this.config.StarcoinConfig.CCMContractAddress)
+	// callMsg := ethereum.CallMsg{
+	// 	From: this.acc.Address, To: &contractaddr, Gas: 0, GasPrice: gasPrice,
+	// 	Value: big.NewInt(0), Data: txData,
+	// }
+	// gasLimit, err := this.ethClient.EstimateGas(context.Background(), callMsg) // todo gasLimit...
+	// if err != nil {
+	// 	log.Errorf("changeBookKeeper - estimate gas limit error: %s", err.Error())
+	// 	return false
+	// }
+	txPayload := poly.EncodeChangeBookKeeperScriptFunction(headerdata, pubkList, sigs)
+	//todo encode module address and name...
 
-	contractaddr := ethcommon.HexToAddress(this.config.StarcoinConfig.ECCMContractAddress)
-	callMsg := ethereum.CallMsg{
-		From: this.acc.Address, To: &contractaddr, Gas: 0, GasPrice: gasPrice,
-		Value: big.NewInt(0), Data: txData,
-	}
+	nonce := this.seqNumManager.GetAccountSeqNum(this.acc.Address)
+	// tx := types.NewTransaction(nonce, contractaddr, big.NewInt(0), gasLimit, gasPrice, txData)
+	// signedtx, err := this.keyStore.SignTransaction(tx, this.acc)
 
-	gasLimit, err := this.ethClient.EstimateGas(context.Background(), callMsg) // todo gasLimit...
+	// if err != nil {
+	// 	log.Errorf("changeBookKeeper - sign raw tx error: %s", err.Error())
+	// 	return false
+	// }
+
+	rawUserTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, nonce)
+	//todo use max gas???
 	if err != nil {
-		log.Errorf("changeBookKeeper - estimate gas limit error: %s", err.Error())
+		log.Errorf("changeBookKeeper - BuildRawUserTransaction error: %s", err.Error())
 		return false
 	}
-
-	nonce := this.seqNumManager.GetAccountSequenceNumber(this.acc.Address)
-	tx := types.NewTransaction(nonce, contractaddr, big.NewInt(0), gasLimit, gasPrice, txData)
-	signedtx, err := this.keyStore.SignTransaction(tx, this.acc)
-	if err != nil {
-		log.Errorf("changeBookKeeper - sign raw tx error: %s", err.Error())
-		return false
-	}
-	if err = this.starcoinClient.SendTransaction(context.Background(), signedtx); err != nil {
+	var txhash string
+	//txhash := signedtx.Hash() //todo cal txhash self???
+	if txhash, err = this.starcoinClient.SubmitTransaction(context.Background(), *this.keyStore.GetPrivateKey(), rawUserTx); err != nil {
 		log.Errorf("changeBookKeeper - send transaction error:%s\n", err.Error())
 		return false
 	}
 
-	hash := header.Hash()
-	txhash := signedtx.Hash()
-	isSuccess := this.waitTransactionConfirm(fmt.Sprintf("header: %d", header.Height), txhash)
+	hdrhash := header.Hash()
+	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, time.Second*20)
+	//todo handle error???
 	if isSuccess {
-		log.Infof("successful to relay poly header to starcoin: (header_hash: %s, height: %d, eth_txhash: %s, nonce: %d, eth_explorer: %s)",
-			hash.ToHexString(), header.Height, txhash.String(), nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash.String())
+		log.Infof("successful to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
+			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 	} else {
-		log.Errorf("failed to relay poly header to starcoin: (header_hash: %s, height: %d, eth_txhash: %s, nonce: %d, eth_explorer: %s)",
-			hash.ToHexString(), header.Height, txhash.String(), nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash.String())
+		log.Errorf("failed to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
+			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 	}
 	return true
 }
 
-func (this *StarcoinSender) sendTxToEth(txInfo *StarcoinTxInfo) error {
-	nonce := this.seqNumManager.GetAccountSequenceNumber(this.acc.Address)
-	tx := types.NewTransaction(nonce, txInfo.contractAddr, big.NewInt(0), txInfo.gasLimit, txInfo.gasPrice, txInfo.txData)
-	signedtx, err := this.keyStore.SignTransaction(tx, this.acc)
+func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
+	nonce := this.seqNumManager.GetAccountSeqNum(this.acc.Address)
+	// tx := types.NewTransaction(nonce, txInfo.contractAddr, big.NewInt(0), txInfo.gasLimit, txInfo.gasPrice, txInfo.txData)
+	// signedtx, err := this.keyStore.SignTransaction(tx, this.acc)
+	// if err != nil {
+	// 	this.seqNumManager.ReturnSeqNum(this.acc.Address, nonce)
+	// 	return fmt.Errorf("commitDepositEventsWithHeader - sign raw tx error and return nonce %d: %v", nonce, err)
+	// }
+	// err = this.starcoinClient.SendTransaction(context.Background(), signedtx)
+	// if err != nil {
+	// 	this.seqNumManager.ReturnSeqNum(this.acc.Address, nonce)
+	// 	return fmt.Errorf("commitDepositEventsWithHeader - send transaction error and return nonce %d: %v", nonce, err)
+	// }
+	// hash := signedtx.Hash()
+	rawUserTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address,
+		txInfo.txPayload, txInfo.gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, nonce)
+	//todo use max gas???
 	if err != nil {
-		this.seqNumManager.ReturnSeqNum(this.acc.Address, nonce)
-		return fmt.Errorf("commitDepositEventsWithHeader - sign raw tx error and return nonce %d: %v", nonce, err)
+		log.Errorf("sendTxToStarcoin - BuildRawUserTransaction error: %s", err.Error())
+		return err
 	}
-	err = this.starcoinClient.SendTransaction(context.Background(), signedtx) //todo starcoin...
-	if err != nil {
-		this.seqNumManager.ReturnSeqNum(this.acc.Address, nonce)
-		return fmt.Errorf("commitDepositEventsWithHeader - send transaction error and return nonce %d: %v", nonce, err)
+	var txhash string
+	if txhash, err = this.starcoinClient.SubmitTransaction(context.Background(), *this.keyStore.GetPrivateKey(), rawUserTx); err != nil {
+		log.Errorf("sendTxToStarcoin - submit transaction error:%s\n", err.Error())
+		return err
 	}
-	hash := signedtx.Hash()
+	//todo cal txhash self???
 
-	isSuccess := this.waitTransactionConfirm(txInfo.polyTxHash, hash)
+	//isSuccess := this.waitTransactionConfirm(txInfo.polyTxHash, hash)
+	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, time.Second*20)
+	//todo hanlde error
 	if isSuccess {
-		log.Infof("successful to relay tx to starcoin: (eth_hash: %s, nonce: %d, poly_hash: %s, eth_explorer: %s)",
-			hash.String(), nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+hash.String())
+		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
+			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 	} else {
-		log.Errorf("failed to relay tx to starcoin: (eth_hash: %s, nonce: %d, poly_hash: %s, eth_explorer: %s)",
-			hash.String(), nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+hash.String())
+		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
+			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 	}
 	return nil
 }
@@ -484,7 +585,8 @@ func (this *StarcoinSender) getRouter() string {
 }
 
 func (this *StarcoinSender) Balance() (*big.Int, error) {
-	balance, err := this.ethClient.BalanceAt(context.Background(), this.acc.Address, nil) //todo starcoin...
+	//balance, err := this.ethClient.BalanceAt(context.Background(), this.acc.Address, nil)
+	balance, err := this.starcoinClient.GetBalanceOfStc(context.Background(), tools.EncodeToHex(this.acc.Address[:]))
 	if err != nil {
 		return nil, err
 	}
@@ -512,9 +614,10 @@ func (this *StarcoinSender) Balance() (*big.Int, error) {
 // }
 
 type StarcoinTxInfo struct {
-	txData       []byte
-	gasLimit     uint64
-	gasPrice     *big.Int
-	contractAddr stctypes.AccountAddress //ethcommon.Address
-	polyTxHash   string
+	//txData   []byte
+	txPayload diemtypes.TransactionPayload
+	gasLimit  uint64
+	gasPrice  int
+	//contractAddr ethcommon.Address
+	polyTxHash string
 }
