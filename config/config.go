@@ -66,6 +66,7 @@ type StarcoinConfig struct {
 	BlockConfig     uint64
 	HeadersPerBatch int
 	MonitorInterval uint64
+	MaxGasAmount    uint64
 }
 
 func ReadFile(fileName string) ([]byte, error) {

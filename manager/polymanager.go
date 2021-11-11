@@ -421,11 +421,6 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	return false
 	// }
 
-	gasPrice, err := this.starcoinClient.GetGasUnitPrice(context.Background())
-	if err != nil {
-		log.Errorf("commitDepositEventsWithHeader - get suggest sas price failed error: %s", err.Error())
-		return false
-	}
 	// contractaddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCMContractAddress)
 	// callMsg := ethereum.CallMsg{
 	// 	From: this.acc.Address, To: &contractaddr, Gas: 0, GasPrice: gasPrice,
@@ -433,10 +428,10 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// }
 	// this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT)
 	// gasLimit, err := this.starcoinClient.EstimateGasByDryRunRaw(context.Background(), callMsg)
-	if err != nil {
-		log.Errorf("commitDepositEventsWithHeader - estimate gas limit error: %s", err.Error())
-		return false
-	}
+	// if err != nil {
+	// 	log.Errorf("commitDepositEventsWithHeader - estimate gas limit error: %s", err.Error())
+	// 	return false
+	// }
 
 	k := this.getRouter()
 	c, ok := this.cmap[k]
@@ -445,7 +440,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 		this.cmap[k] = c
 		go func() {
 			for v := range c {
-				if err = this.sendTxToStarcoin(v); err != nil {
+				if err := this.sendTxToStarcoin(v); err != nil {
 					txBytes, _ := v.txPayload.BcsSerialize()
 					log.Errorf("failed to send tx to starcoin: error: %v, txData: %s", err, hex.EncodeToString(txBytes))
 				}
@@ -456,8 +451,8 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	c <- &StarcoinTxInfo{
 		txPayload: txPayload,
 		//contractAddr: contractaddr,
-		gasPrice:   gasPrice,
-		gasLimit:   stcclient.DEFAULT_MAX_GAS_AMOUNT, //gasLimit,
+		//gasPrice:   gasPrice,
+		//gasLimit:   stcclient.DEFAULT_MAX_GAS_AMOUNT, //gasLimit,
 		polyTxHash: polyTxHash,
 	}
 	return true
@@ -510,7 +505,7 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 	// 	return false
 	// }
 
-	rawUserTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, nonce)
+	rawUserTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address, txPayload, gasPrice, this.config.StarcoinConfig.MaxGasAmount, nonce)
 	//todo use max gas???
 	if err != nil {
 		log.Errorf("changeBookKeeper - BuildRawUserTransaction error: %s", err.Error())
@@ -550,8 +545,15 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	// 	return fmt.Errorf("commitDepositEventsWithHeader - send transaction error and return nonce %d: %v", nonce, err)
 	// }
 	// hash := signedtx.Hash()
+
+	gasPrice, err := this.starcoinClient.GetGasUnitPrice(context.Background())
+	if err != nil {
+		log.Errorf("commitDepositEventsWithHeader - get suggest sas price failed error: %s", err.Error())
+		return err
+	}
+
 	rawUserTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address,
-		txInfo.txPayload, txInfo.gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, nonce)
+		txInfo.txPayload, gasPrice, this.config.StarcoinConfig.MaxGasAmount, nonce)
 	//todo use max gas???
 	if err != nil {
 		log.Errorf("sendTxToStarcoin - BuildRawUserTransaction error: %s", err.Error())
@@ -613,8 +615,8 @@ func (this *StarcoinSender) Balance() (*big.Int, error) {
 type StarcoinTxInfo struct {
 	//txData   []byte
 	txPayload diemtypes.TransactionPayload
-	gasLimit  uint64
-	gasPrice  int
+	//gasLimit  uint64
+	//gasPrice int
 	//contractAddr ethcommon.Address
 	polyTxHash string
 }
