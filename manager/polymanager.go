@@ -518,7 +518,7 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 	}
 	var txhash string
 	//txhash := signedtx.Hash() //todo cal txhash self???
-	if txhash, err = this.starcoinClient.SubmitTransaction(context.Background(), *this.keyStore.GetPrivateKey(), rawUserTx); err != nil {
+	if txhash, err = this.starcoinClient.SubmitTransaction(context.Background(), this.keyStore.GetPrivateKey(), rawUserTx); err != nil {
 		log.Errorf("changeBookKeeper - send transaction error:%s\n", err.Error())
 		return false
 	}
@@ -558,7 +558,7 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 		return err
 	}
 	var txhash string
-	if txhash, err = this.starcoinClient.SubmitTransaction(context.Background(), *this.keyStore.GetPrivateKey(), rawUserTx); err != nil {
+	if txhash, err = this.starcoinClient.SubmitTransaction(context.Background(), this.keyStore.GetPrivateKey(), rawUserTx); err != nil {
 		log.Errorf("sendTxToStarcoin - submit transaction error:%s\n", err.Error())
 		return err
 	}

@@ -87,35 +87,35 @@ func extractSingleResult(result interface{}) interface{} {
 }
 
 func toBool(i interface{}) (bool, error) {
-	switch i.(type) {
+	switch i := i.(type) {
 	case bool:
-		return i.(bool), nil
+		return i, nil
 	case string:
-		return strconv.ParseBool(i.(string))
+		return strconv.ParseBool(i)
 	}
 	return false, fmt.Errorf("unknown type to bool %t", i)
 }
 
 func toBytes(i interface{}) ([]byte, error) {
-	switch i.(type) {
+	switch i := i.(type) {
 	case []byte:
-		return i.([]byte), nil
+		return i, nil
 	case string:
-		return tools.HexToBytes(i.(string))
+		return tools.HexToBytes(i)
 	}
 	return nil, fmt.Errorf("unknown type to []byte %t", i)
 }
 
 func toUint64(i interface{}) (uint64, error) {
-	switch i.(type) {
+	switch i := i.(type) {
 	case uint64:
-		return i.(uint64), nil
+		return i, nil
 	case float64:
-		return uint64(i.(float64)), nil
+		return uint64(i), nil
 	case string:
-		return strconv.ParseUint(i.(string), 10, 64)
+		return strconv.ParseUint(i, 10, 64)
 	case json.Number:
-		r, err := i.(json.Number).Int64()
+		r, err := i.Int64()
 		return uint64(r), err
 	}
 	return 0, fmt.Errorf("unknown type to uint64 %t", i)

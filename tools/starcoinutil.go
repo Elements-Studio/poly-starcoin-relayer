@@ -65,7 +65,7 @@ func GetStarcoinNodeHeight(url string, restClient *RestClient) (uint64, error) {
 }
 
 type StarcoinKeyStore struct {
-	privateKey *types.Ed25519PrivateKey
+	privateKey types.Ed25519PrivateKey
 	chainId    int
 }
 
@@ -73,7 +73,7 @@ func (ks *StarcoinKeyStore) GetChainId() int {
 	return ks.chainId
 }
 
-func (ks *StarcoinKeyStore) GetPrivateKey() *types.Ed25519PrivateKey {
+func (ks *StarcoinKeyStore) GetPrivateKey() types.Ed25519PrivateKey {
 	return ks.privateKey
 }
 
