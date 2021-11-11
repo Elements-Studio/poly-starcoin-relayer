@@ -55,10 +55,11 @@ type PolyConfig struct {
 }
 
 type StarcoinConfig struct {
-	SideChainId        uint64
-	RestURL            string
-	CCMContractAddress string
-	CCDContractAddress string
+	SideChainId            uint64
+	RestURL                string
+	CCMModule              string //Cross Chain Data Module Id.
+	CCDModule              string //Cross Chain Manager Module Id.
+	CrossChainEventAddress string //Cross Chain Event Address
 	// KeyStorePath       string
 	// KeyStorePwdSet     map[string]string
 	PrivateKeys     []string

@@ -14,7 +14,7 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
-	poly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/lib"
+	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -28,8 +28,6 @@ import (
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 	diemtypes "github.com/starcoinorg/starcoin-go/types"
-	//ethtypes "github.com/ethereum/go-ethereum/core/types"
-	//"github.com/polynetwork/bridge-common/abi/eccd_abi"
 )
 
 const (
@@ -270,7 +268,7 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 
 	//eccdAddr := ethcommon.HexToAddress(this.config.StarcoinConfig.CCDContractAddress)
 	//eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)
-	ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDContractAddress)
+	ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
 	// if err != nil {
 	// 	return false, nil, fmt.Errorf("failed to new CCD: %v", err)
 	// }
@@ -303,7 +301,7 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 func (this *PolyManager) findCurEpochStartHeight() uint32 {
 	//ethcommon.HexToAddress(this.config.StarcoinConfig.ECCDContractAddress)
 	//instance, err := eccd_abi.NewEthCrossChainData(address, this.ethClient)
-	instance := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDContractAddress)
+	instance := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
 	// if err != nil {
 	// 	log.Errorf("findCurEpochStartHeight - new eth cross chain failed: %s", err.Error())
 	// 	return 0
@@ -389,7 +387,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 
 	// eccdAddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCDContractAddress)
 	// eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)
-	ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDContractAddress)
+	ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
 	// if err != nil {
 	// 	panic(fmt.Errorf("failed to new CCM: %v", err))
 	// }
@@ -415,8 +413,8 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	rawProof,     // The header merkle proof used to verify rawHeader
 	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
 	// 	sigs)
-	//todo encode contract address...
-	txPayload := poly.EncodeVerifyHeaderAndExecuteTxScriptFunction(rawAuditPath, headerData, rawProof, rawAnchor, sigs)
+
+	txPayload := stcpoly.EncodeCCMVerifyHeaderAndExecuteTxPayload(this.config.StarcoinConfig.CCMModule, rawAuditPath, headerData, rawProof, rawAnchor, sigs)
 
 	// if err != nil {
 	// 	log.Errorf("commitDepositEventsWithHeader - err:" + err.Error())
@@ -501,8 +499,7 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 	// 	log.Errorf("changeBookKeeper - estimate gas limit error: %s", err.Error())
 	// 	return false
 	// }
-	txPayload := poly.EncodeChangeBookKeeperScriptFunction(headerdata, pubkList, sigs)
-	//todo encode module address and name...
+	txPayload := stcpoly.EncodeCCMChangeBookKeeperTxPayload(this.config.StarcoinConfig.CCMModule, headerdata, pubkList, sigs)
 
 	nonce := this.seqNumManager.GetAccountSeqNum(this.acc.Address)
 	// tx := types.NewTransaction(nonce, contractaddr, big.NewInt(0), gasLimit, gasPrice, txData)

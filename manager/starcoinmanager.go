@@ -19,7 +19,7 @@ import (
 
 	"github.com/ontio/ontology/smartcontract/service/native/cross_chain/cross_chain_manager"
 
-	evttypes "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
+	stcpolyevts "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
@@ -249,7 +249,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 	// 	Context: context.Background(),
 	// }
 	eventFilter := &stcclient.EventFilter{
-		Address:   this.config.StarcoinConfig.CCMContractAddress, //todo filter this address???
+		Address:   this.config.StarcoinConfig.CrossChainEventAddress, //todo filter this address???
 		FromBlock: height,
 		ToBlock:   &height,
 	}
@@ -272,7 +272,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 			log.Errorf("fetchLockDepositEvents - hex.DecodeString error :%s", err.Error())
 			return false
 		}
-		ccDepositEvt, err := evttypes.BcsDeserializeCrossChainEvent(evtData)
+		ccDepositEvt, err := stcpolyevts.BcsDeserializeCrossChainEvent(evtData)
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - BcsDeserializeCrossChainDepositEvent error :%s", err.Error())
 			return false
