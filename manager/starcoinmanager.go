@@ -376,10 +376,10 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 			log.Errorf("handleLockDepositEvents - MappingKeyAt error:%s\n", err.Error())
 			continue
 		}
-		if refHeight <= crosstx.height+this.config.StarcoinConfig.BlockConfig {
+		if refHeight <= crosstx.height+this.config.StarcoinConfig.BlockConfirmations {
 			continue
 		}
-		height := int64(refHeight - this.config.StarcoinConfig.BlockConfig)
+		height := int64(refHeight - this.config.StarcoinConfig.BlockConfirmations)
 		heightHex := hexutil.EncodeBig(big.NewInt(height))
 		//proofKey := hexutil.Encode(keyBytes)
 		//2. get proof

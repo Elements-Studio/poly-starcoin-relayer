@@ -28,7 +28,7 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/db"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	"github.com/elements-studio/poly-starcoin-relayer/manager"
-	polySdk "github.com/polynetwork/poly-go-sdk"
+	polysdk "github.com/polynetwork/poly-go-sdk"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 	"github.com/urfave/cli"
 )
@@ -94,7 +94,7 @@ func startServer(ctx *cli.Context) {
 	}
 
 	// create poly sdk
-	polySdk := polySdk.NewPolySdk()
+	polySdk := polysdk.NewPolySdk()
 	err := setUpPoly(polySdk, servConfig.PolyConfig.RestURL)
 	if err != nil {
 		log.Errorf("startServer - failed to setup poly sdk: %v", err)
@@ -126,7 +126,7 @@ func startServer(ctx *cli.Context) {
 	waitToExit()
 }
 
-func setUpPoly(poly *polySdk.PolySdk, RpcAddr string) error {
+func setUpPoly(poly *polysdk.PolySdk, RpcAddr string) error {
 	poly.NewRpcClient().SetAddress(RpcAddr)
 	hdr, err := poly.GetHeaderByHeight(0)
 	if err != nil {
@@ -150,7 +150,7 @@ func waitToExit() {
 	<-exit
 }
 
-func initStarcoinServer(servConfig *config.ServiceConfig, polysdk *polySdk.PolySdk, stcclient *stcclient.StarcoinClient, db db.DB) {
+func initStarcoinServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolySdk, stcclient *stcclient.StarcoinClient, db db.DB) {
 	mgr, err := manager.NewStarcoinManager(servConfig, StartHeight, StartForceHeight, polysdk, stcclient, db)
 	if err != nil {
 		log.Error("initStarcoinServer - starcoin service start err: %s", err.Error())
@@ -161,7 +161,7 @@ func initStarcoinServer(servConfig *config.ServiceConfig, polysdk *polySdk.PolyS
 	go mgr.CheckDeposit()
 }
 
-func initPolyServer(servConfig *config.ServiceConfig, polysdk *polySdk.PolySdk, stcclient *stcclient.StarcoinClient, db db.DB) {
+func initPolyServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolySdk, stcclient *stcclient.StarcoinClient, db db.DB) {
 	mgr, err := manager.NewPolyManager(servConfig, uint32(PolyStartHeight), polysdk, stcclient, db)
 	if err != nil {
 		log.Error("initPolyServer - PolyServer service start failed: %v", err)

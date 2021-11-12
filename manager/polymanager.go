@@ -103,7 +103,7 @@ func (this *PolyManager) init() bool {
 		log.Infof("PolyManager init - start height from flag: %d", this.currentHeight)
 		return true
 	}
-	this.currentHeight, _ = this.db.GetPolyHeight() // todo db error...
+	this.currentHeight, _ = this.db.GetPolyHeight() // todo handle db error...
 	curEpochStart := this.findCurEpochStartHeight()
 	if curEpochStart > this.currentHeight {
 		this.currentHeight = curEpochStart
@@ -277,13 +277,7 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 		return false, nil, fmt.Errorf("failed to get current epoch keepers: %v", err)
 	}
 
-	var bookkeepers []keypair.PublicKey
-	for _, peer := range blkInfo.NewChainConfig.Peers {
-		keystr, _ := hex.DecodeString(peer.ID)
-		key, _ := keypair.DeserializePublicKey(keystr)
-		bookkeepers = append(bookkeepers, key)
-	}
-	bookkeepers = keypair.SortPublicKeys(bookkeepers)
+	bookkeepers := this.readBookKeeperPublicKeys(blkInfo)
 	publickeys := make([]byte, 0)
 	sink := common.NewZeroCopySink(nil)
 	sink.WriteUint64(uint64(len(bookkeepers)))
@@ -296,6 +290,70 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 		return false, nil, nil
 	}
 	return true, publickeys, nil
+}
+
+func (this *PolyManager) initGenesis() error {
+	blockNum, err := this.getPolyLastConfigBlockNum()
+	if err != nil {
+		log.Errorf("getPolyLastConfigBlockNum error")
+		return err
+	}
+	publickeys, err := this.readBookKeeperPublicKeyBytes(blockNum)
+	if err != nil {
+		log.Errorf("readBookKeeperPublicKeyBytes error")
+		return err
+	}
+	fmt.Println(publickeys)
+	//todo
+	return nil
+}
+
+func (this *PolyManager) getPolyLastConfigBlockNum() (uint32, error) {
+	height, err := this.polySdk.GetCurrentBlockHeight()
+	if err != nil {
+		return 0, err
+	}
+	hdr, err := this.polySdk.GetHeaderByHeight(height)
+	if err != nil {
+		return 0, err
+	}
+	blkInfo := &vconfig.VbftBlockInfo{}
+	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
+		return 0, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err)
+	}
+	return blkInfo.LastConfigBlockNum, nil
+}
+
+func (this *PolyManager) readBookKeeperPublicKeyBytes(blockNum uint32) ([]byte, error) {
+	hdr, err := this.polySdk.GetHeaderByHeight(blockNum)
+	if err != nil {
+		return nil, err
+	}
+	blkInfo := &vconfig.VbftBlockInfo{}
+	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
+		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err)
+	}
+	if hdr.NextBookkeeper == common.ADDRESS_EMPTY || blkInfo.NewChainConfig == nil {
+		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - blkInfo.NewChainConfig == nil")
+	}
+	bookkeepers := this.readBookKeeperPublicKeys(blkInfo)
+	publickeys := make([]byte, 0)
+	for _, key := range bookkeepers {
+		raw := tools.GetNoCompresskey(key)
+		publickeys = append(publickeys, raw...)
+	}
+	return publickeys, nil
+}
+
+func (this *PolyManager) readBookKeeperPublicKeys(blkInfo *vconfig.VbftBlockInfo) []keypair.PublicKey {
+	var bookkeepers []keypair.PublicKey
+	for _, peer := range blkInfo.NewChainConfig.Peers {
+		keystr, _ := hex.DecodeString(peer.ID)
+		key, _ := keypair.DeserializePublicKey(keystr)
+		bookkeepers = append(bookkeepers, key)
+	}
+	bookkeepers = keypair.SortPublicKeys(bookkeepers)
+	return bookkeepers
 }
 
 func (this *PolyManager) findCurEpochStartHeight() uint32 {

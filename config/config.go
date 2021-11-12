@@ -43,6 +43,7 @@ type ServiceConfig struct {
 	PolyConfig      *PolyConfig
 	StarcoinConfig  *StarcoinConfig
 	BoltDbPath      string
+	MySqlDSN        string
 	RoutineNum      int64
 	TargetContracts []map[string]map[string][]uint64
 }
@@ -62,11 +63,11 @@ type StarcoinConfig struct {
 	CrossChainEventAddress string //Cross Chain Event Address
 	// KeyStorePath       string
 	// KeyStorePwdSet     map[string]string
-	PrivateKeys     []string
-	BlockConfig     uint64
-	HeadersPerBatch int
-	MonitorInterval uint64
-	MaxGasAmount    uint64
+	PrivateKeys        []string
+	BlockConfirmations uint64 // safe block confirmations
+	HeadersPerBatch    int
+	MonitorInterval    uint64
+	MaxGasAmount       uint64
 }
 
 func ReadFile(fileName string) ([]byte, error) {
