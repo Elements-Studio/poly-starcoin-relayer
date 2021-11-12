@@ -45,3 +45,14 @@ func EncodeCCMVerifyHeaderAndExecuteTxPayload(module string, proof []byte, raw_h
 		},
 	}
 }
+
+func EncodeInitGenesisTxPayload(module string, raw_header []byte, pub_key_list []byte) diemtypes.TransactionPayload {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: "init_genesis",
+			TyArgs:   []diemtypes.TypeTag{},
+			Args:     [][]byte{encode_u8vector_argument(raw_header), encode_u8vector_argument(pub_key_list)},
+		},
+	}
+}

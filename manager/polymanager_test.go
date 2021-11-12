@@ -10,7 +10,7 @@ import (
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
-func TestReadServiceConfig(t *testing.T) {
+func TestInitGenersis(t *testing.T) {
 	config := config.NewServiceConfig("../config-devnet.json")
 	fmt.Println(config)
 	polySdk := polysdk.NewPolySdk()

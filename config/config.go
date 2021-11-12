@@ -63,7 +63,7 @@ type StarcoinConfig struct {
 	CrossChainEventAddress string //Cross Chain Event Address
 	// KeyStorePath       string
 	// KeyStorePwdSet     map[string]string
-	PrivateKeys        []string
+	PrivateKeys        []map[string]string
 	BlockConfirmations uint64 // safe block confirmations
 	HeadersPerBatch    int
 	MonitorInterval    uint64
