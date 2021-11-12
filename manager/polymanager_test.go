@@ -25,7 +25,7 @@ func TestInitGenersis(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(polyManager)
-	err = polyManager.initGenesis()
+	err = polyManager.InitGenesis()
 	fmt.Println(err)
 }
 

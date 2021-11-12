@@ -107,7 +107,7 @@ func (this *PolyManager) init() bool {
 	curEpochStart := this.findCurEpochStartHeight()
 	if curEpochStart > this.currentHeight {
 		this.currentHeight = curEpochStart
-		log.Infof("PolyManager init - latest height from ECCM: %d", this.currentHeight)
+		log.Infof("PolyManager init - latest height from CCD: %d", this.currentHeight)
 		return true
 	}
 	log.Infof("PolyManager init - latest height from DB: %d", this.currentHeight)
@@ -292,10 +292,10 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 	return true, publickeys, nil
 }
 
-func (this *PolyManager) initGenesis() error {
+func (this *PolyManager) InitGenesis() error {
 	blockNum, err := this.getPolyLastConfigBlockNum()
 	if err != nil {
-		log.Errorf("initGenesis - getPolyLastConfigBlockNum error")
+		log.Errorf("InitGenesis - getPolyLastConfigBlockNum error")
 		return err
 	}
 	hdr, err := this.polySdk.GetHeaderByHeight(blockNum)
@@ -304,7 +304,7 @@ func (this *PolyManager) initGenesis() error {
 	}
 	publickeys, err := this.readBookKeeperPublicKeyBytes(hdr)
 	if err != nil {
-		log.Errorf("initGenesis - readBookKeeperPublicKeyBytes error")
+		log.Errorf("InitGenesis - readBookKeeperPublicKeyBytes error")
 		return err
 	}
 	fmt.Println(publickeys) // todo remove this
@@ -316,33 +316,33 @@ func (this *PolyManager) initGenesis() error {
 	}
 	senderPrivateKey, err := tools.HexToBytes(senderpk[sender])
 	if err != nil {
-		log.Errorf("initGenesis - Convert hex to bytes error:%s", err.Error())
+		log.Errorf("InitGenesis - Convert hex to bytes error:%s", err.Error())
 		return err
 	}
 	senderAddress, err := stcclient.ToAccountAddress(sender)
 	if err != nil {
-		log.Errorf("initGenesis - Convert string to AccountAddress error:%s", err.Error())
+		log.Errorf("InitGenesis - Convert string to AccountAddress error:%s", err.Error())
 		return err
 	}
 	seqNum, err := this.starcoinClient.GetAccountSequenceNumber(context.Background(), sender)
 	if err != nil {
-		log.Errorf("initGenesis - GetAccountSequenceNumber error:%s", err.Error())
+		log.Errorf("InitGenesis - GetAccountSequenceNumber error:%s", err.Error())
 		return err
 	}
 	gasPrice, err := this.starcoinClient.GetGasUnitPrice(context.Background())
 	if err != nil {
-		log.Errorf("initGenesis - GetAccountSequenceNumber error:%s", err.Error())
+		log.Errorf("InitGenesis - GetAccountSequenceNumber error:%s", err.Error())
 		return err
 	}
 	txPayload := stcpoly.EncodeInitGenesisTxPayload(this.config.StarcoinConfig.CCMModule, hdr.GetMessage(), publickeys)
 	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, seqNum)
 	if err != nil {
-		log.Errorf("initGenesis - BuildRawUserTransaction error:%s", err.Error())
+		log.Errorf("InitGenesis - BuildRawUserTransaction error:%s", err.Error())
 		return err
 	}
 	txHash, err := this.starcoinClient.SubmitTransaction(context.Background(), senderPrivateKey, userTx)
 	if err != nil {
-		log.Errorf("initGenesis - SubmitTransaction error:%s", err.Error())
+		log.Errorf("InitGenesis - SubmitTransaction error:%s", err.Error())
 		return err
 	}
 	fmt.Println(txHash)
