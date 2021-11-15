@@ -17,6 +17,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -24,6 +25,7 @@ import (
 	"syscall"
 
 	//"github.com/elements-studio/poly-starcoin-relayer/cmd"
+	"github.com/elements-studio/poly-starcoin-relayer/cmd"
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
@@ -44,16 +46,15 @@ func setupApp() *cli.App {
 	app.Usage = "Starcoin relayer Service"
 	app.Action = startServer
 	app.Version = config.Version
-	app.Copyright = "Copyright in 2019 The Ontology Authors"
-	// app.Flags = []cli.Flag{
-	// 	cmd.LogLevelFlag,
-	// 	cmd.ConfigPathFlag,
-	// 	cmd.EthStartFlag,
-	// 	cmd.EthStartForceFlag,
-	// 	cmd.PolyStartFlag,
-	// 	cmd.LogDir,
-	// }
-	//todo...
+	app.Copyright = "Copyright in 2021 The Starcoin Community Authors"
+	app.Flags = []cli.Flag{
+		cmd.LogLevelFlag,
+		cmd.ConfigPathFlag,
+		cmd.StarcoinStartFlag,
+		cmd.StarcoinStartForceFlag,
+		cmd.PolyStartFlag,
+		cmd.LogDir,
+	}
 	app.Commands = []cli.Command{}
 	app.Before = func(context *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
@@ -64,27 +65,27 @@ func setupApp() *cli.App {
 
 func startServer(ctx *cli.Context) {
 	// get all cmd flag
-	//todo ...
-	// logLevel := ctx.GlobalInt(cmd.GetFlagName(cmd.LogLevelFlag))
 
-	// ld := ctx.GlobalString(cmd.GetFlagName(cmd.LogDir))
-	// log.InitLog(logLevel, ld, log.Stdout)
+	logLevel := ctx.GlobalInt(cmd.GetFlagName(cmd.LogLevelFlag))
 
-	// ConfigPath = ctx.GlobalString(cmd.GetFlagName(cmd.ConfigPathFlag))
-	// ethstart := ctx.GlobalUint64(cmd.GetFlagName(cmd.EthStartFlag))
-	// if ethstart > 0 {
-	// 	StartHeight = ethstart
-	// }
+	ld := ctx.GlobalString(cmd.GetFlagName(cmd.LogDir))
+	log.InitLog(logLevel, ld, log.Stdout)
 
-	// StartForceHeight = 0
-	// ethstartforce := ctx.GlobalUint64(cmd.GetFlagName(cmd.EthStartForceFlag))
-	// if ethstartforce > 0 {
-	// 	StartForceHeight = ethstartforce
-	// }
-	// polyStart := ctx.GlobalUint64(cmd.GetFlagName(cmd.PolyStartFlag))
-	// if polyStart > 0 {
-	// 	PolyStartHeight = polyStart
-	// }
+	ConfigPath = ctx.GlobalString(cmd.GetFlagName(cmd.ConfigPathFlag))
+	stcstart := ctx.GlobalUint64(cmd.GetFlagName(cmd.StarcoinStartFlag))
+	if stcstart > 0 {
+		StartHeight = stcstart
+	}
+
+	StartForceHeight = 0
+	stcstartforce := ctx.GlobalUint64(cmd.GetFlagName(cmd.StarcoinStartForceFlag))
+	if stcstartforce > 0 {
+		StartForceHeight = stcstartforce
+	}
+	polyStart := ctx.GlobalUint64(cmd.GetFlagName(cmd.PolyStartFlag))
+	if polyStart > 0 {
+		PolyStartHeight = polyStart
+	}
 
 	// read config
 	servConfig := config.NewServiceConfig(ConfigPath)
@@ -103,12 +104,12 @@ func startServer(ctx *cli.Context) {
 
 	// create ethereum sdk
 	// ethereumsdk, err := ethclient.Dial(servConfig.StarcoinConfig.RestURL)
-	// if err != nil {
-	// 	log.Errorf("startServer - cannot dial sync node, err: %s", err)
-	// 	return
-	// }
-	//todo...
-	stcclient := &stcclient.StarcoinClient{}
+	stcclient := stcclient.NewStarcoinClient(servConfig.StarcoinConfig.RestURL)
+	_, err = stcclient.GetNodeInfo(context.Background())
+	if err != nil {
+		log.Errorf("startServer - cannot dial starcoin node, err: %s", err.Error())
+		return
+	}
 
 	var boltDB *db.BoltDB
 	if servConfig.BoltDbPath == "" {
@@ -117,12 +118,12 @@ func startServer(ctx *cli.Context) {
 		boltDB, err = db.NewBoltDB(servConfig.BoltDbPath)
 	}
 	if err != nil {
-		log.Fatalf("db.NewWaitingDB error:%s", err)
+		log.Fatalf("db.NewWaitingDB error:%s", err.Error())
 		return
 	}
 
-	initPolyServer(servConfig, polySdk, stcclient, boltDB)
-	initStarcoinServer(servConfig, polySdk, stcclient, boltDB)
+	initPolyServer(servConfig, polySdk, &stcclient, boltDB)
+	initStarcoinServer(servConfig, polySdk, &stcclient, boltDB)
 	waitToExit()
 }
 

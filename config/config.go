@@ -91,13 +91,13 @@ func ReadFile(fileName string) ([]byte, error) {
 func NewServiceConfig(configFilePath string) *ServiceConfig {
 	fileContent, err := ReadFile(configFilePath)
 	if err != nil {
-		log.Errorf("NewServiceConfig: failed, err: %s", err)
+		log.Errorf("NewServiceConfig: failed, err: %s", err.Error())
 		return nil
 	}
 	servConfig := &ServiceConfig{}
 	err = json.Unmarshal(fileContent, servConfig)
 	if err != nil {
-		log.Errorf("NewServiceConfig: failed, err: %s", err)
+		log.Errorf("NewServiceConfig: failed, err: %s", err.Error())
 		return nil
 	}
 

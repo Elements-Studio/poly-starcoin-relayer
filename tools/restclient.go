@@ -76,12 +76,12 @@ func (self *RestClient) SetHttpClient(httpClient *http.Client) *RestClient {
 func (self *RestClient) SendPostRequest(addr string, data []byte) ([]byte, error) {
 	resp, err := self.httpClient.Post(addr, "application/json", strings.NewReader(string(data)))
 	if err != nil {
-		return nil, fmt.Errorf("http post request:%s error:%s", data, err)
+		return nil, fmt.Errorf("http post request:%s error:%s", data, err.Error())
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("read rest response body error:%s", err)
+		return nil, fmt.Errorf("read rest response body error:%s", err.Error())
 	}
 	return body, nil
 }

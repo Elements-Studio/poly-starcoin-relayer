@@ -127,7 +127,7 @@ func (this *PolyManager) MonitorChain() {
 		case <-monitorTicker.C:
 			latestheight, err := this.polySdk.GetCurrentBlockHeight()
 			if err != nil {
-				log.Errorf("PolyManager.MonitorChain - get poly chain block height error: %s", err)
+				log.Errorf("PolyManager.MonitorChain - get poly chain block height error: %s", err.Error())
 				continue
 			}
 			latestheight--
@@ -260,7 +260,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 	blkInfo := &vconfig.VbftBlockInfo{}
 	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
-		return false, nil, fmt.Errorf("IsEpoch - unmarshal blockInfo error: %s", err)
+		return false, nil, fmt.Errorf("IsEpoch - unmarshal blockInfo error: %s", err.Error())
 	}
 	if hdr.NextBookkeeper == common.ADDRESS_EMPTY || blkInfo.NewChainConfig == nil {
 		return false, nil, nil
@@ -365,7 +365,7 @@ func (this *PolyManager) getPolyLastConfigBlockNum() (uint32, error) {
 	}
 	blkInfo := &vconfig.VbftBlockInfo{}
 	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
-		return 0, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err)
+		return 0, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err.Error())
 	}
 	return blkInfo.LastConfigBlockNum, nil
 }
@@ -373,7 +373,7 @@ func (this *PolyManager) getPolyLastConfigBlockNum() (uint32, error) {
 func (this *PolyManager) readBookKeeperPublicKeyBytes(hdr *polytypes.Header) ([]byte, error) {
 	blkInfo := &vconfig.VbftBlockInfo{}
 	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
-		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err)
+		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err.Error())
 	}
 	if hdr.NextBookkeeper == common.ADDRESS_EMPTY || blkInfo.NewChainConfig == nil {
 		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - blkInfo.NewChainConfig == nil")
