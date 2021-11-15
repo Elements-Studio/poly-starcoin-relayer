@@ -334,7 +334,21 @@ func (this *PolyManager) InitGenesis() error {
 		log.Errorf("InitGenesis - GetAccountSequenceNumber error:%s", err.Error())
 		return err
 	}
+
+	// fmt.Println("----------------- hdr --------------------")
+	// rawHdr := hdr.GetMessage()
+	// fmt.Println(len(rawHdr))
+	// fmt.Println(rawHdr)
+	// fmt.Println(hex.EncodeToString(rawHdr))
+	// fmt.Println("------------------ publickeys -------------------")
+	// fmt.Println(len(publickeys))
+	// fmt.Println(publickeys)
+	// fmt.Println(hex.EncodeToString(publickeys))
+	// fmt.Println("------------------ header.SigData -------------------")
+	// fmt.Println(hex.EncodeToString(encodeHeaderSigData(hdr)))
+	// fmt.Println("-----------------------------------------------------")
 	txPayload := stcpoly.EncodeInitGenesisTxPayload(this.config.StarcoinConfig.CCMModule, hdr.GetMessage(), publickeys)
+
 	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, seqNum)
 	if err != nil {
 		log.Errorf("InitGenesis - BuildRawUserTransaction error:%s", err.Error())
@@ -561,22 +575,17 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 // commitHeader
 func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList []byte) bool {
 	headerdata := header.GetMessage()
-	var (
-		// txData []byte
-		// txErr  error
-		sigs []byte
-	)
-	gasPrice, err := this.starcoinClient.GetGasUnitPrice(context.Background()) //this.ethClient.SuggestGasPrice(context.Background())
+	//var (
+	// txData []byte
+	// txErr  error
+	//sigs []byte
+	//)
+	sigs := encodeHeaderSigData(header)
 
+	gasPrice, err := this.starcoinClient.GetGasUnitPrice(context.Background()) //this.ethClient.SuggestGasPrice(context.Background())
 	if err != nil {
 		log.Errorf("changeBookKeeper - get suggest sas price failed error: %s", err.Error())
 		return false
-	}
-	for _, sig := range header.SigData {
-		temp := make([]byte, len(sig))
-		copy(temp, sig)
-		newsig, _ := signature.ConvertToEthCompatible(temp) //todo starcoin...
-		sigs = append(sigs, newsig...)
 	}
 
 	// txData, txErr = this.contractAbi.Pack("changeBookKeeper", headerdata, pubkList, sigs)
@@ -719,4 +728,15 @@ type StarcoinTxInfo struct {
 	//gasPrice int
 	//contractAddr ethcommon.Address
 	polyTxHash string
+}
+
+func encodeHeaderSigData(header *polytypes.Header) []byte {
+	var sigs []byte
+	for _, sig := range header.SigData {
+		temp := make([]byte, len(sig))
+		copy(temp, sig)
+		newsig, _ := signature.ConvertToEthCompatible(temp)
+		sigs = append(sigs, newsig...)
+	}
+	return sigs
 }
