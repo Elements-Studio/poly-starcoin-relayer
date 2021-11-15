@@ -346,6 +346,11 @@ func (this *PolyManager) InitGenesis() error {
 		return err
 	}
 	fmt.Println(txHash)
+	err = this.db.UpdatePolyHeight(blockNum)
+	if err != nil {
+		log.Errorf("InitGenesis - UpdatePolyHeight error:%s", err.Error())
+		return err
+	}
 	return nil
 }
 
