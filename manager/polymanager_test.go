@@ -11,6 +11,21 @@ import (
 )
 
 func TestInitGenersis(t *testing.T) {
+	polyManager := getTestPolyManager(t)
+	fmt.Println(polyManager)
+	//err := polyManager.InitGenesis(nil)
+	var height uint32 = 1319999
+	err := polyManager.InitGenesis(&height)
+	fmt.Println(err)
+}
+
+func TestGetPolyLastConfigBlockNumAtHeight(t *testing.T) {
+	polyManager := getTestPolyManager(t)
+	fmt.Println(polyManager)
+	polyManager.getPolyLastConfigBlockNumAtHeight(1319999)
+}
+
+func getTestPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-devnet.json")
 	fmt.Println(config)
 	polySdk := polysdk.NewPolySdk()
@@ -24,9 +39,7 @@ func TestInitGenersis(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	fmt.Println(polyManager)
-	err = polyManager.InitGenesis()
-	fmt.Println(err)
+	return polyManager
 }
 
 func setUpPoly(poly *polysdk.PolySdk, RpcAddr string) error {

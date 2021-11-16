@@ -70,7 +70,7 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 	// if err = ks.UnlockKeys(servCfg.ETHConfig); err != nil {
 	// 	return nil, err
 	// }
-	accArr := []string{} //config.StarcoinConfig.PrivateKeys
+	accArr := servCfg.StarcoinConfig.PrivateKeys
 	senders := make([]*StarcoinSender, len(accArr))
 	for i, v := range senders {
 		v = &StarcoinSender{}
@@ -277,7 +277,7 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 		return false, nil, fmt.Errorf("failed to get current epoch keepers: %v", err)
 	}
 
-	bookkeepers := this.readBookKeeperPublicKeys(blkInfo)
+	bookkeepers := readBookKeeperPublicKeys(blkInfo)
 	publickeys := make([]byte, 0)
 	sink := common.NewZeroCopySink(nil)
 	sink.WriteUint64(uint64(len(bookkeepers)))
@@ -292,39 +292,35 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 	return true, publickeys, nil
 }
 
-func (this *PolyManager) InitGenesis() error {
-	blockNum, err := this.getPolyLastConfigBlockNum()
+func (this *PolyManager) InitGenesis(height *uint32) error {
+	var cfgBlockNum uint32
+	var err error
+	if height == nil {
+		cfgBlockNum, err = this.getPolyLastConfigBlockNum()
+	} else {
+		cfgBlockNum, err = this.getPolyLastConfigBlockNumAtHeight(*height)
+	}
 	if err != nil {
 		log.Errorf("InitGenesis - getPolyLastConfigBlockNum error")
 		return err
 	}
-	hdr, err := this.polySdk.GetHeaderByHeight(blockNum)
+	hdr, err := this.polySdk.GetHeaderByHeight(cfgBlockNum)
 	if err != nil {
 		return err
 	}
-	publickeys, err := this.readBookKeeperPublicKeyBytes(hdr)
+	publickeys, err := readBookKeeperPublicKeyBytes(hdr)
 	if err != nil {
 		log.Errorf("InitGenesis - readBookKeeperPublicKeyBytes error")
 		return err
 	}
 	fmt.Println(publickeys) // todo remove this
-	senderpk := this.config.StarcoinConfig.PrivateKeys[0]
-	var sender string // := "0x2d81a0427d64ff61b11ede9085efa5ad"
-	for k := range senderpk {
-		sender = k
-		break
-	}
-	senderPrivateKey, err := tools.HexToBytes(senderpk[sender])
-	if err != nil {
-		log.Errorf("InitGenesis - Convert hex to bytes error:%s", err.Error())
-		return err
-	}
-	senderAddress, err := stcclient.ToAccountAddress(sender)
+	senderAndPK := this.config.StarcoinConfig.PrivateKeys[0]
+	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(senderAndPK)
 	if err != nil {
 		log.Errorf("InitGenesis - Convert string to AccountAddress error:%s", err.Error())
 		return err
 	}
-	seqNum, err := this.starcoinClient.GetAccountSequenceNumber(context.Background(), sender)
+	seqNum, err := this.starcoinClient.GetAccountSequenceNumber(context.Background(), tools.EncodeToHex(senderAddress[:]))
 	if err != nil {
 		log.Errorf("InitGenesis - GetAccountSequenceNumber error:%s", err.Error())
 		return err
@@ -334,19 +330,18 @@ func (this *PolyManager) InitGenesis() error {
 		log.Errorf("InitGenesis - GetAccountSequenceNumber error:%s", err.Error())
 		return err
 	}
-
-	// fmt.Println("----------------- hdr --------------------")
-	// rawHdr := hdr.GetMessage()
-	// fmt.Println(len(rawHdr))
-	// fmt.Println(rawHdr)
-	// fmt.Println(hex.EncodeToString(rawHdr))
-	// fmt.Println("------------------ publickeys -------------------")
-	// fmt.Println(len(publickeys))
-	// fmt.Println(publickeys)
-	// fmt.Println(hex.EncodeToString(publickeys))
-	// fmt.Println("------------------ header.SigData -------------------")
-	// fmt.Println(hex.EncodeToString(encodeHeaderSigData(hdr)))
-	// fmt.Println("-----------------------------------------------------")
+	fmt.Println("----------------- hdr --------------------")
+	rawHdr := hdr.GetMessage()
+	fmt.Println(len(rawHdr))
+	fmt.Println(rawHdr)
+	fmt.Println(hex.EncodeToString(rawHdr))
+	fmt.Println("------------------ publickeys -------------------")
+	fmt.Println(len(publickeys))
+	fmt.Println(publickeys)
+	fmt.Println(hex.EncodeToString(publickeys))
+	fmt.Println("------------------ header.SigData -------------------")
+	fmt.Println(hex.EncodeToString(encodeHeaderSigData(hdr)))
+	fmt.Println("-----------------------------------------------------")
 	txPayload := stcpoly.EncodeInitGenesisTxPayload(this.config.StarcoinConfig.CCMModule, hdr.GetMessage(), publickeys)
 
 	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, seqNum)
@@ -360,7 +355,7 @@ func (this *PolyManager) InitGenesis() error {
 		return err
 	}
 	fmt.Println(txHash)
-	err = this.db.UpdatePolyHeight(blockNum)
+	err = this.db.UpdatePolyHeight(cfgBlockNum)
 	if err != nil {
 		log.Errorf("InitGenesis - UpdatePolyHeight error:%s", err.Error())
 		return err
@@ -373,6 +368,10 @@ func (this *PolyManager) getPolyLastConfigBlockNum() (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
+	return this.getPolyLastConfigBlockNumAtHeight(height)
+}
+
+func (this *PolyManager) getPolyLastConfigBlockNumAtHeight(height uint32) (uint32, error) {
 	hdr, err := this.polySdk.GetHeaderByHeight(height)
 	if err != nil {
 		return 0, err
@@ -381,35 +380,9 @@ func (this *PolyManager) getPolyLastConfigBlockNum() (uint32, error) {
 	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
 		return 0, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err.Error())
 	}
+	fmt.Printf("---------------- LastConfigBlockNum at %d -----------------\n", height)
+	fmt.Println(blkInfo.LastConfigBlockNum)
 	return blkInfo.LastConfigBlockNum, nil
-}
-
-func (this *PolyManager) readBookKeeperPublicKeyBytes(hdr *polytypes.Header) ([]byte, error) {
-	blkInfo := &vconfig.VbftBlockInfo{}
-	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
-		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err.Error())
-	}
-	if hdr.NextBookkeeper == common.ADDRESS_EMPTY || blkInfo.NewChainConfig == nil {
-		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - blkInfo.NewChainConfig == nil")
-	}
-	bookkeepers := this.readBookKeeperPublicKeys(blkInfo)
-	publickeys := make([]byte, 0)
-	for _, key := range bookkeepers {
-		raw := tools.GetNoCompresskey(key)
-		publickeys = append(publickeys, raw...)
-	}
-	return publickeys, nil
-}
-
-func (this *PolyManager) readBookKeeperPublicKeys(blkInfo *vconfig.VbftBlockInfo) []keypair.PublicKey {
-	var bookkeepers []keypair.PublicKey
-	for _, peer := range blkInfo.NewChainConfig.Peers {
-		keystr, _ := hex.DecodeString(peer.ID)
-		key, _ := keypair.DeserializePublicKey(keystr)
-		bookkeepers = append(bookkeepers, key)
-	}
-	bookkeepers = keypair.SortPublicKeys(bookkeepers)
-	return bookkeepers
 }
 
 func (this *PolyManager) findCurEpochStartHeight() uint32 {
@@ -701,6 +674,54 @@ func (this *StarcoinSender) Balance() (*big.Int, error) {
 	return balance, nil
 }
 
+type StarcoinTxInfo struct {
+	//txData   []byte
+	txPayload diemtypes.TransactionPayload
+	//gasLimit  uint64
+	//gasPrice int
+	//contractAddr ethcommon.Address
+	polyTxHash string
+}
+
+func readBookKeeperPublicKeyBytes(hdr *polytypes.Header) ([]byte, error) {
+	blkInfo := &vconfig.VbftBlockInfo{}
+	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
+		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err.Error())
+	}
+	if hdr.NextBookkeeper == common.ADDRESS_EMPTY || blkInfo.NewChainConfig == nil {
+		return nil, fmt.Errorf("readBookKeeperPublicKeyBytes - blkInfo.NewChainConfig == nil")
+	}
+	bookkeepers := readBookKeeperPublicKeys(blkInfo)
+	publickeys := make([]byte, 0)
+	for _, key := range bookkeepers {
+		raw := tools.GetNoCompresskey(key)
+		publickeys = append(publickeys, raw...)
+	}
+	return publickeys, nil
+}
+
+func readBookKeeperPublicKeys(blkInfo *vconfig.VbftBlockInfo) []keypair.PublicKey {
+	var bookkeepers []keypair.PublicKey
+	for _, peer := range blkInfo.NewChainConfig.Peers {
+		keystr, _ := hex.DecodeString(peer.ID)
+		key, _ := keypair.DeserializePublicKey(keystr)
+		bookkeepers = append(bookkeepers, key)
+	}
+	bookkeepers = keypair.SortPublicKeys(bookkeepers)
+	return bookkeepers
+}
+
+func encodeHeaderSigData(header *polytypes.Header) []byte {
+	var sigs []byte
+	for _, sig := range header.SigData {
+		temp := make([]byte, len(sig))
+		copy(temp, sig)
+		newsig, _ := signature.ConvertToEthCompatible(temp)
+		sigs = append(sigs, newsig...)
+	}
+	return sigs
+}
+
 // func (this *StarcoinSender) waitTransactionConfirm(polyTxHash string, hash ethcommon.Hash) bool { //todo starcoin...
 // 	for {
 // 		time.Sleep(time.Second * 1)
@@ -720,23 +741,3 @@ func (this *StarcoinSender) Balance() (*big.Int, error) {
 // 		}
 // 	}
 // }
-
-type StarcoinTxInfo struct {
-	//txData   []byte
-	txPayload diemtypes.TransactionPayload
-	//gasLimit  uint64
-	//gasPrice int
-	//contractAddr ethcommon.Address
-	polyTxHash string
-}
-
-func encodeHeaderSigData(header *polytypes.Header) []byte {
-	var sigs []byte
-	for _, sig := range header.SigData {
-		temp := make([]byte, len(sig))
-		copy(temp, sig)
-		newsig, _ := signature.ConvertToEthCompatible(temp)
-		sigs = append(sigs, newsig...)
-	}
-	return sigs
-}
