@@ -208,7 +208,7 @@ func (this *StarcoinManager) handleNewBlock(height uint64) bool {
 		log.Errorf("StarcoinManager.handleNewBlock - handleBlockHeader on height :%d failed", height)
 		return false
 	}
-	ret = this.fetchLockDepositEvents(height, this.client)
+	ret = this.fetchLockDepositEvents(height)
 	if !ret {
 		log.Errorf("StarcoinManager.handleNewBlock - fetchLockDepositEvents on height :%d failed", height)
 	}
@@ -237,7 +237,7 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	return true
 }
 
-func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stcclient.StarcoinClient) bool {
+func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 	// lockAddress := ethcommon.HexToAddress(this.config.StarcoinConfig.ECCMContractAddress)
 	// lockContract, err := eccm_abi.NewEthCrossChainManager(lockAddress, client)
 	// if err != nil {
@@ -249,7 +249,8 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 	// 	Context: context.Background(),
 	// }
 	eventFilter := &stcclient.EventFilter{
-		Address:   this.config.StarcoinConfig.CrossChainEventAddress, //todo filter this address???
+		Address:   []string{this.config.StarcoinConfig.CrossChainEventAddress},
+		TypeTags:  []string{this.config.StarcoinConfig.CrossChainEventTypeTag}, //todo config this???
 		FromBlock: height,
 		ToBlock:   &height,
 	}
@@ -267,28 +268,51 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 
 	for _, evt := range events {
 		//evt := events.Event
-		evtData, err := hex.DecodeString(evt.Data)
+		//fmt.Println(evt)
+		evtData, err := tools.HexToBytes(evt.Data)
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - hex.DecodeString error :%s", err.Error())
 			return false
 		}
-		ccDepositEvt, err := stcpolyevts.BcsDeserializeCrossChainEvent(evtData)
+		ccEvent, err := stcpolyevts.BcsDeserializeCrossChainEvent(evtData)
+		// // Fire the cross chain event denoting there is a cross chain request from Ethereum network to other public chains through Poly chain network
+		// emit CrossChainEvent(tx.origin, paramTxHash, msg.sender, toChainId, toContract, rawParam);
+		// // event CrossChainEvent(
+		// //     address indexed sender,
+		// //     bytes txId,                      // transaction hash
+		// //     address proxyOrAssetContract,    // msg.sender
+		// //     uint64 toChainId,
+		// //     bytes toContract,
+		// //     bytes rawdata
+		// // );
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - BcsDeserializeCrossChainDepositEvent error :%s", err.Error())
 			return false
 		}
 		var isTarget bool
-		if len(this.config.TargetContracts) > 0 {
-			var toContractStr string //todo toContractStr := ccDepositEvt.ProxyOrAssetContract.String()
-			for _, v := range this.config.TargetContracts {
-				toChainIdArr, ok := v[toContractStr]
+		if len(this.config.ProxyOrAssetContracts) > 0 {
+			fmt.Println(tools.EncodeToHex(ccEvent.Sender))
+			fmt.Println("---------------- ProxyOrAssetContract -----------------")
+			fmt.Println(tools.EncodeToHex(ccEvent.ProxyOrAssetContract))
+			fmt.Println("---------------- TxId(hash) -----------------")
+			fmt.Println(tools.EncodeToHex(ccEvent.TxId))
+			fmt.Println("---------------- ToChainId -----------------")
+			fmt.Println(ccEvent.ToChainId)
+			fmt.Println("---------------- ToContract -----------------")
+			fmt.Println(string(ccEvent.ToContract))
+			fmt.Println("---------------- RawData -----------------")
+			fmt.Println(tools.EncodeToHex(ccEvent.RawData))
+			//var proxyOrAssetContract string
+			proxyOrAssetContract := tools.EncodeToHex(ccEvent.ProxyOrAssetContract)
+			for _, v := range this.config.ProxyOrAssetContracts { // rename TargetContracts
+				chainIdArrMap, ok := v[proxyOrAssetContract]
 				if ok {
-					if len(toChainIdArr["outbound"]) == 0 {
+					if len(chainIdArrMap["outbound"]) == 0 {
 						isTarget = true
 						break
 					}
-					for _, id := range toChainIdArr["outbound"] {
-						if id == ccDepositEvt.ToChainId { // todo is this OK??
+					for _, id := range chainIdArrMap["outbound"] {
+						if id == ccEvent.ToChainId { // todo is this OK??
 							isTarget = true
 							break
 						}
@@ -303,7 +327,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 			}
 		}
 		param := &common2.MakeTxParam{}
-		_ = param.Deserialization(common.NewZeroCopySource([]byte(ccDepositEvt.RawData)))
+		_ = param.Deserialization(common.NewZeroCopySource([]byte(ccEvent.RawData)))
 		raw, _ := this.polySdk.GetStorage(autils.CrossChainManagerContractAddress.ToHexString(),
 			append(append([]byte(cross_chain_manager.DONE_TX), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), param.CrossChainID...))
 		if len(raw) != 0 {
@@ -312,7 +336,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 			continue
 		}
 		index := big.NewInt(0)
-		index.SetBytes(ccDepositEvt.TxId)
+		index.SetBytes(ccEvent.TxId)
 		txHash, err := tools.HexWithPrefixToBytes(evt.TransactionHash)
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - tools.HexWithPrefixToBytes error: %s", err.Error())
@@ -321,8 +345,8 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64, client *stccl
 		crossTx := &CrossTransfer{
 			txIndex: tools.EncodeBigInt(index),
 			txId:    txHash,
-			toChain: uint32(ccDepositEvt.ToChainId),
-			value:   []byte(ccDepositEvt.RawData),
+			toChain: uint32(ccEvent.ToChainId),
+			value:   []byte(ccEvent.RawData),
 			height:  height,
 		}
 		sink := common.NewZeroCopySink(nil)

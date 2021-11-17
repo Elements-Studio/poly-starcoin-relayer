@@ -212,10 +212,10 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					continue
 				}
 				var isTarget bool
-				if len(this.config.TargetContracts) > 0 {
+				if len(this.config.ProxyOrAssetContracts) > 0 {
 					//toContractStr := ethcommon.BytesToAddress(param.MakeTxParam.ToContractAddress).String()
 					toContractStr := string(param.MakeTxParam.ToContractAddress) //todo starcoin module(address and name)?...
-					for _, v := range this.config.TargetContracts {
+					for _, v := range this.config.ProxyOrAssetContracts {
 						toChainIdArr, ok := v[toContractStr]
 						if ok {
 							if len(toChainIdArr["inbound"]) == 0 {
@@ -293,8 +293,10 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 }
 
 func (this *PolyManager) InitGenesis(height *uint32) error {
-	var cfgBlockNum uint32
-	var err error
+	var (
+		cfgBlockNum uint32
+		err         error
+	)
 	if height == nil {
 		cfgBlockNum, err = this.getPolyLastConfigBlockNum()
 	} else {
@@ -313,7 +315,7 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 		log.Errorf("InitGenesis - readBookKeeperPublicKeyBytes error")
 		return err
 	}
-	fmt.Println(publickeys) // todo remove this
+	//fmt.Println(publickeys)
 	senderAndPK := this.config.StarcoinConfig.PrivateKeys[0]
 	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(senderAndPK)
 	if err != nil {
@@ -330,18 +332,18 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 		log.Errorf("InitGenesis - GetAccountSequenceNumber error:%s", err.Error())
 		return err
 	}
-	fmt.Println("----------------- hdr --------------------")
+	fmt.Println("---------------------- hdr ----------------------")
 	rawHdr := hdr.GetMessage()
-	fmt.Println(len(rawHdr))
-	fmt.Println(rawHdr)
+	//fmt.Println(len(rawHdr))
+	//fmt.Println(rawHdr)
 	fmt.Println(hex.EncodeToString(rawHdr))
 	fmt.Println("------------------ publickeys -------------------")
-	fmt.Println(len(publickeys))
-	fmt.Println(publickeys)
+	//fmt.Println(len(publickeys))
+	//fmt.Println(publickeys)
 	fmt.Println(hex.EncodeToString(publickeys))
-	fmt.Println("------------------ header.SigData -------------------")
+	fmt.Println("---------------- header.SigData ------------------")
 	fmt.Println(hex.EncodeToString(encodeHeaderSigData(hdr)))
-	fmt.Println("-----------------------------------------------------")
+	fmt.Println("--------------------------------------------------")
 	txPayload := stcpoly.EncodeInitGenesisTxPayload(this.config.StarcoinConfig.CCMModule, hdr.GetMessage(), publickeys)
 
 	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, seqNum)
@@ -354,6 +356,7 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 		log.Errorf("InitGenesis - SubmitTransaction error:%s", err.Error())
 		return err
 	}
+	fmt.Println("--------------- starcoin tx hash ----------------")
 	fmt.Println(txHash)
 	err = this.db.UpdatePolyHeight(cfgBlockNum)
 	if err != nil {

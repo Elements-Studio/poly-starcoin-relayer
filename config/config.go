@@ -40,12 +40,12 @@ const (
 )
 
 type ServiceConfig struct {
-	PolyConfig      *PolyConfig
-	StarcoinConfig  *StarcoinConfig
-	BoltDbPath      string
-	MySqlDSN        string
-	RoutineNum      int64
-	TargetContracts []map[string]map[string][]uint64
+	PolyConfig            *PolyConfig
+	StarcoinConfig        *StarcoinConfig
+	BoltDbPath            string
+	MySqlDSN              string
+	RoutineNum            int64
+	ProxyOrAssetContracts []map[string]map[string][]uint64
 }
 
 type PolyConfig struct {
@@ -61,6 +61,7 @@ type StarcoinConfig struct {
 	CCMModule              string //Cross Chain Data Module Id.
 	CCDModule              string //Cross Chain Manager Module Id.
 	CrossChainEventAddress string //Cross Chain Event Address
+	CrossChainEventTypeTag string
 	// KeyStorePath       string
 	// KeyStorePwdSet     map[string]string
 	PrivateKeys        []map[string]string

@@ -12,6 +12,23 @@ import (
 )
 
 func TestCommitHeader(t *testing.T) {
+	starcoinManager := getTestStarcoinManager(t)
+	fmt.Println(starcoinManager)
+	ok := starcoinManager.handleBlockHeader(1)
+	fmt.Println(ok)
+	fmt.Println(starcoinManager.header4sync)
+	//starcoinManager.commitHeader()
+	//fmt.Println("todo...")
+}
+
+func TestFetchLockDepositEvents(t *testing.T) {
+	starcoinManager := getTestStarcoinManager(t)
+	fmt.Println(starcoinManager)
+	ok := starcoinManager.fetchLockDepositEvents(4)
+	fmt.Println(ok)
+}
+
+func getTestStarcoinManager(t *testing.T) *StarcoinManager {
 	config := config.NewServiceConfig("../config-devnet.json")
 	fmt.Println(config)
 	polySdk := polysdk.NewPolySdk()
@@ -45,11 +62,5 @@ func TestCommitHeader(t *testing.T) {
 	//ignore this error:init - the genesis block has not synced!
 	starcoinManager.init()
 	// ---------------------------------------------------------------
-
-	fmt.Println(starcoinManager)
-	ok := starcoinManager.handleBlockHeader(1)
-	fmt.Println(ok)
-	fmt.Println(starcoinManager.header4sync)
-	//starcoinManager.commitHeader()
-	//fmt.Println("todo...")
+	return starcoinManager
 }
