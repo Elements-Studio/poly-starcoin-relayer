@@ -250,7 +250,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 	// }
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{this.config.StarcoinConfig.CrossChainEventAddress},
-		TypeTags:  []string{this.config.StarcoinConfig.CrossChainEventTypeTag}, //todo config this???
+		TypeTags:  []string{this.config.StarcoinConfig.CrossChainEventTypeTag}, // config this...
 		FromBlock: height,
 		ToBlock:   &height,
 	}
@@ -291,20 +291,21 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 		}
 		var isTarget bool
 		if len(this.config.ProxyOrAssetContracts) > 0 {
-			fmt.Println(tools.EncodeToHex(ccEvent.Sender))
+			// fmt.Println(tools.EncodeToHex(ccEvent.Sender))
 			fmt.Println("---------------- ProxyOrAssetContract -----------------")
-			fmt.Println(tools.EncodeToHex(ccEvent.ProxyOrAssetContract))
-			fmt.Println("---------------- TxId(hash) -----------------")
-			fmt.Println(tools.EncodeToHex(ccEvent.TxId))
-			fmt.Println("---------------- ToChainId -----------------")
-			fmt.Println(ccEvent.ToChainId)
+			fmt.Println(ccEvent.ProxyOrAssetContract)
+			fmt.Println(string(ccEvent.ProxyOrAssetContract)) //tools.EncodeToHex(ccEvent.ProxyOrAssetContract)
+			// fmt.Println("---------------- TxId(hash) -----------------")
+			// fmt.Println(tools.EncodeToHex(ccEvent.TxId))
+			// fmt.Println("---------------- ToChainId -----------------")
+			// fmt.Println(ccEvent.ToChainId)
 			fmt.Println("---------------- ToContract -----------------")
 			fmt.Println(string(ccEvent.ToContract))
-			fmt.Println("---------------- RawData -----------------")
-			fmt.Println(tools.EncodeToHex(ccEvent.RawData))
+			// fmt.Println("---------------- RawData -----------------")
+			// fmt.Println(tools.EncodeToHex(ccEvent.RawData))
 			//var proxyOrAssetContract string
-			proxyOrAssetContract := tools.EncodeToHex(ccEvent.ProxyOrAssetContract)
-			for _, v := range this.config.ProxyOrAssetContracts { // rename TargetContracts
+			proxyOrAssetContract := string(ccEvent.ProxyOrAssetContract) // for 'source' proxy contract, filter it's outbound chain Id.
+			for _, v := range this.config.ProxyOrAssetContracts {        // renamed TargetContracts
 				chainIdArrMap, ok := v[proxyOrAssetContract]
 				if ok {
 					if len(chainIdArrMap["outbound"]) == 0 {
@@ -312,7 +313,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 						break
 					}
 					for _, id := range chainIdArrMap["outbound"] {
-						if id == ccEvent.ToChainId { // todo is this OK??
+						if id == ccEvent.ToChainId {
 							isTarget = true
 							break
 						}

@@ -213,16 +213,16 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 				}
 				var isTarget bool
 				if len(this.config.ProxyOrAssetContracts) > 0 {
-					//toContractStr := ethcommon.BytesToAddress(param.MakeTxParam.ToContractAddress).String()
-					toContractStr := string(param.MakeTxParam.ToContractAddress) //todo starcoin module(address and name)?...
+					//proxyOrAssetContract := ethcommon.BytesToAddress(param.MakeTxParam.ToContractAddress).String()
+					proxyOrAssetContract := string(param.MakeTxParam.ToContractAddress) // starcoin module(address and name)...
 					for _, v := range this.config.ProxyOrAssetContracts {
-						toChainIdArr, ok := v[toContractStr]
+						chainIdArrMap, ok := v[proxyOrAssetContract]
 						if ok {
-							if len(toChainIdArr["inbound"]) == 0 {
+							if len(chainIdArrMap["inbound"]) == 0 {
 								isTarget = true
 								break
 							}
-							for _, id := range toChainIdArr["inbound"] {
+							for _, id := range chainIdArrMap["inbound"] {
 								if id == param.FromChainID {
 									isTarget = true
 									break
