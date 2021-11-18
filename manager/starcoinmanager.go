@@ -193,9 +193,17 @@ func (this *StarcoinManager) rollBackToCommAncestor() {
 			log.Errorf("rollBackToCommAncestor - failed to get header by number, so we wait for one second to retry: %v", err)
 			time.Sleep(time.Second)
 			this.currentHeight++
+			continue
 		}
-		if bytes.Equal(hdr.Hash(), raw) {
-			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(number: %d)", hex.EncodeToString(hdr.Hash()), this.currentHeight)
+		hdrhash, err := hdr.Hash()
+		if err != nil {
+			log.Errorf("rollBackToCommAncestor - failed to get header hash, so we wait for one second to retry: %v", err)
+			time.Sleep(time.Second)
+			this.currentHeight++
+			continue // todo is this ok??
+		}
+		if bytes.Equal(hdrhash, raw) {
+			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(number: %d)", hex.EncodeToString(hdrhash), this.currentHeight)
 			break
 		}
 	}
@@ -231,7 +239,12 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	rawHdr, _ := json.Marshal(hdr)
 	raw, _ := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
-	if len(raw) == 0 || !bytes.Equal(raw, hdr.Hash()) {
+	hdrhash, err := hdr.Hash()
+	if err != nil {
+		log.Errorf("handleBlockHeader - get header hash on height :%d failed", height)
+		return false
+	}
+	if len(raw) == 0 || !bytes.Equal(raw, hdrhash) {
 		this.header4sync = append(this.header4sync, rawHdr)
 	}
 	return true
