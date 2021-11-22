@@ -240,7 +240,7 @@ func (w *BoltDB) GetPolyHeight() (uint32, error) {
 	return h, nil
 }
 
-func (w *BoltDB) PutPolyTx(txHash string) (uint64, error) {
+func (w *BoltDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	return 0, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 

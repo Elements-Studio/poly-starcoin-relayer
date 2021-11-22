@@ -13,10 +13,25 @@ import (
 func TestInitGenersis(t *testing.T) {
 	polyManager := getTestPolyManager(t)
 	fmt.Println(polyManager)
-	//err := polyManager.InitGenesis(nil)
-	var height uint32 = 1319999
-	err := polyManager.InitGenesis(&height)
+	err := polyManager.InitGenesis(nil)
+	// var height uint32 = 1319999
+	// err := polyManager.InitGenesis(&height)
 	fmt.Println(err)
+}
+
+func TestHandleDepositEvents(t *testing.T) {
+	polyManager := getTestPolyManager(t)
+	fmt.Println(polyManager)
+	var height uint32 = 1088
+	err := polyManager.handleDepositEvents(height)
+	fmt.Println(err)
+}
+
+func TestGetPolyCurrentBlockHeight(t *testing.T) {
+	polyManager := getTestPolyManager(t)
+	fmt.Println(polyManager)
+	h, err := polyManager.polySdk.GetCurrentBlockHeight()
+	fmt.Println(h, err)
 }
 
 func TestGetPolyLastConfigBlockNumAtHeight(t *testing.T) {

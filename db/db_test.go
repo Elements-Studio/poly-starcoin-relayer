@@ -68,6 +68,19 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 func TestPutPolyTx(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
-	idx, _ := testDB.PutPolyTx(hex.EncodeToString(v))
-	fmt.Println(idx)
+	tx := PolyTx{
+		TxHash:       hex.EncodeToString(v),
+		Proof:        hex.EncodeToString(v),
+		Header:       hex.EncodeToString(v),
+		HeaderProof:  hex.EncodeToString(v),
+		AnchorHeader: hex.EncodeToString(v),
+		HeaderSig:    hex.EncodeToString(v),
+		RootHash:     hex.EncodeToString(v),
+		NonIncProof:  hex.EncodeToString(v),
+	}
+	idx, err := testDB.PutPolyTx(&tx) //hex.EncodeToString(v))
+	fmt.Println(idx, err)
+	if err != nil {
+		t.FailNow()
+	}
 }

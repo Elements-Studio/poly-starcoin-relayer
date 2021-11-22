@@ -497,6 +497,17 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 		rawAnchor = anchorHeader.GetMessage()
 	}
 	headerData = header.GetMessage()
+
+	// Solidity code:
+	//
+	// function verifyHeaderAndExecuteTx(
+	// 	bytes memory proof,
+	// 	bytes memory rawHeader,
+	// 	bytes memory headerProof,
+	// 	bytes memory curRawHeader,
+	// 	bytes memory headerSig //The coverted signature veriable for solidity derived from Poly chain consensus nodes' signature
+	// ) whenNotPaused public returns (bool){
+
 	// txData, err := this.contractAbi.Pack("verifyHeaderAndExecuteTx",
 	// 	rawAuditPath, // Poly chain tx merkle proof
 	// 	headerData,   // The header containing crossStateRoot to verify the above tx merkle proof
@@ -504,7 +515,12 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
 	// 	sigs)
 
-	txPayload := stcpoly.EncodeCCMVerifyHeaderAndExecuteTxPayload(this.config.StarcoinConfig.CCMModule, rawAuditPath, headerData, rawProof, rawAnchor, sigs)
+	txPayload := stcpoly.EncodeCCMVerifyHeaderAndExecuteTxPayload(this.config.StarcoinConfig.CCMModule,
+		rawAuditPath,
+		headerData,
+		rawProof,
+		rawAnchor,
+		sigs)
 
 	// if err != nil {
 	// 	log.Errorf("commitDepositEventsWithHeader - err:" + err.Error())

@@ -98,7 +98,7 @@ func DecodeScriptFunctionPayload(script diemtypes.TransactionPayload) (ScriptFun
 func EncodeChangeBookKeeperScriptFunction(raw_header []byte, pub_key_list []byte, sig_list []byte) diemtypes.TransactionPayload {
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
-			Module:   diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrosschainScript"},
+			Module:   diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrossChainScript"},
 			Function: "changeBookKeeper",
 			TyArgs:   []diemtypes.TypeTag{},
 			Args:     [][]byte{encode_u8vector_argument(raw_header), encode_u8vector_argument(pub_key_list), encode_u8vector_argument(sig_list)},
@@ -110,7 +110,7 @@ func EncodeChangeBookKeeperScriptFunction(raw_header []byte, pub_key_list []byte
 func EncodeInitGenesisScriptFunction(raw_header []byte, pub_key_list []byte) diemtypes.TransactionPayload {
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
-			Module:   diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrosschainScript"},
+			Module:   diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrossChainScript"},
 			Function: "init_genesis",
 			TyArgs:   []diemtypes.TypeTag{},
 			Args:     [][]byte{encode_u8vector_argument(raw_header), encode_u8vector_argument(pub_key_list)},
@@ -121,7 +121,7 @@ func EncodeInitGenesisScriptFunction(raw_header []byte, pub_key_list []byte) die
 func EncodeLockScriptFunction(token_type diemtypes.TypeTag, chain_type diemtypes.TypeTag, to_address []byte, amount serde.Uint128) diemtypes.TransactionPayload {
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
-			Module:   diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrosschainScript"},
+			Module:   diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrossChainScript"},
 			Function: "lock",
 			TyArgs:   []diemtypes.TypeTag{token_type, chain_type},
 			Args:     [][]byte{encode_u8vector_argument(to_address), encode_u128_argument(amount)},
@@ -132,7 +132,7 @@ func EncodeLockScriptFunction(token_type diemtypes.TypeTag, chain_type diemtypes
 func EncodeVerifyHeaderAndExecuteTxScriptFunction(proof []byte, raw_header []byte, header_proof []byte, cur_raw_header []byte, header_sig []byte) diemtypes.TransactionPayload {
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
-			Module:   diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrosschainScript"},
+			Module:   diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrossChainScript"},
 			Function: "verifyHeaderAndExecuteTx",
 			TyArgs:   []diemtypes.TypeTag{},
 			Args:     [][]byte{encode_u8vector_argument(proof), encode_u8vector_argument(raw_header), encode_u8vector_argument(header_proof), encode_u8vector_argument(cur_raw_header), encode_u8vector_argument(header_sig)},

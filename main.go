@@ -111,19 +111,24 @@ func startServer(ctx *cli.Context) {
 		return
 	}
 
-	var boltDB *db.BoltDB
-	if servConfig.BoltDbPath == "" {
-		boltDB, err = db.NewBoltDB("boltdb")
-	} else {
-		boltDB, err = db.NewBoltDB(servConfig.BoltDbPath)
-	}
+	// var boltDB *db.BoltDB
+	// if servConfig.BoltDbPath == "" {
+	// 	boltDB, err = db.NewBoltDB("boltdb")
+	// } else {
+	// 	boltDB, err = db.NewBoltDB(servConfig.BoltDbPath)
+	// }
+	// if err != nil {
+	// 	log.Fatalf("db.NewBoltDB error:%s", err.Error())
+	// 	return
+	// }
+	mysqldb, err := db.NewMySqlDB(servConfig.MySqlDSN)
 	if err != nil {
-		log.Fatalf("db.NewWaitingDB error:%s", err.Error())
+		log.Fatalf("db.NewMySqlDB error:%s", err.Error())
 		return
 	}
 
-	initPolyServer(servConfig, polySdk, &stcclient, boltDB)
-	initStarcoinServer(servConfig, polySdk, &stcclient, boltDB)
+	initPolyServer(servConfig, polySdk, &stcclient, mysqldb)
+	initStarcoinServer(servConfig, polySdk, &stcclient, mysqldb)
 	waitToExit()
 }
 

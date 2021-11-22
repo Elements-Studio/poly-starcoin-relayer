@@ -25,7 +25,8 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 		return nil, err
 	}
 	// Migrate the schema
-	db.AutoMigrate(&ChainHeight{}, &StarcoinTxRetry{}, &StarcoinTxCheck{}, &PolyTx{})
+	db.AutoMigrate(&ChainHeight{}, &StarcoinTxRetry{}, &StarcoinTxCheck{})
+	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{})
 
 	w := new(MySqlDB)
 	w.db = db
@@ -114,7 +115,7 @@ func (w *MySqlDB) GetPolyHeight() (uint32, error) {
 	return ch.Height, nil
 }
 
-func (w *MySqlDB) PutPolyTx(txHash string) (uint64, error) {
+func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	var lastTx PolyTx
 	var lastIndex uint64
 	err := w.db.Last(&lastTx).Error
@@ -127,11 +128,15 @@ func (w *MySqlDB) PutPolyTx(txHash string) (uint64, error) {
 	} else {
 		lastIndex = lastTx.TxIndex
 	}
-	tx := PolyTx{
-		TxIndex: lastIndex + 1,
-		TxHash:  txHash,
+	// tx := PolyTx{
+	// 	TxIndex: lastIndex + 1,
+	// 	TxHash:  txHash,
+	// }
+	tx.TxIndex = lastIndex + 1
+	err = w.db.Create(tx).Error
+	if err != nil {
+		return 0, err
 	}
-	err = w.db.Create(&tx).Error
 	return tx.TxIndex, err
 }
 

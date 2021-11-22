@@ -18,7 +18,7 @@ func ParseModuleId(str string) *diemtypes.ModuleId {
 	}
 	return &diemtypes.ModuleId{
 		Address: *addr,                       //[16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61},
-		Name:    diemtypes.Identifier(ss[1]), //"CrosschainScript",
+		Name:    diemtypes.Identifier(ss[1]), //"CrossChainScript",
 	}
 }
 
@@ -26,7 +26,7 @@ func EncodeCCMChangeBookKeeperTxPayload(module string, raw_header []byte, pub_ke
 	// copy from generated code:
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
-			Module:   *ParseModuleId(module), //diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrosschainScript"},
+			Module:   *ParseModuleId(module), //diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrossChainScript"},
 			Function: "changeBookKeeper",
 			TyArgs:   []diemtypes.TypeTag{},
 			Args:     [][]byte{encode_u8vector_argument(raw_header), encode_u8vector_argument(pub_key_list), encode_u8vector_argument(sig_list)},
@@ -38,7 +38,7 @@ func EncodeCCMVerifyHeaderAndExecuteTxPayload(module string, proof []byte, raw_h
 	// copy from generated code:
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
-			Module:   *ParseModuleId(module), //diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrosschainScript"},
+			Module:   *ParseModuleId(module), //diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrossChainScript"},
 			Function: "verifyHeaderAndExecuteTx",
 			TyArgs:   []diemtypes.TypeTag{},
 			Args:     [][]byte{encode_u8vector_argument(proof), encode_u8vector_argument(raw_header), encode_u8vector_argument(header_proof), encode_u8vector_argument(cur_raw_header), encode_u8vector_argument(header_sig)},

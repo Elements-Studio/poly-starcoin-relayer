@@ -24,7 +24,7 @@ func TestCommitHeader(t *testing.T) {
 func TestFetchLockDepositEvents(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	fmt.Println(starcoinManager)
-	ok := starcoinManager.fetchLockDepositEvents(4)
+	ok := starcoinManager.fetchLockDepositEvents(777)
 	fmt.Println(ok)
 }
 
