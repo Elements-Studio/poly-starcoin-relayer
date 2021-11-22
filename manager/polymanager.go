@@ -83,6 +83,7 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 		// v.contractAbi = &contractabi
 		v.seqNumManager = tools.NewSeqNumManager(stcclient)
 		v.cmap = make(map[string]chan *StarcoinTxInfo)
+		v.db = db
 		senders[i] = v
 	}
 
@@ -441,6 +442,7 @@ type StarcoinSender struct {
 	acc            tools.StarcoinAccount
 	config         *config.ServiceConfig
 	cmap           map[string]chan *StarcoinTxInfo
+	db             db.DB
 }
 
 // type EthSender struct {
@@ -515,17 +517,61 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
 	// 	sigs)
 
+	polyTx := db.PolyTx{
+		TxHash:       polyTxHash,
+		Proof:        hex.EncodeToString(rawAuditPath),
+		Header:       hex.EncodeToString(headerData),
+		HeaderProof:  hex.EncodeToString(rawProof),
+		AnchorHeader: hex.EncodeToString(rawAnchor),
+		HeaderSig:    hex.EncodeToString(sigs),
+		RootHash:     "", //todo
+		NonIncProof:  "", //todo
+	}
+	_, err := this.db.PutPolyTx(&polyTx)
+	if err != nil {
+		log.Errorf("commitDepositEventsWithHeader - db.PutPolyTx error: %s", err.Error())
+		return false
+	}
+
+	//todo ???
+	return this.sendPolyTxToStarcoin(&polyTx)
+}
+
+func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
+	polyTxHash := polyTx.TxHash
+
+	rawAuditPath, err := hex.DecodeString(polyTx.Proof)
+	if err != nil {
+		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		return false
+	}
+	headerData, err := hex.DecodeString(polyTx.Header)
+	if err != nil {
+		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		return false
+	}
+	rawProof, err := hex.DecodeString(polyTx.HeaderProof)
+	if err != nil {
+		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		return false
+	}
+	rawAnchor, err := hex.DecodeString(polyTx.AnchorHeader)
+	if err != nil {
+		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		return false
+	}
+	sigs, err := hex.DecodeString(polyTx.HeaderSig)
+	if err != nil {
+		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		return false
+	}
+
 	txPayload := stcpoly.EncodeCCMVerifyHeaderAndExecuteTxPayload(this.config.StarcoinConfig.CCMModule,
 		rawAuditPath,
 		headerData,
 		rawProof,
 		rawAnchor,
 		sigs)
-
-	// if err != nil {
-	// 	log.Errorf("commitDepositEventsWithHeader - err:" + err.Error())
-	// 	return false
-	// }
 
 	// contractaddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCMContractAddress)
 	// callMsg := ethereum.CallMsg{

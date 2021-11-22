@@ -6,7 +6,6 @@ import (
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
-	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
@@ -40,27 +39,27 @@ func getTestStarcoinManager(t *testing.T) *StarcoinManager {
 	}
 	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
 	config.PolyConfig.WalletFile = "../../../polynetwork/poly/wallet.dat"
-	// starcoinManager, err := NewStarcoinManager(config, 0, 0, polySdk, &starcoinClient, db)
-	// if err != nil {
-	// 	fmt.Println("NewStarcoinManager() error:" + err.Error())
-	// 	t.FailNow()
-	// }
-	// ---------------------------------------------------------------
-	starcoinManager := &StarcoinManager{
-		config:        config,
-		exitChan:      make(chan int),
-		currentHeight: 1,
-		forceHeight:   1,
-		restClient:    tools.NewRestClient(),
-		client:        &starcoinClient,
-		polySdk:       polySdk,
-		//polySigner:    signer,
-		header4sync: make([][]byte, 0),
-		//crosstx4sync:  make([]*CrossTransfer, 0),
-		db: db,
+	starcoinManager, err := NewStarcoinManager(config, 0, 0, polySdk, &starcoinClient, db)
+	if err != nil {
+		fmt.Println("NewStarcoinManager() error:" + err.Error())
+		t.FailNow()
 	}
-	//ignore this error:init - the genesis block has not synced!
-	starcoinManager.init()
+	// ---------------------------------------------------------------
+	// starcoinManager := &StarcoinManager{
+	// 	config:        config,
+	// 	exitChan:      make(chan int),
+	// 	currentHeight: 1,
+	// 	forceHeight:   1,
+	// 	restClient:    tools.NewRestClient(),
+	// 	client:        &starcoinClient,
+	// 	polySdk:       polySdk,
+	// 	//polySigner:    signer,
+	// 	header4sync: make([][]byte, 0),
+	// 	//crosstx4sync:  make([]*CrossTransfer, 0),
+	// 	db: db,
+	// }
+	// //ignore this error:init - the genesis block has not synced!
+	// starcoinManager.init()
 	// ---------------------------------------------------------------
 	return starcoinManager
 }

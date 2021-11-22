@@ -11,6 +11,8 @@ import (
 )
 
 func TestInitGenersis(t *testing.T) {
+	// Poly devnet:
+	// http://138.91.6.226:40336
 	polyManager := getTestPolyManager(t)
 	fmt.Println(polyManager)
 	err := polyManager.InitGenesis(nil)
