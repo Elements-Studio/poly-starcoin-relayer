@@ -308,14 +308,14 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 			fmt.Println("---------------- ProxyOrAssetContract -----------------")
 			fmt.Println(ccEvent.ProxyOrAssetContract)
 			fmt.Println(string(ccEvent.ProxyOrAssetContract)) //tools.EncodeToHex(ccEvent.ProxyOrAssetContract)
-			// fmt.Println("---------------- TxId(hash) -----------------")
-			// fmt.Println(tools.EncodeToHex(ccEvent.TxId))
-			// fmt.Println("---------------- ToChainId -----------------")
-			// fmt.Println(ccEvent.ToChainId)
+			fmt.Println("---------------- TxId(hash) -----------------")
+			fmt.Println(tools.EncodeToHex(ccEvent.TxId))
+			fmt.Println("---------------- ToChainId -----------------")
+			fmt.Println(ccEvent.ToChainId)
 			fmt.Println("---------------- ToContract -----------------")
 			fmt.Println(string(ccEvent.ToContract))
-			// fmt.Println("---------------- RawData -----------------")
-			// fmt.Println(tools.EncodeToHex(ccEvent.RawData))
+			fmt.Println("---------------- RawData -----------------")
+			fmt.Println(tools.EncodeToHex(ccEvent.RawData))
 			//var proxyOrAssetContract string
 			proxyOrAssetContract := string(ccEvent.ProxyOrAssetContract) // for 'source' proxy contract, filter it's outbound chain Id.
 			for _, v := range this.config.ProxyOrAssetContracts {        // renamed TargetContracts
@@ -357,10 +357,10 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 			return false
 		}
 		crossTx := &CrossTransfer{
-			txIndex: tools.EncodeBigInt(index),
-			txId:    txHash,
+			txIndex: tools.EncodeBigInt(index), // tools.EncodeBigInt(ccEvent.TxId to big.Int),
+			txId:    txHash,                    // starcoin tx hash
 			toChain: uint32(ccEvent.ToChainId),
-			value:   []byte(ccEvent.RawData),
+			value:   ccEvent.RawData,
 			height:  height,
 		}
 		sink := common.NewZeroCopySink(nil)
@@ -368,6 +368,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 		err = this.db.PutStarcoinTxRetry(sink.Bytes())
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - this.db.PutStarcoinTxRetry error: %s", err.Error())
+			return false
 		}
 		log.Infof("fetchLockDepositEvent -  height: %d", height)
 	}
@@ -399,9 +400,18 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		return fmt.Errorf("handleLockDepositEvents - this.db.GetAllStarcoinTxRetry error: %s", err.Error())
 	}
 	for _, v := range retryList {
+		fmt.Println("------------------------ event from retry list ----------------------------")
+		fmt.Println(hex.EncodeToString(v)) //todo remove this
 		time.Sleep(time.Second * 1)
 		crosstx := new(CrossTransfer)
 		err := crosstx.Deserialization(common.NewZeroCopySource(v))
+		fmt.Println("------------------------ crosstx deserialized ----------------------------")
+		fmt.Printf("crosstx.height: %d\n", crosstx.height) //todo remove this
+		fmt.Printf("crosstx.toChain: %d\n", crosstx.toChain)
+		fmt.Println("crosstx.txIndex: " + crosstx.txIndex + " // tools.EncodeBigInt(ccEvent.TxId to big.Int)")
+		fmt.Println("crosstx.txId: " + hex.EncodeToString(crosstx.txId) + " // starcoin tx hash")
+		fmt.Println("crosstx.value: " + hex.EncodeToString(crosstx.value))
+
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - retry.Deserialization error: %s", err.Error())
 			continue
@@ -422,8 +432,8 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		//proofKey := hexutil.Encode(keyBytes)
 		//2. get proof
 		//todo starcoin GetProof...
-		fmt.Println(heightHex) //todo remove this line
-		var proof []byte
+		fmt.Println(heightHex)             //todo remove this line
+		var proof []byte = []byte("{}")[:] //todo get proof from chain RPC...
 		// proof, err := tools.GetProof(this.config.StarcoinConfig.RestURL, this.config.StarcoinConfig.CCDContractAddress, proofKey, heightHex, this.restClient)
 		// if err != nil {
 		// 	log.Errorf("handleLockDepositEvents - error :%s\n", err.Error())
@@ -436,11 +446,14 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 				log.Infof("handleLockDepositEvents - invokeNativeContract error: %s", err.Error())
 				continue
 			} else {
-				if err := this.db.DeleteStarcoinTxRetry(v); err != nil {
-					log.Errorf("handleLockDepositEvents - this.db.DeleteStarcoinTxRetry error: %s", err.Error())
-				}
+				// if err := this.db.DeleteStarcoinTxRetry(v); err != nil {
+				// 	log.Errorf("handleLockDepositEvents - this.db.DeleteStarcoinTxRetry error: %s", err.Error())
+				// }
 				if strings.Contains(err.Error(), "tx already done") {
 					log.Debugf("handleLockDepositEvents - starcoin_tx %s already on poly", tools.EncodeToHex(crosstx.txId))
+					if err := this.db.DeleteStarcoinTxRetry(v); err != nil {
+						log.Errorf("handleLockDepositEvents - this.db.DeleteStarcoinTxRetry error: %s", err.Error())
+					}
 				} else {
 					log.Errorf("handleLockDepositEvents - invokeNativeContract error for starcoin_tx %s: %s", tools.EncodeToHex(crosstx.txId), err)
 				}

@@ -36,6 +36,16 @@ func TestFetchLockDepositEvents(t *testing.T) {
 	fmt.Println(starcoinManager)
 	ok := starcoinManager.fetchLockDepositEvents(777)
 	fmt.Println(ok)
+
+	rl, err := starcoinManager.db.GetAllStarcoinTxRetry()
+	fmt.Println(len(rl))
+	fmt.Println(rl)
+	fmt.Println(err)
+}
+
+func TestMisc(t *testing.T) {
+	var proof []byte = []byte("{}")[:]
+	fmt.Print(proof)
 }
 
 func getTestStarcoinManager(t *testing.T) *StarcoinManager {

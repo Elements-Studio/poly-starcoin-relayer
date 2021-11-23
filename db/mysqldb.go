@@ -83,7 +83,7 @@ func (w *MySqlDB) GetAllStarcoinTxRetry() ([][]byte, error) {
 	if err := w.db.Find(&list).Error; err != nil {
 		return nil, err
 	}
-	m := make([][]byte, len(list))
+	m := make([][]byte, 0, len(list))
 	for _, v := range list {
 		bs, _ := hex.DecodeString(v.TxData)
 		m = append(m, bs)
