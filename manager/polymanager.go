@@ -340,7 +340,7 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 	fmt.Println(hex.EncodeToString(rawHdr))
 	fmt.Println("------------------ publickeys -------------------")
 	//fmt.Println(len(publickeys))
-	//fmt.Println(publickeys)
+	fmt.Println(publickeys)
 	fmt.Println(hex.EncodeToString(publickeys))
 	fmt.Println("---------------- header.SigData ------------------")
 	fmt.Println(hex.EncodeToString(encodeHeaderSigData(hdr)))

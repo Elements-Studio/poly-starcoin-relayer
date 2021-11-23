@@ -10,14 +10,25 @@ import (
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
+func TestFindSyncedHeight(t *testing.T) {
+	starcoinManager := getTestStarcoinManager(t)
+	fmt.Println(starcoinManager)
+	h := starcoinManager.findSyncedHeight()
+	fmt.Println(h) // 66856
+}
+
 func TestCommitHeader(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	fmt.Println(starcoinManager)
-	ok := starcoinManager.handleBlockHeader(1)
+	ok := starcoinManager.handleBlockHeader(66857)
 	fmt.Println(ok)
 	fmt.Println(starcoinManager.header4sync)
-	//starcoinManager.commitHeader()
-	//fmt.Println("todo...")
+	r := starcoinManager.commitHeader()
+	// 0 for ok
+	fmt.Println(r)
+	if r != 0 {
+		t.FailNow()
+	}
 }
 
 func TestFetchLockDepositEvents(t *testing.T) {
