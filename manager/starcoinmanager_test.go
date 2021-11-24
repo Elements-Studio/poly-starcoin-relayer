@@ -14,16 +14,19 @@ func TestFindSyncedHeight(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	fmt.Println(starcoinManager)
 	h := starcoinManager.findSyncedHeight()
+	fmt.Println("------------------- findSyncedHeight ------------------")
 	fmt.Println(h) // 66856
 }
 
 func TestCommitHeader(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	fmt.Println(starcoinManager)
-	ok := starcoinManager.handleBlockHeader(66857)
+	ok := starcoinManager.handleBlockHeader(67859)
 	fmt.Println(ok)
+	fmt.Println("-------------------- header4sync --------------------")
 	fmt.Println(starcoinManager.header4sync)
 	r := starcoinManager.commitHeader()
+	fmt.Println("-------------------- header4sync result --------------------")
 	// 0 for ok
 	fmt.Println(r)
 	if r != 0 {
@@ -34,7 +37,7 @@ func TestCommitHeader(t *testing.T) {
 func TestFetchLockDepositEvents(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	fmt.Println(starcoinManager)
-	ok := starcoinManager.fetchLockDepositEvents(777)
+	ok := starcoinManager.fetchLockDepositEvents(70007)
 	fmt.Println(ok)
 
 	rl, err := starcoinManager.db.GetAllStarcoinTxRetry()

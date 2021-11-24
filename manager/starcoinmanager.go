@@ -108,7 +108,8 @@ func (this *StarcoinManager) init() error {
 }
 
 func (this *StarcoinManager) MonitorChain() {
-	fetchBlockTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
+	fetchBlockTicker := time.NewTicker(200 * time.Millisecond) //todo
+	//fetchBlockTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
 	var blockHandleResult bool
 	for {
 		select {
@@ -140,7 +141,12 @@ func (this *StarcoinManager) MonitorChain() {
 					}
 				}
 			}
+			fmt.Println("----------------- blockHandleResult -----------------")
+			fmt.Println(blockHandleResult)
+			fmt.Println("----------------- len(header4sync) -----------------")
+			fmt.Println(len(this.header4sync))
 			if blockHandleResult && len(this.header4sync) > 0 {
+				fmt.Println("---------------- commit headers... ------------------")
 				this.commitHeader()
 			}
 		case <-this.exitChan:
@@ -183,12 +189,16 @@ func (this *StarcoinManager) commitHeader() int {
 
 func (this *StarcoinManager) rollBackToCommAncestor() {
 	for ; ; this.currentHeight-- {
+		log.Warnf("this.currentHeight: %d", this.currentHeight) //todo remove this warning
 		raw, err := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 			append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), autils.GetUint64Bytes(this.currentHeight)...))
 		if len(raw) == 0 || err != nil {
+			log.Warnf("rollBackToCommAncestor - len(raw) == 0 || err != nil, len(raw): %d, err: %v", len(raw), err) //todo remove this warning
 			continue
 		}
+
 		hdr, err := this.client.HeaderByNumber(context.Background(), this.currentHeight)
+		//hdr, err := this.client.HeaderWithDifficutyInfoByNumber(context.Background(), this.currentHeight) //use this???
 		if err != nil {
 			log.Errorf("rollBackToCommAncestor - failed to get header by number, so we wait for one second to retry: %v", err)
 			time.Sleep(time.Second)
@@ -203,8 +213,18 @@ func (this *StarcoinManager) rollBackToCommAncestor() {
 			continue // todo is this ok??
 		}
 		if bytes.Equal(hdrhash, raw) {
-			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(number: %d)", hex.EncodeToString(hdrhash), this.currentHeight)
+			// -----------------------------------
+			//todo remove this...
+			hdrInPoly, err := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
+				append(append([]byte(scom.HEADER_INDEX), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), raw...))
+			log.Warnf("header in poly: %s", hex.EncodeToString(hdrInPoly))
+			fmt.Println(err)
+			//todo remove this...
+			// ------------------------------------
+			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(block hash) %s(header hash) (number: %d)", hdr.BlockHash, hex.EncodeToString(hdrhash), this.currentHeight)
 			break
+		} else {
+			log.Warnf("hdr hash: %s, raw hash from poly: %s", hex.EncodeToString(hdrhash), hex.EncodeToString(raw)) //todo remove this warning
 		}
 	}
 	this.header4sync = make([][]byte, 0)
@@ -220,6 +240,7 @@ func (this *StarcoinManager) handleNewBlock(height uint64) bool {
 	if !ret {
 		log.Errorf("StarcoinManager.handleNewBlock - fetchLockDepositEvents on height :%d failed", height)
 	}
+	//ignore event fetch result here! //todo handle event error...
 	return true
 }
 
@@ -230,19 +251,47 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	// 	return false
 	// }
 	// rawHdr, _ := hdr.MarshalJSON()
-	block, err := this.client.GetBlockByNumber(context.Background(), int(height))
+	// block, err := this.client.GetBlockByNumber(context.Background(), int(height))
+	// if err != nil {
+	// 	log.Errorf("handleBlockHeader - GetBlockByNumber on height :%d failed", height)
+	// 	return false
+	// }
+
+	hdr, err := this.client.HeaderWithDifficutyInfoByNumber(context.Background(), height) //block.BlockHeader
 	if err != nil {
-		log.Errorf("handleBlockHeader - GetBlockByNumber on height :%d failed", height)
+		log.Errorf("handleBlockHeader - HeaderWithDifficutyInfoByNumber on height :%d failed", height)
 		return false
 	}
-	hdr := block.BlockHeader
+	// // -------------- test start ----------------
+	// //todo remove this test code...
+	// log.Infof("----------------- height: %d -----------------", height)
+	// headerhash, err := hdr.BlockHeader.Hash()
+	// blockhash, err := tools.HexToBytes(hdr.BlockHeader.BlockHash)
+	// if bytes.Compare(headerhash, blockhash) != 0 {
+	// 	log.Warnf("hdr.Hash(): %s <> hdr.BlockHash: %s", hex.EncodeToString(headerhash), hex.EncodeToString(blockhash))
+	// 	panic(1)
+	// } else {
+	// 	log.Infof("hdr.Hash(): %s == hdr.BlockHash: %s", hex.EncodeToString(headerhash), hex.EncodeToString(blockhash))
+	// }
+	// return true
+	// // -------------- test end ----------------
+
 	rawHdr, _ := json.Marshal(hdr)
 	raw, _ := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
-	hdrhash, err := hdr.Hash()
+	hdrhash, err := hdr.BlockHeader.Hash()
 	if err != nil {
 		log.Errorf("handleBlockHeader - get header hash on height :%d failed", height)
 		return false
+	}
+	blockhash, err := tools.HexToBytes(hdr.BlockHeader.BlockHash)
+	if err != nil {
+		log.Errorf("handleBlockHeader - get hdr.BlockHeader.BlockHash on height :%d failed", height)
+		return false
+	}
+	if !bytes.Equal(hdrhash, blockhash) {
+		log.Errorf("handleBlockHeader - hdr.Hash(): %s <> hdr.BlockHeader.BlockHash: %s", hex.EncodeToString(hdrhash), hex.EncodeToString(blockhash))
+		return false //panic(1)
 	}
 	if len(raw) == 0 || !bytes.Equal(raw, hdrhash) {
 		this.header4sync = append(this.header4sync, rawHdr)

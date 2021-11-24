@@ -13,11 +13,10 @@ require (
 	github.com/polynetwork/bridge-common v0.0.20 // indirect
 	github.com/polynetwork/poly v1.3.1
 	github.com/polynetwork/poly-go-sdk v0.0.0-20210114120411-3dcba035134f
-	github.com/starcoinorg/starcoin-go v0.0.0-20211022100808-4b435d900b00
+	github.com/starcoinorg/starcoin-go v0.0.0-20211119023234-a6250be08772
 	github.com/urfave/cli v1.22.4
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	gorm.io/driver/mysql v1.1.3
 	gorm.io/gorm v1.21.12
 )
-
 replace github.com/starcoinorg/starcoin-go => ../../starcoinorg/starcoin-go
