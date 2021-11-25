@@ -354,10 +354,12 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 		var isTarget bool
 		if len(this.config.ProxyOrAssetContracts) > 0 {
 			// fmt.Println(tools.EncodeToHex(ccEvent.Sender))
+			fmt.Println("---------------- height -----------------")
+			fmt.Println(height)
 			fmt.Println("---------------- ProxyOrAssetContract -----------------")
 			fmt.Println(ccEvent.ProxyOrAssetContract)
 			fmt.Println(string(ccEvent.ProxyOrAssetContract)) //tools.EncodeToHex(ccEvent.ProxyOrAssetContract)
-			fmt.Println("---------------- TxId(hash) -----------------")
+			fmt.Println("---------------- TxId(CrossChainEvent.TxId) -----------------")
 			fmt.Println(tools.EncodeToHex(ccEvent.TxId))
 			fmt.Println("---------------- ToChainId -----------------")
 			fmt.Println(ccEvent.ToChainId)
@@ -405,6 +407,8 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 			log.Errorf("fetchLockDepositEvents - tools.HexWithPrefixToBytes error: %s", err.Error())
 			return false
 		}
+		fmt.Println("---------------- Starcoin Transaction Hash -----------------") //todo remove this...
+		fmt.Println(tools.EncodeToHex(txHash))                                      //todo remove this...
 		crossTx := &CrossTransfer{
 			txIndex: tools.EncodeBigInt(index), // tools.EncodeBigInt(ccEvent.TxId to big.Int),
 			txId:    txHash,                    // starcoin tx hash
@@ -457,9 +461,9 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		fmt.Println("------------------------ crosstx deserialized ----------------------------")
 		fmt.Printf("crosstx.height: %d\n", crosstx.height) //todo remove this
 		fmt.Printf("crosstx.toChain: %d\n", crosstx.toChain)
-		fmt.Println("crosstx.txIndex: " + crosstx.txIndex + " // tools.EncodeBigInt(ccEvent.TxId to big.Int)")
+		fmt.Println("crosstx.txIndex: " + crosstx.txIndex + " // tools.EncodeBigInt(CrossChainEvent.TxId to big.Int)")
 		fmt.Println("crosstx.txId: " + hex.EncodeToString(crosstx.txId) + " // starcoin tx hash")
-		fmt.Println("crosstx.value: " + hex.EncodeToString(crosstx.value))
+		fmt.Println("crosstx.value: " + hex.EncodeToString(crosstx.value) + " // CrossChainEvent.RawData")
 
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - retry.Deserialization error: %s", err.Error())
@@ -529,14 +533,25 @@ func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []by
 	if err != nil {
 		return "", err
 	}
+	fmt.Println("--------- parameters of polySdk.Native.Ccm.ImportOuterTransfer ----------") // remove this...
+	fmt.Println(this.config.StarcoinConfig.SideChainId)                                      // remove this...
+	fmt.Println(hex.EncodeToString(value))                                                   // remove this...
+	fmt.Println(height)                                                                      // remove this...
+	fmt.Println(string(proof))                                                               // remove this...
+	fmt.Println(hex.EncodeToString(relayAddr))                                               // remove this...
+	fmt.Println([]byte{})                                                                    // remove this...
+	fmt.Println(this.polySigner.Address.ToHexString())                                       // remove this...
+	fmt.Println("------- end of params of polySdk.Native.Ccm.ImportOuterTransfer ---------") // remove this...
+
 	tx, err := this.polySdk.Native.Ccm.ImportOuterTransfer(
-		this.config.StarcoinConfig.SideChainId,
-		value,
-		height,
-		proof,
-		relayAddr,
-		[]byte{},
-		this.polySigner)
+		this.config.StarcoinConfig.SideChainId, //sourceChainId uint64,
+		value,                                  //txData []byte,
+		height,                                 //height uint32,
+		proof,                                  //proof []byte,
+		relayAddr,                              //relayerAddress []byte,
+		[]byte{},                               //HeaderOrCrossChainMsg []byte,
+		this.polySigner)                        //signer *Account)
+
 	if err != nil {
 		return "", err
 	} else {
