@@ -545,7 +545,7 @@ func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []by
 
 	tx, err := this.polySdk.Native.Ccm.ImportOuterTransfer(
 		this.config.StarcoinConfig.SideChainId, //sourceChainId uint64,
-		value,                                  //txData []byte,
+		value,                                  //txData []byte, // CrossChainEvent.RawData
 		height,                                 //height uint32,
 		proof,                                  //proof []byte,
 		relayAddr,                              //relayerAddress []byte,
