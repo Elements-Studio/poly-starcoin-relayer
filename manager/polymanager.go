@@ -347,7 +347,7 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 	fmt.Println("--------------------------------------------------")
 	txPayload := stcpoly.EncodeInitGenesisTxPayload(this.config.StarcoinConfig.CCMModule, hdr.GetMessage(), publickeys)
 
-	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT, seqNum)
+	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT*4, seqNum)
 	if err != nil {
 		log.Errorf("InitGenesis - BuildRawUserTransaction error:%s", err.Error())
 		return err

@@ -52,7 +52,7 @@ func TestFetchLockDepositEvents(t *testing.T) {
 }
 
 func TestCommitProof(t *testing.T) {
-	height := 68172
+	height := 14630
 	//---------------- RawData -----------------
 	rawData := "1000000000000000000000000000000000203fa1016c3440ad9c0290a4abbe24fc9e994c6879f48346ab4ddc54aec3b07219102d81a0427d64ff61b11ede9085efa5adda0000000000000034307832643831613034323764363466663631623131656465393038356566613561643a3a43726f7373436861696e53637269707406756e6c6f636b3f0d3078313a3a5354433a3a53544310bd7e8be8fae9f60f2f5136433e36a0911027000000000000000000000000000000000000000000000000000000000000"
 	//---------------- Starcoin Transaction Hash -----------------
@@ -163,19 +163,6 @@ func TestDeserializeCrossChainEventRawData(t *testing.T) {
 	// amount, b := s2.NextVarUint()
 	// fmt.Println(amount)
 
-	// Move code:
-	// // Tx hash index
-	// let param_tx_hash = BCS::to_bytes(&CrossChainData::get_eth_tx_hash_index());
-	// raw_param = Bytes::concat(&raw_param, ZeroCopySink::write_var_bytes(&param_tx_hash));
-
-	// let genesis_addr_byte = Address::bytify(CrossChainGlobal::genesis_account());
-	// let contract_addr_serialize = Hash::sha3_256(Bytes::concat(&genesis_addr_byte, *&param_tx_hash));
-	// raw_param = Bytes::concat(&raw_param, ZeroCopySink::write_var_bytes(&contract_addr_serialize));
-	// raw_param = Bytes::concat(&raw_param, ZeroCopySink::write_var_bytes(&Address::bytify(account)));
-	// raw_param = Bytes::concat(&raw_param, ZeroCopySink::write_var_uint(to_chain_id));
-	// raw_param = Bytes::concat(&raw_param, ZeroCopySink::write_var_bytes(to_contract));
-	// raw_param = Bytes::concat(&raw_param, ZeroCopySink::write_var_bytes(method));
-	// raw_param = Bytes::concat(&raw_param, ZeroCopySink::write_var_bytes(tx_data));
 }
 
 func TestMisc(t *testing.T) {

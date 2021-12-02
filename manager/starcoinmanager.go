@@ -135,6 +135,11 @@ func (this *StarcoinManager) MonitorChain() {
 				this.currentHeight++
 				// try to commit header if more than 50 headers needed to be syned
 				if len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch {
+					fmt.Println("----------------- len(header4sync) -----------------") //todo remove this
+					fmt.Println(len(this.header4sync))
+					fmt.Println("--------------- this.header4sync[0] ----------------")
+					fmt.Println(string(this.header4sync[0]))
+					fmt.Println("---------------- commit headers... ------------------")
 					if res := this.commitHeader(); res != 0 {
 						blockHandleResult = false
 						break
