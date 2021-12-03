@@ -9,8 +9,8 @@ import (
 )
 
 func TestWaitTransactionConfirm(t *testing.T) {
-	stcclient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-	b, err := WaitTransactionConfirm(stcclient, "0x3f9b3d5c9a821327461a283e760afef055f0edd288d6826968bc4afd7620b0d5", time.Second*10)
+	stcclient := stcclient.NewStarcoinClient("https://halley-seed.starcoin.org")
+	b, err := WaitTransactionConfirm(stcclient, "0x077fd430df5165a10caf5ebd175c58b14e05786d79d50d339e70a892c8aa68d0", time.Second*30)
 	fmt.Println(b, err)
 }
 

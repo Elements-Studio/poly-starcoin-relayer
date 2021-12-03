@@ -31,7 +31,8 @@ import (
 )
 
 const (
-	ChanLen = 64
+	ChanLen                    = 64
+	WaitTransactionConfirmTime = time.Second * 60
 )
 
 type PolyManager struct {
@@ -681,7 +682,7 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 	}
 
 	hdrhash := header.Hash()
-	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, time.Second*20)
+	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
 	//todo handle error???
 	if isSuccess {
 		log.Infof("successful to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
@@ -729,7 +730,7 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	//todo cal txhash self???
 
 	//isSuccess := this.waitTransactionConfirm(txInfo.polyTxHash, hash)
-	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, time.Second*20)
+	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
 	//todo hanlde error
 	if isSuccess {
 		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
