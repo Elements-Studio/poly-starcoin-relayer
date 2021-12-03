@@ -241,11 +241,13 @@ func (this *StarcoinManager) handleNewBlock(height uint64) bool {
 		log.Errorf("StarcoinManager.handleNewBlock - handleBlockHeader on height :%d failed", height)
 		return false
 	}
-	ret = this.fetchLockDepositEvents(height)
-	if !ret {
+	ret, err := this.fetchLockDepositEvents(height)
+	if err != nil {
 		log.Errorf("StarcoinManager.handleNewBlock - fetchLockDepositEvents on height :%d failed", height)
+		return false //not ignore event fetch error here! Is this ok?
+	} else if !ret {
+		log.Debugf("No events need to handle on height :%d", height)
 	}
-	//ignore event fetch result here! //todo handle event error...
 	return true
 }
 
@@ -304,7 +306,7 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	return true
 }
 
-func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
+func (this *StarcoinManager) fetchLockDepositEvents(height uint64) (bool, error) {
 	// lockAddress := ethcommon.HexToAddress(this.config.StarcoinConfig.ECCMContractAddress)
 	// lockContract, err := eccm_abi.NewEthCrossChainManager(lockAddress, client)
 	// if err != nil {
@@ -326,11 +328,11 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 	//events, err := lockContract.FilterCrossChainEvent(opt, nil) // todo get events from starcoin
 	if err != nil {
 		log.Errorf("fetchLockDepositEvents - FilterCrossChainEvent error :%s", err.Error())
-		return false
+		return false, err
 	}
 	if events == nil {
 		log.Infof("fetchLockDepositEvents - no events found on FilterCrossChainEvent")
-		return false
+		return false, nil
 	}
 
 	for _, evt := range events {
@@ -339,7 +341,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 		evtData, err := tools.HexToBytes(evt.Data)
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - hex.DecodeString error :%s", err.Error())
-			return false
+			return false, err
 		}
 		ccEvent, err := stcpolyevts.BcsDeserializeCrossChainEvent(evtData)
 		// // Fire the cross chain event denoting there is a cross chain request from Ethereum network to other public chains through Poly chain network
@@ -354,7 +356,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 		// // );
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - BcsDeserializeCrossChainDepositEvent error :%s", err.Error())
-			return false
+			return false, err
 		}
 		var isTarget bool
 		if len(this.config.ProxyOrAssetContracts) > 0 {
@@ -373,7 +375,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 			fmt.Println("---------------- RawData -----------------")
 			fmt.Println(tools.EncodeToHex(ccEvent.RawData))
 			//var proxyOrAssetContract string
-			proxyOrAssetContract := string(ccEvent.ProxyOrAssetContract) // for 'source' proxy contract, filter it's outbound chain Id.
+			proxyOrAssetContract := string(ccEvent.ProxyOrAssetContract) // for 'source' proxy contract, filter is outbound chain Id.
 			for _, v := range this.config.ProxyOrAssetContracts {        // renamed TargetContracts
 				chainIdArrMap, ok := v[proxyOrAssetContract]
 				if ok {
@@ -410,7 +412,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 		txHash, err := tools.HexWithPrefixToBytes(evt.TransactionHash)
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - tools.HexWithPrefixToBytes error: %s", err.Error())
-			return false
+			return false, err
 		}
 		fmt.Println("---------------- Starcoin Transaction Hash -----------------") //todo remove this...
 		fmt.Println(tools.EncodeToHex(txHash))                                      //todo remove this...
@@ -426,11 +428,11 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) bool {
 		err = this.db.PutStarcoinTxRetry(sink.Bytes())
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - this.db.PutStarcoinTxRetry error: %s", err.Error())
-			return false
+			return false, err
 		}
 		log.Infof("fetchLockDepositEvent -  height: %d", height)
 	}
-	return true
+	return true, nil
 }
 
 func (this *StarcoinManager) MonitorDeposit() {

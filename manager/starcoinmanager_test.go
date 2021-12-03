@@ -41,9 +41,10 @@ func TestCommitHeader(t *testing.T) {
 
 func TestFetchLockDepositEvents(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
-	fmt.Println(starcoinManager)
-	ok := starcoinManager.fetchLockDepositEvents(70007)
+	fmt.Println("---------- fetchLockDepositEvents -----------")
+	ok, err := starcoinManager.fetchLockDepositEvents(3434)
 	fmt.Println(ok)
+	fmt.Println(err)
 
 	rl, err := starcoinManager.db.GetAllStarcoinTxRetry()
 	fmt.Println(len(rl))

@@ -226,7 +226,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					for _, v := range this.config.ProxyOrAssetContracts {
 						chainIdArrMap, ok := v[proxyOrAssetContract]
 						if ok {
-							if len(chainIdArrMap["inbound"]) == 0 {
+							if len(chainIdArrMap["inbound"]) == 0 { // for 'target' proxy contract, filter is inbound chain Id.
 								isTarget = true
 								break
 							}
