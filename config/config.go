@@ -57,6 +57,7 @@ type PolyConfig struct {
 
 type StarcoinConfig struct {
 	SideChainId            uint64
+	ChainId                int // starcoin chain Id.
 	RestURL                string
 	CCMModule              string //Cross Chain Data Module Id.
 	CCDModule              string //Cross Chain Manager Module Id.

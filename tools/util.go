@@ -47,6 +47,8 @@ func GetExplorerUrl(chainId int) string {
 	switch chainId {
 	case 1:
 		return "https://stcscan.io/main/transactions/detail/"
+	case 253:
+		return "https://stcscan.io/halley/transactions/detail/"
 	case 254:
 		return "https://stcscan.io/barnard/transactions/detail/"
 	default:

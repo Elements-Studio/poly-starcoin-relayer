@@ -108,7 +108,7 @@ func (this *StarcoinManager) init() error {
 }
 
 func (this *StarcoinManager) MonitorChain() {
-	fetchBlockTicker := time.NewTicker(200 * time.Millisecond) //todo
+	fetchBlockTicker := time.NewTicker(200 * time.Millisecond) //todo remove this
 	//fetchBlockTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
 	var blockHandleResult bool
 	for {
@@ -126,7 +126,7 @@ func (this *StarcoinManager) MonitorChain() {
 			blockHandleResult = true
 			for this.currentHeight < height-config.STARCOIN_USEFUL_BLOCK_NUM {
 				if this.currentHeight%10 == 0 {
-					log.Infof("handle confirmed starcoin Block height: %d", this.currentHeight)
+					log.Infof("StarcoinManager.MonitorChain - handle confirmed starcoin Block height: %d", this.currentHeight)
 				}
 				blockHandleResult = this.handleNewBlock(this.currentHeight + 1)
 				if blockHandleResult == false {

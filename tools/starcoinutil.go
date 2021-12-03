@@ -72,6 +72,13 @@ type StarcoinKeyStore struct {
 	chainId    int
 }
 
+func NewStarcoinKeyStore(privateKey types.Ed25519PrivateKey, chainId int) *StarcoinKeyStore {
+	return &StarcoinKeyStore{
+		privateKey: privateKey,
+		chainId:    chainId,
+	}
+}
+
 func (ks *StarcoinKeyStore) GetChainId() int {
 	return ks.chainId
 }

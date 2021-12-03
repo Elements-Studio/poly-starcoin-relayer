@@ -24,9 +24,36 @@ func TestInitGenersis(t *testing.T) {
 func TestHandleDepositEvents(t *testing.T) {
 	polyManager := getTestPolyManager(t)
 	fmt.Println(polyManager)
-	var height uint32 = 1088
-	err := polyManager.handleDepositEvents(height)
-	fmt.Println(err)
+	var height uint32 = 6003
+	ok := polyManager.handleDepositEvents(height)
+	fmt.Println("---------------- handleDepositEvents result -----------------")
+	fmt.Println(ok)
+	if !ok {
+		t.FailNow()
+	}
+}
+
+func TestSendPolyTxToStarcoin(t *testing.T) {
+	polyManager := getTestPolyManager(t)
+	//fmt.Println(polyManager)
+	polyTxHash := "0a2a6502415f878d8866ae3b7d646327ce28fe3c592f7f08091c6ed6db4e55ac"
+	polyTx, err := polyManager.db.GetPolyTx(polyTxHash)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(polyTx)
+
+	sender := polyManager.senders[0]
+	stcTxInfo, err := sender.polyTxToStarcoinTxInfo(polyTx)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(stcTxInfo)
+	err = sender.sendTxToStarcoin(stcTxInfo)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 }
 
 func TestGetPolyCurrentBlockHeight(t *testing.T) {

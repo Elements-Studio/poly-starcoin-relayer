@@ -115,6 +115,21 @@ func (w *MySqlDB) GetPolyHeight() (uint32, error) {
 	return ch.Height, nil
 }
 
+func (w *MySqlDB) GetPolyTx(txHash string) (*PolyTx, error) {
+	px := PolyTx{
+		TxHash: txHash,
+	}
+	if err := w.db.First(&px).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			//fmt.Println("errors.Is(err, gorm.ErrRecordNotFound)")
+			return nil, nil
+		}
+	}
+	return &px, nil
+}
+
 func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	var lastTx PolyTx
 	var lastIndex uint64
