@@ -1,5 +1,10 @@
 package db
 
+import (
+	"crypto/sha256"
+	"encoding/hex"
+)
+
 const KEY_POLY_HEIGHT = "poly_height"
 
 type DB interface {
@@ -27,4 +32,11 @@ type DB interface {
 	PutPolyTx(tx *PolyTx) (uint64, error)
 
 	Close()
+}
+
+func Sha256HashHex(v []byte) string {
+	hasher := sha256.New()
+	hasher.Write(v)
+	h := hasher.Sum(nil)
+	return hex.EncodeToString(h)
 }

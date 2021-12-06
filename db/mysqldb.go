@@ -1,9 +1,15 @@
 package db
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"strings"
 
+	"github.com/celestiaorg/smt"
+
+	gomysql "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/sha3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -26,7 +32,7 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 	}
 	// Migrate the schema
 	db.AutoMigrate(&ChainHeight{}, &StarcoinTxRetry{}, &StarcoinTxCheck{})
-	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{})
+	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{})
 
 	w := new(MySqlDB)
 	w.db = db
@@ -155,6 +161,21 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	return tx.TxIndex, err
 }
 
+func (w *MySqlDB) getPolyTxByTxHashHash(txHashHash string) (*PolyTx, error) {
+	px := PolyTx{
+		TxHashHash: txHashHash,
+	}
+	if err := w.db.First(&px).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			//fmt.Println("errors.Is(err, gorm.ErrRecordNotFound)")
+			return nil, nil
+		}
+	}
+	return &px, nil
+}
+
 func (w *MySqlDB) Close() {
 	//
 }
@@ -164,8 +185,120 @@ func createOrUpdate(db *gorm.DB, dest interface{}) error {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		} else {
-			db.Create(dest)
+			return db.Create(dest).Error
 		}
 	}
 	return nil
+}
+
+var (
+	PolyTxExistsValue        = []byte{1}
+	PolyTxExistsValueHashHex = Sha256HashHex(PolyTxExistsValue)
+	SmtDefaultValue          = []byte{} //defaut(empty) value
+)
+
+type PolyTxMapStore struct {
+	db *MySqlDB
+}
+
+func NewPolyTxMapStore(db *MySqlDB) *PolyTxMapStore {
+	return &PolyTxMapStore{
+		db: db,
+	}
+}
+
+func (m *PolyTxMapStore) Get(key []byte) ([]byte, error) { // Get gets the value for a key.
+	h := hex.EncodeToString(key)
+	polyTx, err := m.db.getPolyTxByTxHashHash(h)
+	if err != nil {
+		return nil, err
+	}
+	if polyTx != nil {
+		return PolyTxExistsValue, nil
+	}
+	return nil, &smt.InvalidKeyError{Key: key}
+}
+
+func (m *PolyTxMapStore) Set(key []byte, value []byte) error { // Set updates the value for a key.
+	if !bytes.Equal(PolyTxExistsValue, value) {
+		return fmt.Errorf("invalid value error(must be [1])")
+	}
+	_, err := m.Get(key)
+	return err
+}
+
+func (m *PolyTxMapStore) Delete(key []byte) error { // Delete deletes a key.
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+type SmtNodeMapStore struct {
+	db *MySqlDB
+}
+
+func NewSmtNodeMapStore(db *MySqlDB) *SmtNodeMapStore {
+	return &SmtNodeMapStore{
+		db: db,
+	}
+}
+
+func (m *SmtNodeMapStore) Get(key []byte) ([]byte, error) { // Get gets the value for a key.
+	h := hex.EncodeToString(key)
+	n := SmtNode{
+		Hash: h,
+	}
+	if err := m.db.db.First(&n).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			//fmt.Println("errors.Is(err, gorm.ErrRecordNotFound)")
+			return nil, &smt.InvalidKeyError{Key: key}
+		}
+	}
+	d, err := hex.DecodeString(n.Data)
+	if err != nil {
+		return nil, err
+	}
+	//fmtPrintlnNodeData(d)
+	return d, nil
+}
+
+func (m *SmtNodeMapStore) Set(key []byte, value []byte) error { // Set updates the value for a key.
+	h := hex.EncodeToString(key)
+	d := hex.EncodeToString(value)
+	n := SmtNode{
+		Hash: h,
+		Data: d,
+	}
+	err := m.db.db.Create(n).Error
+	var mysqlErr *gomysql.MySQLError
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		oldData, err := m.Get(key)
+		if err != nil {
+			return err
+		}
+		if bytes.Equal(value, oldData) {
+			return nil
+		} else {
+			return fmt.Errorf("reset value is not allowed, key: %s, value: %s, old value: %s", h, d, hex.EncodeToString(oldData))
+		}
+	}
+	return err
+}
+
+func (m *SmtNodeMapStore) Delete(key []byte) error { // Delete deletes a key.
+	h := hex.EncodeToString(key)
+	n := SmtNode{
+		Hash: h,
+	}
+	return m.db.db.Delete(n).Error
+}
+
+func fmtPrintlnNodeData(d []byte) {
+	r := hex.EncodeToString(d[33:65])
+	if strings.EqualFold(r, PolyTxExistsValueHashHex) {
+		r = "hashOf([]byte{1})"
+	}
+	fmt.Println("-------- parse node data --------")
+	fmt.Printf("prefix: %s, left hash(or leaf path): %s, right hash(or value hash): %s\n",
+		hex.EncodeToString(d[0:1]), hex.EncodeToString(d[1:33]), r)
 }

@@ -68,6 +68,7 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 func TestPutPolyTx(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
+	h := Sha256HashHex(v)
 	tx := PolyTx{
 		TxHash:       hex.EncodeToString(v),
 		Proof:        hex.EncodeToString(v),
@@ -75,12 +76,27 @@ func TestPutPolyTx(t *testing.T) {
 		HeaderProof:  hex.EncodeToString(v),
 		AnchorHeader: hex.EncodeToString(v),
 		HeaderSig:    hex.EncodeToString(v),
-		RootHash:     hex.EncodeToString(v),
-		NonIncProof:  hex.EncodeToString(v),
+		SmtRootHash:  hex.EncodeToString(v),
+		TxHashHash:   h,
+		//SmtProofSideNodes:  hex.EncodeToString(v),
 	}
 	idx, err := testDB.PutPolyTx(&tx) //hex.EncodeToString(v))
 	fmt.Println(idx, err)
 	if err != nil {
 		t.FailNow()
 	}
+
+	m := NewPolyTxMapStore(testDB.(*MySqlDB))
+	hh, _ := hex.DecodeString(h)
+	d, err := m.Get(hh)
+	fmt.Println(d, err)
+	if err != nil {
+		t.FailNow()
+	}
+
+	err = m.Set(hh, PolyTxExistsValue)
+	if err != nil {
+		t.FailNow()
+	}
+
 }

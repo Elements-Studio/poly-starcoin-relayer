@@ -532,8 +532,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 		HeaderProof:  hex.EncodeToString(rawProof),
 		AnchorHeader: hex.EncodeToString(rawAnchor),
 		HeaderSig:    hex.EncodeToString(sigs),
-		RootHash:     "", //todo
-		NonIncProof:  "", //todo
+		SmtRootHash:  "", //todo Non-Membership proof
 	}
 	_, err := this.db.PutPolyTx(&polyTx)
 	if err != nil {

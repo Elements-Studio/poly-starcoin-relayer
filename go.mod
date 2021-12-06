@@ -5,7 +5,9 @@ go 1.16
 require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/btcsuite/btcd v0.21.0-beta
+	github.com/celestiaorg/smt v0.2.1-0.20210927133715-225e28d5599a // indirect
 	github.com/ethereum/go-ethereum v1.10.7
+	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/novifinancial/serde-reflection/serde-generate/runtime/golang v0.0.0-20211013011333-6820d5b97d8c
 	github.com/ontio/ontology v1.11.1-0.20200812075204-26cf1fa5dd47
@@ -19,4 +21,7 @@ require (
 	gorm.io/driver/mysql v1.1.3
 	gorm.io/gorm v1.21.12
 )
+
 replace github.com/starcoinorg/starcoin-go => ../../starcoinorg/starcoin-go
+
+replace github.com/lazyledger/smt => github.com/celestiaorg/smt v0.2.1
