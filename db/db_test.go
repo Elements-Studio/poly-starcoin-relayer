@@ -23,17 +23,35 @@ func init() {
 	testDB = db
 }
 
-func TestUpdatePolyHeight(t *testing.T) {
-	err := testDB.UpdatePolyHeight(141)
-	fmt.Println(err)
-}
+// func TestUpdatePolyHeight(t *testing.T) {
+// 	err := testDB.UpdatePolyHeight(141)
+// 	fmt.Println(err)
+// }
 
-func GetPolyHeight(t *testing.T) {
+func TestGetMethods(t *testing.T) {
 	h, err := testDB.GetPolyHeight()
 	if err != nil {
 		t.FailNow()
 	}
 	fmt.Println(h)
+	p, err := testDB.GetPolyTx("foo")
+	if err != nil {
+		t.FailNow()
+	}
+	if p.TxHash != "foo" {
+		t.FailNow()
+	}
+	fmt.Println(p)
+	testMySqlDB := testDB.(*MySqlDB)
+	p2, err := testMySqlDB.getPolyTxByTxHashHash("15291f67d99ea7bc578c3544dadfbb991e66fa69cb36ff70fe30e798e111ff5f")
+	if err != nil {
+		t.FailNow()
+	}
+	if p2.TxHashHash != "15291f67d99ea7bc578c3544dadfbb991e66fa69cb36ff70fe30e798e111ff5f" {
+		t.FailNow()
+	}
+	fmt.Println(p2)
+
 }
 
 func TestPutStarcoinTxCheck(t *testing.T) {
@@ -101,7 +119,7 @@ func TestPutPolyTx(t *testing.T) {
 		t.FailNow()
 	}
 
-	m := NewPolyTxMapStore(testDB.(*MySqlDB))
+	m := NewPolyTxMapStore(testDB.(*MySqlDB), nil)
 	hh, _ := hex.DecodeString(h)
 	d, err := m.Get(hh)
 	fmt.Println(d, err)

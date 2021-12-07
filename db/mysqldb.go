@@ -2,13 +2,15 @@ package db
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/celestiaorg/smt"
-
+	csmt "github.com/celestiaorg/smt"
 	gomysql "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/sha3"
 	"gorm.io/driver/mysql"
@@ -107,10 +109,10 @@ func (w *MySqlDB) UpdatePolyHeight(h uint32) error {
 }
 
 func (w *MySqlDB) GetPolyHeight() (uint32, error) {
-	ch := ChainHeight{
+	ch := ChainHeight{}
+	if err := w.db.Where(&ChainHeight{
 		Key: KEY_POLY_HEIGHT,
-	}
-	if err := w.db.First(&ch).Error; err != nil {
+	}).First(&ch).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return 0, err
 		} else {
@@ -122,10 +124,10 @@ func (w *MySqlDB) GetPolyHeight() (uint32, error) {
 }
 
 func (w *MySqlDB) GetPolyTx(txHash string) (*PolyTx, error) {
-	px := PolyTx{
+	px := PolyTx{}
+	if err := w.db.Where(&PolyTx{
 		TxHash: txHash,
-	}
-	if err := w.db.First(&px).Error; err != nil {
+	}).First(&px).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		} else {
@@ -137,14 +139,15 @@ func (w *MySqlDB) GetPolyTx(txHash string) (*PolyTx, error) {
 }
 
 func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
-	var lastTx PolyTx
+	lastTx := &PolyTx{}
 	var lastIndex uint64
-	err := w.db.Last(&lastTx).Error
+	err := w.db.Last(lastTx).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return 0, err
 		} else {
 			lastIndex = 0
+			lastTx = nil
 		}
 	} else {
 		lastIndex = lastTx.TxIndex
@@ -154,6 +157,10 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	// 	TxHash:  txHash,
 	// }
 	tx.TxIndex = lastIndex + 1
+	err = w.updatePolyTxNonMembershipProof(tx, lastTx)
+	if err != nil {
+		return 0, err
+	}
 	err = w.db.Create(tx).Error
 	if err != nil {
 		return 0, err
@@ -161,11 +168,73 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	return tx.TxIndex, err
 }
 
-func (w *MySqlDB) getPolyTxByTxHashHash(txHashHash string) (*PolyTx, error) {
-	px := PolyTx{
-		TxHashHash: txHashHash,
+func (w *MySqlDB) updatePolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
+	nodeStore := NewSmtNodeMapStore(w)
+	valueStore := NewPolyTxMapStore(w, tx)
+	var smt *csmt.SparseMerkleTree
+	if preTx == nil {
+		smt = csmt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+	} else {
+		preRootHash, err := hex.DecodeString(preTx.SmtNonMembershipRootHash)
+		if err != nil {
+			return err
+		}
+		smt = csmt.ImportSparseMerkleTree(nodeStore, valueStore, sha256.New(), preRootHash)
+		_, err = smt.Update([]byte(preTx.TxHash), PolyTxExistsValue)
+		if err != nil {
+			return err
+		}
 	}
-	if err := w.db.First(&px).Error; err != nil {
+	tx.SmtNonMembershipRootHash = hex.EncodeToString(smt.Root()) //string `gorm:"size:66"`
+	proof, err := smt.ProveUpdatable([]byte(tx.TxHash))
+	if err != nil {
+		return err
+	}
+	sns, err := EncodeSmtProofSideNodes(proof.SideNodes)
+	if err != nil {
+		return err
+	}
+	tx.SmtProofSideNodes = sns //string `gorm:"size:18000"`
+
+	// NonMembershipLeafData is the data of the unrelated leaf at the position
+	// of the key being proven, in the case of a non-membership proof. For
+	// membership proofs, is nil.
+	tx.SmtProofNonMembershipLeafData = hex.EncodeToString(proof.NonMembershipLeafData) //string `gorm:"size:132"`
+	tx.SmtProofSiblingData = hex.EncodeToString(proof.SiblingData)
+	return nil
+}
+
+func EncodeSmtProofSideNodes(sideNodes [][]byte) (string, error) {
+	ss := make([]string, 0, len(sideNodes))
+	for _, s := range sideNodes {
+		ss = append(ss, hex.EncodeToString(s))
+	}
+	r, err := json.Marshal(ss)
+	return string(r), err
+}
+
+func DecodeSmtProofSideNodes(s string) ([][]byte, error) {
+	ss := &[]string{}
+	err := json.Unmarshal([]byte(s), ss)
+	if err != nil {
+		return nil, err
+	}
+	bs := make([][]byte, 0, len(*ss))
+	for _, v := range *ss {
+		b, err := hex.DecodeString(v)
+		if err != nil {
+			return nil, err
+		}
+		bs = append(bs, b)
+	}
+	return bs, nil
+}
+
+func (w *MySqlDB) getPolyTxByTxHashHash(txHashHash string) (*PolyTx, error) {
+	px := PolyTx{}
+	if err := w.db.Where(&PolyTx{
+		TxHashHash: txHashHash,
+	}).First(&px).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		} else {
@@ -198,17 +267,22 @@ var (
 )
 
 type PolyTxMapStore struct {
-	db *MySqlDB
+	db            *MySqlDB
+	currentPolyTx *PolyTx
 }
 
-func NewPolyTxMapStore(db *MySqlDB) *PolyTxMapStore {
+func NewPolyTxMapStore(db *MySqlDB, currentTx *PolyTx) *PolyTxMapStore {
 	return &PolyTxMapStore{
-		db: db,
+		db:            db,
+		currentPolyTx: currentTx,
 	}
 }
 
 func (m *PolyTxMapStore) Get(key []byte) ([]byte, error) { // Get gets the value for a key.
 	h := hex.EncodeToString(key)
+	if m.currentPolyTx != nil && strings.EqualFold(m.currentPolyTx.TxHashHash, h) {
+		return PolyTxExistsValue, nil
+	}
 	polyTx, err := m.db.getPolyTxByTxHashHash(h)
 	if err != nil {
 		return nil, err
@@ -222,6 +296,10 @@ func (m *PolyTxMapStore) Get(key []byte) ([]byte, error) { // Get gets the value
 func (m *PolyTxMapStore) Set(key []byte, value []byte) error { // Set updates the value for a key.
 	if !bytes.Equal(PolyTxExistsValue, value) {
 		return fmt.Errorf("invalid value error(must be [1])")
+	}
+	h := hex.EncodeToString(key)
+	if m.currentPolyTx != nil && strings.EqualFold(m.currentPolyTx.TxHashHash, h) {
+		return nil
 	}
 	_, err := m.Get(key)
 	return err
@@ -243,10 +321,10 @@ func NewSmtNodeMapStore(db *MySqlDB) *SmtNodeMapStore {
 
 func (m *SmtNodeMapStore) Get(key []byte) ([]byte, error) { // Get gets the value for a key.
 	h := hex.EncodeToString(key)
-	n := SmtNode{
+	n := SmtNode{}
+	if err := m.db.db.Where(&SmtNode{
 		Hash: h,
-	}
-	if err := m.db.db.First(&n).Error; err != nil {
+	}).First(&n).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		} else {
@@ -286,11 +364,12 @@ func (m *SmtNodeMapStore) Set(key []byte, value []byte) error { // Set updates t
 }
 
 func (m *SmtNodeMapStore) Delete(key []byte) error { // Delete deletes a key.
-	h := hex.EncodeToString(key)
-	n := SmtNode{
-		Hash: h,
-	}
-	return m.db.db.Delete(n).Error
+	// h := hex.EncodeToString(key)
+	// n := SmtNode{
+	// 	Hash: h,
+	// }
+	// return m.db.db.Delete(n).Error
+	return nil
 }
 
 func fmtPrintlnNodeData(d []byte) {

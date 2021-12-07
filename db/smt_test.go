@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"testing"
 
 	"github.com/celestiaorg/smt"
@@ -113,18 +114,49 @@ func TestDBSmtNodeMapStore(t *testing.T) {
 }
 
 func TestDBMapStores(t *testing.T) {
-	addTestPolyTx(testDB, "testKey")
-	addTestPolyTx(testDB, "foo")
-	addTestPolyTx(testDB, "testKey2")
+	// addTestPolyTx(testDB, "foo")
+	// addTestPolyTx(testDB, "testKey")
+	// addTestPolyTx(testDB, "testKey2")
+	// addTestPolyTx(testDB, "testKey3")
+	// addTestPolyTx(testDB, "testKey4")
+	// addTestPolyTx(testDB, "testKey5")
+	// addTestPolyTx(testDB, "testKey6")
+	// addTestPolyTx(testDB, "testKey7")
+	// addTestPolyTx(testDB, "testKey8")
+	// addTestPolyTx(testDB, "testKey9")
+	key := "foo"
+	var tx *PolyTx
+	tx, err := testDB.GetPolyTx(key)
+	if err != nil {
+		t.FailNow()
+	}
+	proof, err := tx.GetNonMembershipProof()
+	if err != nil {
+		t.FailNow()
+	}
+	rootHash, err := hex.DecodeString(tx.SmtNonMembershipRootHash)
+	if err != nil {
+		t.FailNow()
+	}
+	// keyHash, err := hex.DecodeString(tx.TxHashHash)
+	// if err != nil {
+	// 	t.FailNow()
+	// }
+	v := smt.VerifyProof(*proof, rootHash, []byte(key), SmtDefaultValue, sha256.New())
+	if !v {
+		t.FailNow()
+	}
+
+	return
 
 	// Initialise two new key-value store to store the nodes and values of the tree
 	//nodeStore := smt.NewSimpleMap()
 	nodeStore := NewSmtNodeMapStore(testDB.(*MySqlDB))
-	valueStore := NewPolyTxMapStore(testDB.(*MySqlDB))
+	valueStore := NewPolyTxMapStore(testDB.(*MySqlDB), nil)
 	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
 	var value []byte
 	var has bool
-	var err error
+	//var err error
 
 	// Test getting an empty key.
 	value, err = smt.Get([]byte("testKey"))
@@ -225,5 +257,8 @@ func addTestPolyTx(db DB, key string) {
 	if err != nil {
 		panic(err)
 	}
-	db.PutPolyTx(polyTx)
+	_, err = db.PutPolyTx(polyTx)
+	if err != nil {
+		panic(err)
+	}
 }

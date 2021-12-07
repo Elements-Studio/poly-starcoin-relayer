@@ -3,6 +3,8 @@ package db
 import (
 	"encoding/hex"
 	"encoding/json"
+
+	"github.com/celestiaorg/smt"
 )
 
 type ChainHeight struct {
@@ -51,6 +53,42 @@ type PolyTx struct {
 	// NumSideNodes, in the case of a compact proof, indicates the number of
 	// sidenodes in the proof when decompacted. This is only set if the proof is compact.
 	SmtProofNumSideNodes int
+}
+
+func (p *PolyTx) GetNonMembershipProof() (*smt.SparseMerkleProof, error) {
+	var proof *smt.SparseMerkleProof
+	leafData, err := p.GetSmtProofNonMembershipLeafData()
+	if err != nil {
+		return nil, err
+	}
+	sns, err := DecodeSmtProofSideNodes(p.SmtProofSideNodes)
+	if err != nil {
+		return nil, err
+	}
+	siblingData, err := p.GetSmtProofSiblingData()
+	if err != nil {
+		return nil, err
+	}
+	proof = &smt.SparseMerkleProof{
+		SideNodes:             sns,
+		NonMembershipLeafData: leafData,
+		SiblingData:           siblingData,
+	}
+	return proof, nil
+}
+
+func (p *PolyTx) GetSmtProofNonMembershipLeafData() ([]byte, error) {
+	if len(p.SmtProofNonMembershipLeafData) != 0 {
+		return hex.DecodeString(p.SmtProofNonMembershipLeafData)
+	}
+	return nil, nil
+}
+
+func (p *PolyTx) GetSmtProofSiblingData() ([]byte, error) {
+	if len(p.SmtProofSiblingData) != 0 {
+		return hex.DecodeString(p.SmtProofSiblingData)
+	}
+	return nil, nil
 }
 
 func NewPolyTx(polyTxHash string, proof []byte, header []byte, headerProof []byte, anchorHeader []byte, sigs []byte) (*PolyTx, error) {
