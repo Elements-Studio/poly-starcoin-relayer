@@ -525,23 +525,20 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
 	// 	sigs)
 
-	polyTx := db.PolyTx{
-		TxHash:       polyTxHash,
-		Proof:        hex.EncodeToString(rawAuditPath),
-		Header:       hex.EncodeToString(headerData),
-		HeaderProof:  hex.EncodeToString(rawProof),
-		AnchorHeader: hex.EncodeToString(rawAnchor),
-		HeaderSig:    hex.EncodeToString(sigs),
-		SmtRootHash:  "", //todo Non-Membership proof
+	polyTx, err := db.NewPolyTx(polyTxHash, rawAuditPath, headerData, rawProof, rawAnchor, sigs)
+	if err != nil {
+		log.Errorf("commitDepositEventsWithHeader - db.NewPolyTx error: %s", err.Error())
+		return false
 	}
-	_, err := this.db.PutPolyTx(&polyTx)
+
+	_, err = this.db.PutPolyTx(polyTx)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - db.PutPolyTx error: %s", err.Error())
 		return false
 	}
 
 	//todo ???
-	return this.sendPolyTxToStarcoin(&polyTx)
+	return this.sendPolyTxToStarcoin(polyTx)
 }
 
 func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
@@ -583,27 +580,31 @@ func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 
 func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*StarcoinTxInfo, error) {
 	polyTxHash := polyTx.TxHash
-	rawAuditPath, err := hex.DecodeString(polyTx.Proof)
+	p, err := polyTx.GetPolyTxProof()
+	if err != nil {
+		return nil, err
+	}
+	rawAuditPath, err := hex.DecodeString(p.Proof)
 	if err != nil {
 		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
 		return nil, err
 	}
-	headerData, err := hex.DecodeString(polyTx.Header)
+	headerData, err := hex.DecodeString(p.Header)
 	if err != nil {
 		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
 		return nil, err
 	}
-	rawProof, err := hex.DecodeString(polyTx.HeaderProof)
+	rawProof, err := hex.DecodeString(p.HeaderProof)
 	if err != nil {
 		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
 		return nil, err
 	}
-	rawAnchor, err := hex.DecodeString(polyTx.AnchorHeader)
+	rawAnchor, err := hex.DecodeString(p.AnchorHeader)
 	if err != nil {
 		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
 		return nil, err
 	}
-	sigs, err := hex.DecodeString(polyTx.HeaderSig)
+	sigs, err := hex.DecodeString(p.HeaderSig)
 	if err != nil {
 		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
 		return nil, err

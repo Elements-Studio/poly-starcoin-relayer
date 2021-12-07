@@ -69,18 +69,33 @@ func TestPutPolyTx(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
 	h := Sha256HashHex(v)
-	tx := PolyTx{
-		TxHash:       hex.EncodeToString(v),
-		Proof:        hex.EncodeToString(v),
-		Header:       hex.EncodeToString(v),
-		HeaderProof:  hex.EncodeToString(v),
-		AnchorHeader: hex.EncodeToString(v),
-		HeaderSig:    hex.EncodeToString(v),
-		SmtRootHash:  hex.EncodeToString(v),
-		TxHashHash:   h,
-		//SmtProofSideNodes:  hex.EncodeToString(v),
+	tx, err := NewPolyTx(
+		//TxHash:
+		hex.EncodeToString(v),
+		//Proof:
+		v,
+		//Header:
+		v,
+		//HeaderProof:
+		v,
+		//AnchorHeader:
+		v,
+		//HeaderSig:
+		v)
+	//SmtRootHash:  hex.EncodeToString(v),
+	//TxHashHash:   h,
+	//SmtProofSideNodes:  hex.EncodeToString(v),
+	if err != nil {
+		t.FailNow()
 	}
-	idx, err := testDB.PutPolyTx(&tx) //hex.EncodeToString(v))
+
+	p, err := tx.GetPolyTxProof()
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(p)
+
+	idx, err := testDB.PutPolyTx(tx) //hex.EncodeToString(v))
 	fmt.Println(idx, err)
 	if err != nil {
 		t.FailNow()

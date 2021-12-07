@@ -221,9 +221,9 @@ func TestDBMapStores(t *testing.T) {
 }
 
 func addTestPolyTx(db DB, key string) {
-	polyTx := PolyTx{
-		TxHash:     key,
-		TxHashHash: Sha256HashHex([]byte(key)),
+	polyTx, err := NewPolyTx(key, nil, nil, nil, nil, nil)
+	if err != nil {
+		panic(err)
 	}
-	db.PutPolyTx(&polyTx)
+	db.PutPolyTx(polyTx)
 }
