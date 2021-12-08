@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/db"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/ontio/ontology/smartcontract/service/native/cross_chain/cross_chain_manager"
 
@@ -425,7 +425,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) (bool, error)
 		}
 		sink := common.NewZeroCopySink(nil)
 		crossTx.Serialization(sink)
-		err = this.db.PutStarcoinTxRetry(sink.Bytes())
+		err = this.db.PutStarcoinTxRetry(sink.Bytes(), evt)
 		if err != nil {
 			log.Errorf("fetchLockDepositEvents - this.db.PutStarcoinTxRetry error: %s", err.Error())
 			return false, err
@@ -455,11 +455,11 @@ func (this *StarcoinManager) MonitorDeposit() {
 }
 
 func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
-	retryList, err := this.db.GetAllStarcoinTxRetry()
+	retryList, eventList, err := this.db.GetAllStarcoinTxRetry()
 	if err != nil {
 		return fmt.Errorf("handleLockDepositEvents - this.db.GetAllStarcoinTxRetry error: %s", err.Error())
 	}
-	for _, v := range retryList {
+	for i, v := range retryList {
 		fmt.Println("------------------------ event from retry list ----------------------------")
 		fmt.Println(hex.EncodeToString(v)) //todo remove this
 		time.Sleep(time.Second * 1)
@@ -472,6 +472,9 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		fmt.Println("crosstx.txId: " + hex.EncodeToString(crosstx.txId) + " // starcoin tx hash")
 		fmt.Println("crosstx.value: " + hex.EncodeToString(crosstx.value) + " // CrossChainEvent.RawData")
 
+		// //////////////////////
+		evt := eventList[i]
+		// //////////////////////
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - retry.Deserialization error: %s", err.Error())
 			continue
@@ -487,20 +490,37 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		if refHeight <= crosstx.height+this.config.StarcoinConfig.BlockConfirmations {
 			continue
 		}
-		height := int64(refHeight - this.config.StarcoinConfig.BlockConfirmations)
-		heightHex := hexutil.EncodeBig(big.NewInt(height))
+		//height := int64(refHeight - this.config.StarcoinConfig.BlockConfirmations)
+		//heightHex := hexutil.EncodeBig(big.NewInt(height))
 		//proofKey := hexutil.Encode(keyBytes)
+
 		//2. get proof
-		//todo starcoin GetProof...
-		fmt.Println(heightHex)             //todo remove this line
-		var proof []byte = []byte("{}")[:] //todo get proof from chain RPC...
+		// starcoin GetProof...
+		eventIdx := evt.EventIndex
+		txGlobalIdx, err := strconv.ParseUint(evt.TransactionGlobalIndex, 10, 64)
+		if err != nil {
+			log.Errorf("handleLockDepositEvents - ParseUint error :%s\n", err.Error())
+			return err // todo or continue???
+		}
+		proof, err := tools.GetTransactionProof(this.config.StarcoinConfig.RestURL, this.restClient, evt.BlockHash, txGlobalIdx, &eventIdx)
+
 		// proof, err := tools.GetProof(this.config.StarcoinConfig.RestURL, this.config.StarcoinConfig.CCDContractAddress, proofKey, heightHex, this.restClient)
 		// if err != nil {
 		// 	log.Errorf("handleLockDepositEvents - error :%s\n", err.Error())
 		// 	continue
 		// }
 		//3. commit proof to poly
-		txHash, err := this.commitProof(uint32(height), proof, crosstx.value, crosstx.txId)
+		height, err := strconv.ParseUint(evt.BlockNumber, 10, 64)
+		if err != nil {
+			log.Errorf("handleLockDepositEvents - ParseUint error :%s\n", err.Error())
+			return err // todo or continue???
+		}
+		evtMsg, err := json.Marshal(evt)
+		if err != nil {
+			log.Errorf("handleLockDepositEvents - json.Marshal(evt) error :%s\n", err.Error())
+			return err // todo or continue???
+		}
+		txHash, err := this.commitProof(uint32(height), []byte(proof), crosstx.value, crosstx.txId, evtMsg)
 		if err != nil {
 			if strings.Contains(err.Error(), "chooseUtxos, current utxo is not enough") {
 				log.Infof("handleLockDepositEvents - invokeNativeContract error: %s", err.Error())
@@ -521,7 +541,7 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 			}
 		}
 		//4. put to check db for checking
-		err = this.db.PutStarcoinTxCheck(txHash, v)
+		err = this.db.PutStarcoinTxCheck(txHash, v, evt)
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - this.db.PutStarcoinTxCheck error: %s", err.Error())
 		}
@@ -534,19 +554,19 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 	return nil
 }
 
-func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []byte, txhash []byte) (string, error) {
+func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []byte, txhash []byte, headerOrCrossChainMsg []byte) (string, error) {
 	log.Debugf("commit proof, height: %d, proof: %s, value: %s, txhash: %s", height, string(proof), hex.EncodeToString(value), hex.EncodeToString(txhash))
 	relayAddr, err := tools.HexToBytes(this.polySigner.Address.ToHexString())
 	if err != nil {
 		return "", err
 	}
 	fmt.Println("--------- parameters of polySdk.Native.Ccm.ImportOuterTransfer ----------") // remove this...
-	fmt.Println(this.config.StarcoinConfig.SideChainId)                                      // remove this...
-	fmt.Println(hex.EncodeToString(value))                                                   // remove this...
-	fmt.Println(height)                                                                      // remove this...
-	fmt.Println(string(proof))                                                               // remove this...
+	fmt.Println(this.config.StarcoinConfig.SideChainId)                                      // sourceChainId uint64,
+	fmt.Println(hex.EncodeToString(value))                                                   // txData []byte, // CrossChainEvent.RawData
+	fmt.Println(height)
+	fmt.Println(string(proof))                                                               // proof []byte,
 	fmt.Println(hex.EncodeToString(relayAddr))                                               // remove this...
-	fmt.Println([]byte{})                                                                    // remove this...
+	fmt.Println(string(headerOrCrossChainMsg))                                               // headerOrCrossChainMsg
 	fmt.Println(this.polySigner.Address.ToHexString())                                       // remove this...
 	fmt.Println("------- end of params of polySdk.Native.Ccm.ImportOuterTransfer ---------") // remove this...
 
@@ -556,7 +576,7 @@ func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []by
 		height,                                 //height uint32,
 		proof,                                  //proof []byte,
 		relayAddr,                              //relayerAddress []byte,
-		[]byte{},                               //HeaderOrCrossChainMsg []byte,
+		headerOrCrossChainMsg,                  //HeaderOrCrossChainMsg []byte,
 		this.polySigner)                        //signer *Account)
 
 	if err != nil {
@@ -596,7 +616,7 @@ func (this *StarcoinManager) checkLockDepositEvents() error {
 		}
 		if event.State != 1 {
 			log.Infof("checkLockDepositEvents - state of poly tx %s is not success", k)
-			err := this.db.PutStarcoinTxRetry(v)
+			err := this.db.PutStarcoinTxRetry(v.Bytes, v.Event)
 			if err != nil {
 				log.Errorf("checkLockDepositEvents - this.db.PutStarcoinTxRetry error:%s", err.Error())
 			}

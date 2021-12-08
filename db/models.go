@@ -13,13 +13,15 @@ type ChainHeight struct {
 }
 
 type StarcoinTxCheck struct {
-	TxHash string `gorm:"primaryKey;size:66"`
-	TxData string `gorm:"size:5000"`
+	TxHash            string `gorm:"primaryKey;size:66"` // Poly Transaction Hash
+	CrossTransferData string `gorm:"size:5000"`          // CrossTransfer serialized data
+	StarcoinEvent     string `gorm:"size:10000"`         // Starcoin Event
 }
 
 type StarcoinTxRetry struct {
-	TxHash string `gorm:"primaryKey;size:66"`
-	TxData string `gorm:"size:5000"`
+	CroosTransferDataHash string `gorm:"primaryKey;size:66"` // CrossTransfer data hash, as primary key
+	CrossTransferData     string `gorm:"size:5000"`          // CrossTransfer serialized data
+	StarcoinEvent         string `gorm:"size:10000"`         // Starcoin Event
 }
 
 //

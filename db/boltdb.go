@@ -25,6 +25,7 @@ import (
 	"sync"
 
 	"github.com/boltdb/bolt"
+	"github.com/starcoinorg/starcoin-go/client"
 )
 
 const MAX_NUM = 1000
@@ -90,7 +91,8 @@ func NewBoltDB(filePath string) (*BoltDB, error) {
 	return w, nil
 }
 
-func (w *BoltDB) PutStarcoinTxCheck(txHash string, v []byte) error {
+func (w *BoltDB) PutStarcoinTxCheck(txHash string, v []byte, e client.Event) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 	w.rwlock.Lock()
 	defer w.rwlock.Unlock()
 
@@ -127,7 +129,8 @@ func (w *BoltDB) DeleteStarcoinTxCheck(txHash string) error {
 	})
 }
 
-func (w *BoltDB) PutStarcoinTxRetry(k []byte) error {
+func (w *BoltDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 	w.rwlock.Lock()
 	defer w.rwlock.Unlock()
 
@@ -156,33 +159,35 @@ func (w *BoltDB) DeleteStarcoinTxRetry(k []byte) error {
 	})
 }
 
-func (w *BoltDB) GetAllStarcoinTxCheck() (map[string][]byte, error) {
-	w.rwlock.Lock()
-	defer w.rwlock.Unlock()
+func (w *BoltDB) GetAllStarcoinTxCheck() (map[string]BytesAndEvent, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+	// w.rwlock.Lock()
+	// defer w.rwlock.Unlock()
 
-	checkMap := make(map[string][]byte)
-	err := w.db.Update(func(tx *bolt.Tx) error {
-		bw := tx.Bucket(BKTStarcoinTxCheck)
-		bw.ForEach(func(k, v []byte) error {
-			_k := make([]byte, len(k))
-			_v := make([]byte, len(v))
-			copy(_k, k)
-			copy(_v, v)
-			checkMap[hex.EncodeToString(_k)] = _v
-			if len(checkMap) >= MAX_NUM {
-				return fmt.Errorf("max num")
-			}
-			return nil
-		})
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return checkMap, nil
+	// checkMap := make(map[string][]byte)
+	// err := w.db.Update(func(tx *bolt.Tx) error {
+	// 	bw := tx.Bucket(BKTStarcoinTxCheck)
+	// 	bw.ForEach(func(k, v []byte) error {
+	// 		_k := make([]byte, len(k))
+	// 		_v := make([]byte, len(v))
+	// 		copy(_k, k)
+	// 		copy(_v, v)
+	// 		checkMap[hex.EncodeToString(_k)] = _v
+	// 		if len(checkMap) >= MAX_NUM {
+	// 			return fmt.Errorf("max num")
+	// 		}
+	// 		return nil
+	// 	})
+	// 	return nil
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return checkMap, nil
 }
 
-func (w *BoltDB) GetAllStarcoinTxRetry() ([][]byte, error) {
+func (w *BoltDB) GetAllStarcoinTxRetry() ([][]byte, []client.Event, error) {
+	return nil, nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 	w.rwlock.Lock()
 	defer w.rwlock.Unlock()
 
@@ -201,9 +206,9 @@ func (w *BoltDB) GetAllStarcoinTxRetry() ([][]byte, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return retryList, nil
+	return retryList, nil, nil
 }
 
 func (w *BoltDB) UpdatePolyHeight(h uint32) error {

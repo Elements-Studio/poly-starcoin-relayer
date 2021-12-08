@@ -11,6 +11,7 @@ import (
 	"github.com/celestiaorg/smt"
 	csmt "github.com/celestiaorg/smt"
 	gomysql "github.com/go-sql-driver/mysql"
+	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -40,10 +41,15 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 	return w, nil
 }
 
-func (w *MySqlDB) PutStarcoinTxCheck(txHash string, v []byte) error {
+func (w *MySqlDB) PutStarcoinTxCheck(txHash string, v []byte, event client.Event) error {
+	j, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
 	tx := StarcoinTxCheck{
-		TxHash: txHash,
-		TxData: hex.EncodeToString(v),
+		TxHash:            txHash,
+		CrossTransferData: hex.EncodeToString(v),
+		StarcoinEvent:     string(j),
 	}
 	return w.db.Create(tx).Error
 }
@@ -56,11 +62,16 @@ func (w *MySqlDB) DeleteStarcoinTxCheck(txHash string) error {
 }
 
 // Put Starcoin cross-chain Tx.(to poly) Retry
-func (w *MySqlDB) PutStarcoinTxRetry(k []byte) error {
+func (w *MySqlDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
 	hash := sha3.Sum256(k)
+	j, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
 	tx := StarcoinTxRetry{
-		TxHash: hex.EncodeToString(hash[:]),
-		TxData: hex.EncodeToString(k),
+		CroosTransferDataHash: hex.EncodeToString(hash[:]),
+		CrossTransferData:     hex.EncodeToString(k),
+		StarcoinEvent:         string(j),
 	}
 	return w.db.Create(tx).Error
 }
@@ -68,34 +79,53 @@ func (w *MySqlDB) PutStarcoinTxRetry(k []byte) error {
 func (w *MySqlDB) DeleteStarcoinTxRetry(k []byte) error {
 	hash := sha3.Sum256(k)
 	tx := StarcoinTxRetry{
-		TxHash: hex.EncodeToString(hash[:]),
+		CroosTransferDataHash: hex.EncodeToString(hash[:]),
 	}
 	return w.db.Delete(tx).Error
 }
 
-func (w *MySqlDB) GetAllStarcoinTxCheck() (map[string][]byte, error) {
+func (w *MySqlDB) GetAllStarcoinTxCheck() (map[string]BytesAndEvent, error) {
 	var list []StarcoinTxCheck
 	if err := w.db.Find(&list).Error; err != nil {
 		return nil, err
 	}
-	m := make(map[string][]byte, len(list))
+	m := make(map[string]BytesAndEvent, len(list))
 	for _, v := range list {
-		m[v.TxHash], _ = hex.DecodeString(v.TxData)
+		bs, _ := hex.DecodeString(v.CrossTransferData)
+		e := &client.Event{}
+		err := json.Unmarshal([]byte(v.StarcoinEvent), e)
+		if err != nil {
+			return nil, err
+		}
+		m[v.TxHash] = BytesAndEvent{
+			Bytes: bs,
+			Event: *e,
+		}
 	}
 	return m, nil
 }
 
-func (w *MySqlDB) GetAllStarcoinTxRetry() ([][]byte, error) {
+func (w *MySqlDB) GetAllStarcoinTxRetry() ([][]byte, []client.Event, error) {
 	var list []StarcoinTxRetry
 	if err := w.db.Find(&list).Error; err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	m := make([][]byte, 0, len(list))
+	cs := make([][]byte, 0, len(list))
+	es := make([]client.Event, 0, len(list))
 	for _, v := range list {
-		bs, _ := hex.DecodeString(v.TxData)
-		m = append(m, bs)
+		bs, err := hex.DecodeString(v.CrossTransferData)
+		if err != nil {
+			return nil, nil, err
+		}
+		cs = append(cs, bs)
+		e := &client.Event{}
+		err = json.Unmarshal([]byte(v.StarcoinEvent), e)
+		if err != nil {
+			return nil, nil, err
+		}
+		es = append(es, *e)
 	}
-	return m, nil
+	return cs, es, nil
 }
 
 // Update poly height synced to Starcoin

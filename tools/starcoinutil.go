@@ -74,7 +74,7 @@ type starcoinTransactionProofRsp struct {
 	Id      uint            `json:"id"`
 }
 
-func GetTransactionProof(url string, restClient *RestClient, blockHash string, txGlobalIndex uint64, eventIndex *uint64) (string, error) {
+func GetTransactionProof(url string, restClient *RestClient, blockHash string, txGlobalIndex uint64, eventIndex *int) (string, error) {
 	params := []interface{}{blockHash, txGlobalIndex, eventIndex}
 	req := &starcoinJsonRpcReq{
 		JsonRpc: "2.0",

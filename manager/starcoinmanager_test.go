@@ -46,10 +46,15 @@ func TestFetchLockDepositEvents(t *testing.T) {
 	fmt.Println(ok)
 	fmt.Println(err)
 
-	rl, err := starcoinManager.db.GetAllStarcoinTxRetry()
+	rl, es, err := starcoinManager.db.GetAllStarcoinTxRetry()
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 	fmt.Println(len(rl))
 	fmt.Println(rl)
-	fmt.Println(err)
+	fmt.Println(es)
+
 }
 
 func TestCommitProof(t *testing.T) {
@@ -64,7 +69,8 @@ func TestCommitProof(t *testing.T) {
 	txHashBS, _ := tools.HexToBytes(txHash)
 	fmt.Println("----------------- commmit proof -----------------")
 	proof := `{"accountProof":[]}`
-	r, err := starcoinManager.commitProof(uint32(height), []byte(proof), dataBS, txHashBS)
+	headerOrCrossChainMsg := `{}`
+	r, err := starcoinManager.commitProof(uint32(height), []byte(proof), dataBS, txHashBS, []byte(headerOrCrossChainMsg))
 	fmt.Println("---------------- poly transaction hash ------------------")
 	fmt.Println(r)
 	fmt.Println(err)

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -59,27 +60,37 @@ func TestPutStarcoinTxCheck(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	k := strings.Replace(uuid.String(), "-", "", -1)
 	v, _ := uuid.MarshalBinary()
-	testDB.PutStarcoinTxCheck(k, v)
+	err := testDB.PutStarcoinTxCheck(k, v, client.Event{})
+	if err != nil {
+		t.FailNow()
+	}
 }
 
 func TestGetAndDeleteAllStarcoinTxCheck(t *testing.T) {
 	m, _ := testDB.GetAllStarcoinTxCheck()
 	fmt.Println(m)
 	for k, _ := range m {
-		testDB.DeleteStarcoinTxCheck(k)
+		err := testDB.DeleteStarcoinTxCheck(k)
+		if err != nil {
+			t.FailNow()
+		}
 	}
 }
 
 func TestPutStarcoinTxRetry(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
-	testDB.PutStarcoinTxRetry(v)
+	err := testDB.PutStarcoinTxRetry(v, client.Event{})
+	if err != nil {
+		t.FailNow()
+	}
 }
 
 func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
-	m, _ := testDB.GetAllStarcoinTxRetry()
-	fmt.Println(m)
-	for _, v := range m {
+	cs, es, _ := testDB.GetAllStarcoinTxRetry()
+	fmt.Println(cs)
+	fmt.Println(es)
+	for _, v := range cs {
 		testDB.DeleteStarcoinTxRetry(v)
 	}
 }

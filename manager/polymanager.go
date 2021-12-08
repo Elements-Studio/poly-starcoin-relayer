@@ -252,6 +252,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					tools.EncodeToHex(sender.acc.Address[:]), event.TxHash, height)
 				// temporarily ignore the error for tx
 				sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
+				//todo NO IGNORE error!
 				//if !sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath) {
 				//	return false
 				//}

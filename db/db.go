@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"hash"
 
+	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -11,18 +12,18 @@ const KEY_POLY_HEIGHT = "poly_height"
 
 type DB interface {
 	// Put Starcoin cross-chain Tx.(to poly) Check
-	PutStarcoinTxCheck(txHash string, v []byte) error
+	PutStarcoinTxCheck(txHash string, v []byte, e client.Event) error
 
 	DeleteStarcoinTxCheck(txHash string) error
 
 	// Put Starcoin cross-chain Tx.(to poly) Retry
-	PutStarcoinTxRetry(k []byte) error
+	PutStarcoinTxRetry(k []byte, event client.Event) error
 
 	DeleteStarcoinTxRetry(k []byte) error
 
-	GetAllStarcoinTxCheck() (map[string][]byte, error)
+	GetAllStarcoinTxCheck() (map[string]BytesAndEvent, error)
 
-	GetAllStarcoinTxRetry() ([][]byte, error)
+	GetAllStarcoinTxRetry() ([][]byte, []client.Event, error)
 
 	// Update poly height synced to Starcoin
 	UpdatePolyHeight(h uint32) error
@@ -34,6 +35,11 @@ type DB interface {
 	PutPolyTx(tx *PolyTx) (uint64, error)
 
 	Close()
+}
+
+type BytesAndEvent struct {
+	Bytes []byte
+	Event client.Event
 }
 
 func Hash256Hex(v []byte) string {
