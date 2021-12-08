@@ -19,10 +19,10 @@ type jsonRpcError struct {
 }
 
 type starcoinJsonRpcReq struct {
-	JsonRpc string   `json:"jsonrpc"`
-	Method  string   `json:"method"`
-	Params  []string `json:"params"`
-	Id      uint     `json:"id"`
+	JsonRpc string        `json:"jsonrpc"`
+	Method  string        `json:"method"`
+	Params  []interface{} `json:"params"`
+	Id      uint          `json:"id"`
 }
 
 type starcoinChainInfoRsp struct {
@@ -40,7 +40,7 @@ func GetStarcoinNodeHeight(url string, restClient *RestClient) (uint64, error) {
 	req := &starcoinJsonRpcReq{
 		JsonRpc: "2.0",
 		Method:  "chain.info", // starcoin chain info
-		Params:  make([]string, 0),
+		Params:  make([]interface{}, 0),
 		Id:      1,
 	}
 	reqData, err := json.Marshal(req)
@@ -65,6 +65,37 @@ func GetStarcoinNodeHeight(url string, restClient *RestClient) (uint64, error) {
 	} else {
 		return uint64(height), nil
 	}
+}
+
+type starcoinTransactionProofRsp struct {
+	JsonRpc string          `json:"jsonrpc"`
+	Result  json.RawMessage `json:"result,omitempty"`
+	Error   *jsonRpcError   `json:"error,omitempty"`
+	Id      uint            `json:"id"`
+}
+
+func GetTransactionProof(url string, restClient *RestClient, blockHash string, txGlobalIndex uint64, eventIndex *uint64) (string, error) {
+	params := []interface{}{blockHash, txGlobalIndex, eventIndex}
+	req := &starcoinJsonRpcReq{
+		JsonRpc: "2.0",
+		Method:  "chain.get_transaction_proof", // starcoin chain info
+		Params:  params,
+		Id:      1,
+	}
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		return "", fmt.Errorf("GetTransactionProof: marshal req err: %s", err.Error())
+	}
+	rspData, err := restClient.SendPostRequest(url, reqData)
+	if err != nil {
+		return "", fmt.Errorf("GetTransactionProof err: %s", err.Error())
+	}
+	rsp := &starcoinTransactionProofRsp{}
+	err = json.Unmarshal(rspData, rsp)
+	if err != nil {
+		return "", fmt.Errorf("GetTransactionProof, unmarshal resp err: %s", err.Error())
+	}
+	return string(rsp.Result), nil
 }
 
 type StarcoinKeyStore struct {

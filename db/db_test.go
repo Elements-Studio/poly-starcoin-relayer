@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/sha3"
 )
 
 var (
@@ -86,7 +87,7 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 func TestPutPolyTx(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
-	h := Sha256HashHex(v)
+	h := Hash256Hex(v)
 	tx, err := NewPolyTx(
 		//TxHash:
 		hex.EncodeToString(v),
@@ -132,4 +133,20 @@ func TestPutPolyTx(t *testing.T) {
 		t.FailNow()
 	}
 
+}
+
+func TestHasher(t *testing.T) {
+	// Move version println:
+	// [debug] (&) [1]
+	// [debug] (&) [104, 101, 108, 108, 111, 119, 111, 114, 108, 100]
+	// [debug] (&) [39, 103, 241, 92, 138, 242, 242, 199, 34, 93, 82, 115, 253, 214, 131, 237, 199, 20, 17, 10, 152, 125, 16, 84, 105, 124, 52, 138, 237, 78, 108, 199]
+	// [debug] (&) [146, 218, 217, 68, 62, 77, 214, 215, 10, 127, 17, 135, 33, 1, 235, 255, 135, 226, 23, 152, 228, 251, 178, 111, 164, 191, 89, 14, 180, 64, 231, 27]
+	oneByte := []byte{1}
+	helloworld := []byte("helloworld")
+	fmt.Println(oneByte)
+	fmt.Println(helloworld)
+	hasher := sha3.New256()
+	hasher.Write(oneByte)
+	fmt.Println(hasher.Sum(nil))
+	fmt.Println(Hash256(helloworld))
 }

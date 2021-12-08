@@ -1,8 +1,10 @@
 package db
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
+	"hash"
+
+	"golang.org/x/crypto/sha3"
 )
 
 const KEY_POLY_HEIGHT = "poly_height"
@@ -34,9 +36,16 @@ type DB interface {
 	Close()
 }
 
-func Sha256HashHex(v []byte) string {
-	hasher := sha256.New()
+func Hash256Hex(v []byte) string {
+	return hex.EncodeToString(Hash256(v))
+}
+
+func Hash256(v []byte) []byte {
+	hasher := New256Hasher()
 	hasher.Write(v)
-	h := hasher.Sum(nil)
-	return hex.EncodeToString(h)
+	return hasher.Sum(nil)
+}
+
+func New256Hasher() hash.Hash {
+	return sha3.New256() //sha256.New()
 }

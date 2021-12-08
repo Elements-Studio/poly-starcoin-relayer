@@ -2,7 +2,6 @@ package db
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -173,13 +172,13 @@ func (w *MySqlDB) updatePolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) erro
 	valueStore := NewPolyTxMapStore(w, tx)
 	var smt *csmt.SparseMerkleTree
 	if preTx == nil {
-		smt = csmt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+		smt = csmt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
 	} else {
 		preRootHash, err := hex.DecodeString(preTx.SmtNonMembershipRootHash)
 		if err != nil {
 			return err
 		}
-		smt = csmt.ImportSparseMerkleTree(nodeStore, valueStore, sha256.New(), preRootHash)
+		smt = csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), preRootHash)
 		_, err = smt.Update([]byte(preTx.TxHash), PolyTxExistsValue)
 		if err != nil {
 			return err
@@ -262,7 +261,7 @@ func createOrUpdate(db *gorm.DB, dest interface{}) error {
 
 var (
 	PolyTxExistsValue        = []byte{1}
-	PolyTxExistsValueHashHex = Sha256HashHex(PolyTxExistsValue)
+	PolyTxExistsValueHashHex = Hash256Hex(PolyTxExistsValue)
 	SmtDefaultValue          = []byte{} //defaut(empty) value
 )
 

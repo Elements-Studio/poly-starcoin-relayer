@@ -2,8 +2,8 @@ package db
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/celestiaorg/smt"
@@ -14,7 +14,7 @@ func TestDBSmtNodeMapStore(t *testing.T) {
 	//nodeStore := smt.NewSimpleMap()
 	nodeStore := NewSmtNodeMapStore(testDB.(*MySqlDB))
 	valueStore := smt.NewSimpleMap()
-	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
 	var value []byte
 	var has bool
 	var err error
@@ -103,7 +103,7 @@ func TestDBSmtNodeMapStore(t *testing.T) {
 	}
 
 	// // Test that a tree can be imported from a MapStore.
-	// smt2 := ImportSparseMerkleTree(smn, smv, sha256.New(), smt.Root())
+	// smt2 := ImportSparseMerkleTree(smn, smv, sha3.New256(), smt.Root())
 	// value, err = smt2.Get([]byte("testKey"))
 	// if err != nil {
 	// 	t.Error("returned error when getting non-empty key")
@@ -113,17 +113,30 @@ func TestDBSmtNodeMapStore(t *testing.T) {
 	// }
 }
 
+func TestPrintOneByteHash(t *testing.T) {
+	fmt.Println(PolyTxExistsValueHashHex)
+	// 2767f15c8af2f2c7225d5273fdd683edc714110a987d1054697c348aed4e6cc7
+	// sha256:
+	// 4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a
+}
+
+func TestPrintLeafDataHash(t *testing.T) {
+	h, _ := hex.DecodeString("0076d3bc41c9f588f7fcd0d5bf4718f8f84b1c41b20882703100b9eb9413807c012767f15c8af2f2c7225d5273fdd683edc714110a987d1054697c348aed4e6cc7")
+
+	fmt.Println(Hash256Hex(h))
+}
+
 func TestDBMapStores(t *testing.T) {
-	// addTestPolyTx(testDB, "foo")
-	// addTestPolyTx(testDB, "testKey")
-	// addTestPolyTx(testDB, "testKey2")
-	// addTestPolyTx(testDB, "testKey3")
-	// addTestPolyTx(testDB, "testKey4")
-	// addTestPolyTx(testDB, "testKey5")
-	// addTestPolyTx(testDB, "testKey6")
-	// addTestPolyTx(testDB, "testKey7")
-	// addTestPolyTx(testDB, "testKey8")
-	// addTestPolyTx(testDB, "testKey9")
+	addTestPolyTx(testDB, "foo")
+	addTestPolyTx(testDB, "testKey")
+	addTestPolyTx(testDB, "testKey2")
+	addTestPolyTx(testDB, "testKey3")
+	addTestPolyTx(testDB, "testKey4")
+	addTestPolyTx(testDB, "testKey5")
+	addTestPolyTx(testDB, "testKey6")
+	addTestPolyTx(testDB, "testKey7")
+	addTestPolyTx(testDB, "testKey8")
+	addTestPolyTx(testDB, "testKey9")
 	key := "foo"
 	var tx *PolyTx
 	tx, err := testDB.GetPolyTx(key)
@@ -142,7 +155,7 @@ func TestDBMapStores(t *testing.T) {
 	// if err != nil {
 	// 	t.FailNow()
 	// }
-	v := smt.VerifyProof(*proof, rootHash, []byte(key), SmtDefaultValue, sha256.New())
+	v := smt.VerifyProof(*proof, rootHash, []byte(key), SmtDefaultValue, New256Hasher())
 	if !v {
 		t.FailNow()
 	}
@@ -153,7 +166,7 @@ func TestDBMapStores(t *testing.T) {
 	//nodeStore := smt.NewSimpleMap()
 	nodeStore := NewSmtNodeMapStore(testDB.(*MySqlDB))
 	valueStore := NewPolyTxMapStore(testDB.(*MySqlDB), nil)
-	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
 	var value []byte
 	var has bool
 	//var err error
@@ -242,7 +255,7 @@ func TestDBMapStores(t *testing.T) {
 	}
 
 	// // Test that a tree can be imported from a MapStore.
-	// smt2 := ImportSparseMerkleTree(smn, smv, sha256.New(), smt.Root())
+	// smt2 := ImportSparseMerkleTree(smn, smv, sha3.New256(), smt.Root())
 	// value, err = smt2.Get([]byte("testKey"))
 	// if err != nil {
 	// 	t.Error("returned error when getting non-empty key")

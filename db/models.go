@@ -105,7 +105,7 @@ func NewPolyTx(polyTxHash string, proof []byte, header []byte, headerProof []byt
 	}
 	return &PolyTx{
 		TxHash:      polyTxHash,
-		TxHashHash:  Sha256HashHex([]byte(polyTxHash)), //todo is this ok
+		TxHashHash:  Hash256Hex([]byte(polyTxHash)), //todo is this ok
 		PolyTxProof: string(j),
 	}, nil
 }
