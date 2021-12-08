@@ -554,7 +554,7 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 	return nil
 }
 
-func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []byte, txhash []byte, headerOrCrossChainMsg []byte) (string, error) {
+func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []byte, txhash []byte, eventMsg []byte) (string, error) {
 	log.Debugf("commit proof, height: %d, proof: %s, value: %s, txhash: %s", height, string(proof), hex.EncodeToString(value), hex.EncodeToString(txhash))
 	relayAddr, err := tools.HexToBytes(this.polySigner.Address.ToHexString())
 	if err != nil {
@@ -563,20 +563,20 @@ func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []by
 	fmt.Println("--------- parameters of polySdk.Native.Ccm.ImportOuterTransfer ----------") // remove this...
 	fmt.Println(this.config.StarcoinConfig.SideChainId)                                      // sourceChainId uint64,
 	fmt.Println(hex.EncodeToString(value))                                                   // txData []byte, // CrossChainEvent.RawData
-	fmt.Println(height)
+	fmt.Println(height)                                                                      // height
 	fmt.Println(string(proof))                                                               // proof []byte,
-	fmt.Println(hex.EncodeToString(relayAddr))                                               // remove this...
-	fmt.Println(string(headerOrCrossChainMsg))                                               // headerOrCrossChainMsg
-	fmt.Println(this.polySigner.Address.ToHexString())                                       // remove this...
+	fmt.Println(hex.EncodeToString(relayAddr))                                               // relayAddr
+	fmt.Println(string(eventMsg))                                                            // headerOrCrossChainMsg
+	fmt.Println(this.polySigner.Address.ToHexString())                                       // polySigner
 	fmt.Println("------- end of params of polySdk.Native.Ccm.ImportOuterTransfer ---------") // remove this...
 
 	tx, err := this.polySdk.Native.Ccm.ImportOuterTransfer(
 		this.config.StarcoinConfig.SideChainId, //sourceChainId uint64,
-		value,                                  //txData []byte, // CrossChainEvent.RawData
+		value,                                  //txData []byte, 					// CrossChainEvent.RawData
 		height,                                 //height uint32,
-		proof,                                  //proof []byte,
+		proof,                                  //proof []byte,						// Starcoin event proof
 		relayAddr,                              //relayerAddress []byte,
-		headerOrCrossChainMsg,                  //HeaderOrCrossChainMsg []byte,
+		eventMsg,                               //HeaderOrCrossChainMsg []byte, 	// Starcoin event json
 		this.polySigner)                        //signer *Account)
 
 	if err != nil {
