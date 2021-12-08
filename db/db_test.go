@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/starcoinorg/starcoin-go/client"
@@ -160,4 +161,19 @@ func TestHasher(t *testing.T) {
 	hasher.Write(oneByte)
 	fmt.Println(hasher.Sum(nil))
 	fmt.Println(Hash256(helloworld))
+}
+
+func TestSetPolyTxStatus(t *testing.T) {
+	txHash := "testKey2"
+	err := testDB.SetPolyTxStatus(txHash, STATUS_PROCESSED)
+	if err != nil {
+		t.FailNow()
+	}
+}
+
+func TestMisc(t *testing.T) {
+	currentMillis := time.Now().UnixNano() / 1000000
+	fmt.Println(currentMillis)
+
+	fmt.Println(currentTimeMillis())
 }

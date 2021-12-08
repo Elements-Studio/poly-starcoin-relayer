@@ -253,6 +253,10 @@ func (w *BoltDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	return 0, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) SetPolyTxStatus(txHash string, status string) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) Close() {
 	w.rwlock.Lock()
 	w.db.Close()

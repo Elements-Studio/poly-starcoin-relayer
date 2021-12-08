@@ -55,6 +55,10 @@ type PolyTx struct {
 	// NumSideNodes, in the case of a compact proof, indicates the number of
 	// sidenodes in the proof when decompacted. This is only set if the proof is compact.
 	SmtProofNumSideNodes int
+
+	UpdatedAt int64 `gorm:"autoUpdateTime:milli"`
+
+	Status string `gorm:"size:20"`
 }
 
 func (p *PolyTx) GetNonMembershipProof() (*smt.SparseMerkleProof, error) {

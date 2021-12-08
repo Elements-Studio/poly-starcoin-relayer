@@ -18,6 +18,13 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+const (
+	STATUS_PROCESSING = "P"
+	STATUS_FAILED     = "F"
+	STATUS_PROCESSED  = "D"
+	STATUS_CONFIRMED  = "C"
+)
+
 type MySqlDB struct {
 	//rwlock   *sync.RWMutex
 	db *gorm.DB
@@ -33,8 +40,8 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 		return nil, err
 	}
 	// Migrate the schema
-	db.AutoMigrate(&ChainHeight{}, &StarcoinTxRetry{}, &StarcoinTxCheck{})
-	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{})
+	db.AutoMigrate(&ChainHeight{})
+	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{}, &StarcoinTxRetry{}, &StarcoinTxCheck{})
 
 	w := new(MySqlDB)
 	w.db = db
@@ -167,6 +174,18 @@ func (w *MySqlDB) GetPolyTx(txHash string) (*PolyTx, error) {
 	return &px, nil
 }
 
+func (w *MySqlDB) SetPolyTxStatus(txHash string, status string) error {
+	px := PolyTx{}
+	if err := w.db.Where(&PolyTx{
+		TxHash: txHash,
+	}).First(&px).Error; err != nil {
+		return err
+	}
+	px.Status = status
+	//px.UpdatedAt = currentTimeMillis()
+	return w.db.Save(px).Error
+}
+
 func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	lastTx := &PolyTx{}
 	var lastIndex uint64
@@ -190,6 +209,10 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	//tx.UpdatedAt = currentTimeMillis()
+	tx.Status = STATUS_PROCESSING
+
 	err = w.db.Create(tx).Error
 	if err != nil {
 		return 0, err

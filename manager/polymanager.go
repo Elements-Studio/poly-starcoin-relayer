@@ -494,7 +494,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// }
 	fromTx := [32]byte{}
 	copy(fromTx[:], param.TxHash[:32])
-	res, _ := ccd.checkIfFromChainTxExist(param.FromChainID, fromTx[:])
+	res, _ := ccd.checkIfFromChainTxExist(param.FromChainID, fromTx[:]) //todo remove this???
 	if res {
 		log.Debugf("already relayed to starcoin: ( from_chain_id: %d, from_txhash: %x,  param.Txhash: %x)",
 			param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)

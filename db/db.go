@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/hex"
 	"hash"
+	"time"
 
 	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
@@ -34,6 +35,8 @@ type DB interface {
 
 	PutPolyTx(tx *PolyTx) (uint64, error)
 
+	SetPolyTxStatus(txHash string, status string) error
+
 	Close()
 }
 
@@ -54,4 +57,8 @@ func Hash256(v []byte) []byte {
 
 func New256Hasher() hash.Hash {
 	return sha3.New256() //sha256.New()
+}
+
+func currentTimeMillis() int64 {
+	return time.Now().UnixNano() / 1000000
 }
