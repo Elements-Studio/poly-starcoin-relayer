@@ -20,7 +20,7 @@ import (
 // }
 
 func getAccountAddressAndPrivateKey(senderpk map[string]string) (*types.AccountAddress, types.Ed25519PrivateKey, error) {
-	var addressHex string // := "0x2d81a0427d64ff61b11ede9085efa5ad"
+	var addressHex string
 	for k := range senderpk {
 		addressHex = k
 		break
