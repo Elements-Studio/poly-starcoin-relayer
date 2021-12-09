@@ -187,8 +187,8 @@ func (w *MySqlDB) SetPolyTxStatus(txHash string, status string) error {
 }
 
 func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
-	px := PolyTx{}
-	err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).First(&px).Error
+	var list []PolyTx
+	err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -196,7 +196,10 @@ func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 			return nil, nil
 		}
 	}
-	return &px, nil
+	if len(list) == 0 {
+		return nil, nil
+	}
+	return &list[0], nil
 }
 
 func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
