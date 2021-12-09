@@ -83,6 +83,10 @@ func (p *PolyTx) GetNonMembershipProof() (*smt.SparseMerkleProof, error) {
 	return proof, nil
 }
 
+func (p *PolyTx) GetSmtProofSideNodes() ([][]byte, error) {
+	return DecodeSmtProofSideNodes(p.SmtProofSideNodes)
+}
+
 func (p *PolyTx) GetSmtProofNonMembershipLeafData() ([]byte, error) {
 	if len(p.SmtProofNonMembershipLeafData) != 0 {
 		return hex.DecodeString(p.SmtProofNonMembershipLeafData)

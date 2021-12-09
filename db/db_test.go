@@ -171,6 +171,13 @@ func TestSetPolyTxStatus(t *testing.T) {
 	}
 }
 
+func TestGetFirstFailedPolyTx(t *testing.T) {
+	px, err := testDB.GetFirstFailedPolyTx()
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(px)
+}
 func TestMisc(t *testing.T) {
 	currentMillis := time.Now().UnixNano() / 1000000
 	fmt.Println(currentMillis)

@@ -257,6 +257,10 @@ func (w *BoltDB) SetPolyTxStatus(txHash string, status string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) GetFirstFailedPolyTx() (*PolyTx, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) Close() {
 	w.rwlock.Lock()
 	w.db.Close()

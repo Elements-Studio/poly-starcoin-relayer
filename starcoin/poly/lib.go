@@ -310,3 +310,14 @@ func encode_u8vector_argument(arg []byte) []byte {
 
 	panic("Unable to serialize argument of type u8vector")
 }
+
+func encode_vecbytes_argument(arg diemtypes.VecBytes) []byte {
+
+	if val, err := arg.BcsSerialize(); err == nil {
+		{
+			return val
+		}
+	}
+
+	panic("Unable to serialize argument of type vecbytes")
+}

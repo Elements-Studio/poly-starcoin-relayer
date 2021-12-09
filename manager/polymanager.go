@@ -95,7 +95,7 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 		senders[i] = v
 	}
 
-	return &PolyManager{
+	mgr := &PolyManager{
 		exitChan:      make(chan int),
 		config:        servCfg,
 		polySdk:       polySdk,
@@ -104,7 +104,14 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 		db:             db,
 		starcoinClient: stcclient,
 		senders:        senders,
-	}, nil
+	}
+
+	ok := mgr.init()
+	if !ok {
+		log.Errorf("NewPolyManager - init failed\n")
+		return nil, fmt.Errorf("NewPolyManager - init failed")
+	}
+	return mgr, nil
 }
 
 func (this *PolyManager) init() bool {
@@ -125,10 +132,10 @@ func (this *PolyManager) init() bool {
 }
 
 func (this *PolyManager) MonitorChain() {
-	ret := this.init()
-	if ret == false {
-		log.Errorf("MonitorChain - init failed\n")
-	}
+	// ret := this.init()
+	// if ret == false {
+	// 	log.Errorf("MonitorChain - init failed\n")
+	// }
 	monitorTicker := time.NewTicker(config.POLY_MONITOR_INTERVAL)
 	var blockHandleResult bool
 	for {
@@ -157,6 +164,29 @@ func (this *PolyManager) MonitorChain() {
 			}
 			if err = this.db.UpdatePolyHeight(this.currentHeight - 1); err != nil {
 				log.Errorf("PolyManager.MonitorChain - failed to save height of poly: %v", err)
+			}
+		case <-this.exitChan:
+			return
+		}
+	}
+}
+
+func (this *PolyManager) MonitorFailedPolyTx() {
+	monitorTicker := time.NewTicker(config.POLY_MONITOR_INTERVAL)
+	for {
+		select {
+		case <-monitorTicker.C:
+			sender := this.selectSender()
+			polyTx, err := this.db.GetFirstFailedPolyTx()
+			if err != nil {
+				log.Errorf("PolyManager.MonitorFailedPolyTx - failed to GetFirstFailedPolyTx: %s", err.Error())
+				continue
+			}
+			if polyTx != nil {
+				ok := sender.sendPolyTxToStarcoin(polyTx)
+				if !ok {
+					log.Errorf("PolyManager.MonitorFailedPolyTx - failed to sendPolyTxToStarcoin")
+				}
 			}
 		case <-this.exitChan:
 			return
@@ -251,11 +281,19 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 				log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )",
 					tools.EncodeToHex(sender.acc.Address[:]), event.TxHash, height)
 				// temporarily ignore the error for tx
-				sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
-				//todo NO IGNORE error!
 				//if !sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath) {
 				//	return false
 				//}
+				// //////////////////////////
+				//todo Is this ok???
+				sent, saved := sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
+				if !sent {
+					log.Debugf("handleDepositEvents - failed to commitDepositEventsWithHeader, not sent.")
+				}
+				if !saved {
+					return false
+				}
+
 			}
 		}
 	}
@@ -465,7 +503,8 @@ type StarcoinSender struct {
 // 	contractAbi  *abi.ABI
 // }
 
-func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
+// return two bool value, first indicate if Starcoin transaction has been sent, second indicate if trasaction has been saved in DB
+func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) (bool, bool) {
 	var (
 		sigs       []byte
 		headerData []byte
@@ -486,21 +525,23 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 		}
 	}
 
-	// eccdAddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCDContractAddress)
-	// eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)
-	ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
-	// if err != nil {
-	// 	panic(fmt.Errorf("failed to new CCM: %v", err))
+	// // ///////////////////////////////////
+	// // eccdAddr := ethcommon.HexToAddress(this.config.ETHConfig.ECCDContractAddress)
+	// // eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)
+	// ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
+	// // if err != nil {
+	// // 	panic(fmt.Errorf("failed to new CCM: %v", err))
+	// // }
+	// fromTx := [32]byte{}
+	// copy(fromTx[:], param.TxHash[:32])
+	// res, _ := ccd.checkIfFromChainTxExist(param.FromChainID, fromTx[:]) //todo remove this???
+	// if res {
+	// 	log.Debugf("already relayed to starcoin: ( from_chain_id: %d, from_txhash: %x,  param.Txhash: %x)",
+	// 		param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)
+	// 	return true
 	// }
-	fromTx := [32]byte{}
-	copy(fromTx[:], param.TxHash[:32])
-	res, _ := ccd.checkIfFromChainTxExist(param.FromChainID, fromTx[:]) //todo remove this???
-	if res {
-		log.Debugf("already relayed to starcoin: ( from_chain_id: %d, from_txhash: %x,  param.Txhash: %x)",
-			param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)
-		return true
-	}
-	//log.Infof("poly proof with header, height: %d, key: %s, proof: %s", header.Height-1, string(key), proof.AuditPath)
+	// //log.Infof("poly proof with header, height: %d, key: %s, proof: %s", header.Height-1, string(key), proof.AuditPath)
+	// // ///////////////////////////////////
 
 	rawProof, _ := hex.DecodeString(headerProof)
 	var rawAnchor []byte
@@ -529,17 +570,17 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	polyTx, err := db.NewPolyTx(polyTxHash, rawAuditPath, headerData, rawProof, rawAnchor, sigs)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - db.NewPolyTx error: %s", err.Error())
-		return false
+		return false, false
 	}
 
 	_, err = this.db.PutPolyTx(polyTx)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - db.PutPolyTx error: %s", err.Error())
-		return false
+		return false, false
 	}
 
 	//todo ???
-	return this.sendPolyTxToStarcoin(polyTx)
+	return this.sendPolyTxToStarcoin(polyTx), true
 }
 
 func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
@@ -587,27 +628,38 @@ func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*Starcoin
 	}
 	rawAuditPath, err := hex.DecodeString(p.Proof)
 	if err != nil {
-		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		log.Errorf("polyTxToStarcoinTxInfo - hex.DecodeString error: %s", err.Error())
 		return nil, err
 	}
 	headerData, err := hex.DecodeString(p.Header)
 	if err != nil {
-		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		log.Errorf("polyTxToStarcoinTxInfo - hex.DecodeString error: %s", err.Error())
 		return nil, err
 	}
 	rawProof, err := hex.DecodeString(p.HeaderProof)
 	if err != nil {
-		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		log.Errorf("polyTxToStarcoinTxInfo - hex.DecodeString error: %s", err.Error())
 		return nil, err
 	}
 	rawAnchor, err := hex.DecodeString(p.AnchorHeader)
 	if err != nil {
-		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		log.Errorf("polyTxToStarcoinTxInfo - hex.DecodeString error: %s", err.Error())
 		return nil, err
 	}
 	sigs, err := hex.DecodeString(p.HeaderSig)
 	if err != nil {
-		log.Errorf("sendPolyTxToStarcoin - hex.DecodeString error: %s", err.Error())
+		log.Errorf("polyTxToStarcoinTxInfo - hex.DecodeString error: %s", err.Error())
+		return nil, err
+	}
+
+	leafData, err := polyTx.GetSmtProofNonMembershipLeafData()
+	if err != nil {
+		log.Errorf("polyTxToStarcoinTxInfo - GetSmtProofNonMembershipLeafData error: %s", err.Error())
+		return nil, err
+	}
+	sideNodes, err := polyTx.GetSmtProofSideNodes()
+	if err != nil {
+		log.Errorf("polyTxToStarcoinTxInfo - DecodeSmtProofSideNodes error: %s", err.Error())
 		return nil, err
 	}
 
@@ -616,7 +668,10 @@ func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*Starcoin
 		headerData,
 		rawProof,
 		rawAnchor,
-		sigs)
+		sigs,
+		leafData,
+		diemtypes.VecBytes(sideNodes),
+	)
 
 	return &StarcoinTxInfo{
 		txPayload: txPayload,
@@ -736,6 +791,7 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	if isSuccess {
 		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
+		this.db.SetPolyTxStatus(txInfo.polyTxHash, db.STATUS_PROCESSED)
 	} else {
 		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)

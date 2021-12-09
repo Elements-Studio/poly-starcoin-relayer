@@ -37,6 +37,8 @@ type DB interface {
 
 	SetPolyTxStatus(txHash string, status string) error
 
+	GetFirstFailedPolyTx() (*PolyTx, error)
+
 	Close()
 }
 

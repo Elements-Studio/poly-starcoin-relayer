@@ -186,6 +186,19 @@ func (w *MySqlDB) SetPolyTxStatus(txHash string, status string) error {
 	return w.db.Save(px).Error
 }
 
+func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
+	px := PolyTx{}
+	err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).First(&px).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+	return &px, nil
+}
+
 func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	lastTx := &PolyTx{}
 	var lastIndex uint64
@@ -313,9 +326,10 @@ func createOrUpdate(db *gorm.DB, dest interface{}) error {
 }
 
 var (
-	PolyTxExistsValue        = []byte{1}
-	PolyTxExistsValueHashHex = Hash256Hex(PolyTxExistsValue)
-	SmtDefaultValue          = []byte{} //defaut(empty) value
+	PolyTxExistsValue                = []byte{1}
+	PolyTxExistsValueHashHex         = Hash256Hex(PolyTxExistsValue)
+	SmtDefaultValue                  = []byte{} //defaut(empty) value
+	PolyTxMaxProcessingSeconds int64 = 120
 )
 
 type PolyTxMapStore struct {
