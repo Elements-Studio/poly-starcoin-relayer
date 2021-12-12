@@ -71,8 +71,8 @@ func TestCommitProof(t *testing.T) {
 	txHashBS, _ := tools.HexToBytes(txHash)
 	fmt.Println("----------------- commmit proof -----------------")
 	proof := `{"accountProof":[]}`
-	headerOrCrossChainMsg := `{}`
-	r, err := starcoinManager.commitProof(uint32(height), []byte(proof), dataBS, txHashBS, []byte(headerOrCrossChainMsg))
+	headerOrCrossChainMsg := []byte{} //`{}`
+	r, err := starcoinManager.commitProof(uint32(height), []byte(proof), dataBS, txHashBS, headerOrCrossChainMsg)
 	fmt.Println("---------------- poly transaction hash ------------------")
 	fmt.Println(r)
 	fmt.Println(err)

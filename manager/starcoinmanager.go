@@ -515,12 +515,12 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 			log.Errorf("handleLockDepositEvents - ParseUint error :%s\n", err.Error())
 			return err // todo or continue???
 		}
-		evtMsg, err := json.Marshal(evt)
-		if err != nil {
-			log.Errorf("handleLockDepositEvents - json.Marshal(evt) error :%s\n", err.Error())
-			return err // todo or continue???
-		}
-		txHash, err := this.commitProof(uint32(height), []byte(proof), crosstx.value, crosstx.txId, evtMsg)
+		// evtMsg, err := json.Marshal(evt)
+		// if err != nil {
+		// 	log.Errorf("handleLockDepositEvents - json.Marshal(evt) error :%s\n", err.Error())
+		// 	return err
+		// }
+		txHash, err := this.commitProof(uint32(height), []byte(proof), crosstx.value, crosstx.txId, []byte{})
 		if err != nil {
 			if strings.Contains(err.Error(), "chooseUtxos, current utxo is not enough") {
 				log.Infof("handleLockDepositEvents - invokeNativeContract error: %s", err.Error())
