@@ -3,7 +3,6 @@ package manager
 import (
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
-	stcclient "github.com/starcoinorg/starcoin-go/client"
 	"github.com/starcoinorg/starcoin-go/types"
 )
 
@@ -30,7 +29,7 @@ func getAccountAddressAndPrivateKey(senderpk map[string]string) (*types.AccountA
 		log.Errorf("getAccountAddressAndPrivateKey - Convert hex to bytes error:%s", err.Error())
 		return nil, nil, err
 	}
-	address, err := stcclient.ToAccountAddress(addressHex)
+	address, err := types.ToAccountAddress(addressHex)
 	if err != nil {
 		return nil, nil, err
 	}

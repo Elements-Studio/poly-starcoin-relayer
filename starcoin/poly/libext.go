@@ -3,7 +3,6 @@ package poly
 import (
 	"strings"
 
-	stcclient "github.com/starcoinorg/starcoin-go/client"
 	diemtypes "github.com/starcoinorg/starcoin-go/types"
 )
 
@@ -12,7 +11,7 @@ func ParseModuleId(str string) *diemtypes.ModuleId {
 	if len(ss) < 2 {
 		panic("module Id string format error")
 	}
-	addr, err := stcclient.ToAccountAddress(ss[0])
+	addr, err := diemtypes.ToAccountAddress(ss[0])
 	if err != nil {
 		panic("module Id string address format error")
 	}

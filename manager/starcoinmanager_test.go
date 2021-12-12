@@ -7,12 +7,14 @@ import (
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
+	"github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	stcpolyevts "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	pcommon "github.com/polynetwork/poly/common"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
+	"github.com/starcoinorg/starcoin-go/types"
 )
 
 func TestFindSyncedHeight(t *testing.T) {
@@ -79,7 +81,7 @@ func TestCommitProof(t *testing.T) {
 	}
 }
 
-func TestGetSmartContractEvent(t *testing.T) {
+func TestGetPolySmartContractEvent(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	//fmt.Println(starcoinManager)
 	k := "0a2a6502415f878d8866ae3b7d646327ce28fe3c592f7f08091c6ed6db4e55ac"
@@ -189,6 +191,45 @@ func TestDeserializeCrossChainEventRawData(t *testing.T) {
 	// amount, b := s2.NextVarUint()
 	// fmt.Println(amount)
 
+}
+
+func TestDeserializeCrossChainEvent(t *testing.T) {
+	ehex := "0x00180500000000000000e498d62f5d1f469d2f72eb3e9dc8f230020000000000000007e498d62f5d1f469d2f72eb3e9dc8f2301143726f7373436861696e4d616e616765720f43726f7373436861696e4576656e7400de0210e498d62f5d1f469d2f72eb3e9dc8f230100000000000000000000000000000000235307865343938643632663564316634363964326637326562336539646338663233303a3a43726f7373436861696e4d616e61676572da0000000000000034307865343938643632663564316634363964326637326562336539646338663233303a3a43726f7373436861696e536372697074c7011000000000000000000000000000000002208f5e5f785723333b2ab129a7928d1d47129a4df840da708d25086f1a361e0f6910e498d62f5d1f469d2f72eb3e9dc8f230da0000000000000034307865343938643632663564316634363964326637326562336539646338663233303a3a43726f7373436861696e53637269707406756e6c6f636b3f0d3078313a3a5354433a3a535443102d81a0427d64ff61b11ede9085efa5ad1027000000000000000000000000000000000000000000000000000000000000"
+	ebs, err := tools.HexToBytes(ehex)
+	if err != nil {
+		t.FailNow()
+	}
+	evt, err := types.BcsDeserializeContractEvent(ebs)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(evt)
+	var ev0 types.ContractEventV0
+	switch evt.(type) {
+	case *types.ContractEvent__V0:
+		ev0 = evt.(*types.ContractEvent__V0).Value
+	default:
+		t.FailNow()
+	}
+	evtData, err := events.BcsDeserializeCrossChainEvent(ev0.EventData)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(evtData)
+	rawDataSrc := pcommon.NewZeroCopySource(evtData.RawData)
+	txParam := new(common2.MakeTxParam)
+	if err := txParam.Deserialization(rawDataSrc); err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("---------- MakeTxParam ----------")
+	fmt.Println(hex.EncodeToString(txParam.TxHash))              // []byte
+	fmt.Println(hex.EncodeToString(txParam.CrossChainID))        // sha256(abi.encodePacked(address(this), paramTxHash))
+	fmt.Println(hex.EncodeToString(txParam.FromContractAddress)) // []byte
+	fmt.Println(txParam.ToChainID)                               // uint64
+	fmt.Println(string(txParam.ToContractAddress))               // []byte
+	fmt.Println(txParam.Method)                                  // string
+	fmt.Println(hex.EncodeToString(txParam.Args))                // []byte
 }
 
 func TestMisc(t *testing.T) {
