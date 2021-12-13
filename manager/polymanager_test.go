@@ -33,6 +33,26 @@ func TestHandleDepositEvents(t *testing.T) {
 	}
 }
 
+func TestGetPolyHeightByTxHash(t *testing.T) {
+	//commitProof - send transaction to poly chain: ( poly_txhash: 61341c16ec50ec4b2c364ee3dfc3ccdb5af540eba38c89160de75afd3322052d,
+	//starcoin_txhash: 0x9cfb0f1a47fa8a3c7cf1a60b652434adc78adf147205fea34b3e74fa6fff9bff, height: 219972 )
+	polyTxHash := "61341c16ec50ec4b2c364ee3dfc3ccdb5af540eba38c89160de75afd3322052d"
+	polyManager := getTestPolyManager(t)
+	h, err := polyManager.polySdk.GetBlockHeightByTxHash(polyTxHash)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(h)
+
+	e, err := polyManager.polySdk.GetSmartContractEvent(polyTxHash)
+	fmt.Println(e)
+	fmt.Println("------------- event.State -------------")
+	fmt.Println(e.State)
+	fmt.Println("------------- event.Notify -------------")
+	fmt.Println(e.Notify)
+	fmt.Println(err)
+}
+
 func TestSendPolyTxToStarcoin(t *testing.T) {
 	polyManager := getTestPolyManager(t)
 	//fmt.Println(polyManager)

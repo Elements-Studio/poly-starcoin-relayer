@@ -94,6 +94,10 @@ func (p *PolyTx) GetSmtProofNonMembershipLeafData() ([]byte, error) {
 	return nil, nil
 }
 
+func (p *PolyTx) GetSmtNonMembershipRootHash() ([]byte, error) {
+	return hex.DecodeString(p.SmtNonMembershipRootHash)
+}
+
 func (p *PolyTx) GetSmtProofSiblingData() ([]byte, error) {
 	if len(p.SmtProofSiblingData) != 0 {
 		return hex.DecodeString(p.SmtProofSiblingData)

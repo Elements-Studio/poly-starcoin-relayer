@@ -154,7 +154,7 @@ func (this *PolyManager) MonitorChain() {
 			blockHandleResult = true
 			for this.currentHeight <= latestheight-config.ONT_USEFUL_BLOCK_NUM {
 				if this.currentHeight%10 == 0 {
-					log.Infof("handle confirmed poly Block height: %d", this.currentHeight)
+					log.Infof("PolyManager.MonitorChain - handle confirmed poly Block height: %d", this.currentHeight)
 				}
 				blockHandleResult = this.handleDepositEvents(this.currentHeight)
 				if blockHandleResult == false {
@@ -659,7 +659,12 @@ func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*Starcoin
 	}
 	sideNodes, err := polyTx.GetSmtProofSideNodes()
 	if err != nil {
-		log.Errorf("polyTxToStarcoinTxInfo - DecodeSmtProofSideNodes error: %s", err.Error())
+		log.Errorf("polyTxToStarcoinTxInfo - GetSmtProofSideNodes error: %s", err.Error())
+		return nil, err
+	}
+	rootHash, err := polyTx.GetSmtNonMembershipRootHash()
+	if err != nil {
+		log.Errorf("polyTxToStarcoinTxInfo - GetSmtNonMembershipRootHash error: %s", err.Error())
 		return nil, err
 	}
 
@@ -669,6 +674,7 @@ func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*Starcoin
 		rawProof,
 		rawAnchor,
 		sigs,
+		rootHash,
 		leafData,
 		diemtypes.VecBytes(sideNodes),
 	)

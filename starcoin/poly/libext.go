@@ -45,14 +45,14 @@ func EncodeCCMChangeBookKeeperTxPayload(module string, raw_header []byte, pub_ke
 // 	}
 // }
 
-func EncodeCCMVerifyHeaderAndExecuteTxPayload(module string, proof []byte, raw_header []byte, header_proof []byte, cur_raw_header []byte, header_sig []byte, merkle_proof_leaf []byte, merkle_proof_siblings diemtypes.VecBytes) diemtypes.TransactionPayload {
+func EncodeCCMVerifyHeaderAndExecuteTxPayload(module string, proof []byte, raw_header []byte, header_proof []byte, cur_raw_header []byte, header_sig []byte, merkle_proof_root []byte, merkle_proof_leaf []byte, merkle_proof_siblings diemtypes.VecBytes) diemtypes.TransactionPayload {
 	// copy from generated code:
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
 			Module:   *ParseModuleId(module), //diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrossChainScript"},
 			Function: "verifyHeaderAndExecuteTx",
 			TyArgs:   []diemtypes.TypeTag{},
-			Args:     [][]byte{encode_u8vector_argument(proof), encode_u8vector_argument(raw_header), encode_u8vector_argument(header_proof), encode_u8vector_argument(cur_raw_header), encode_u8vector_argument(header_sig), encode_u8vector_argument(merkle_proof_leaf), encode_vecbytes_argument(merkle_proof_siblings)},
+			Args:     [][]byte{encode_u8vector_argument(proof), encode_u8vector_argument(raw_header), encode_u8vector_argument(header_proof), encode_u8vector_argument(cur_raw_header), encode_u8vector_argument(header_sig), encode_u8vector_argument(merkle_proof_root), encode_u8vector_argument(merkle_proof_leaf), encode_vecbytes_argument(merkle_proof_siblings)},
 		},
 	}
 }
