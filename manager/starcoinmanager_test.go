@@ -1,8 +1,11 @@
 package manager
 
 import (
+	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
@@ -240,6 +243,43 @@ func TestMisc(t *testing.T) {
 	sink.WriteUint64(1)
 	fmt.Println(hex.EncodeToString(sink.Bytes()))
 
+}
+
+func TestGetBlockHeaders(t *testing.T) {
+	starcoinManager := getTestStarcoinManager(t)
+	var height uint64 = 222625
+	blockCount := 25
+	var hdrs = make([]*stcclient.BlockHeader, 0, blockCount)
+	for i := 0; i < blockCount; i++ {
+		h := height - uint64(i)
+		hdr, err := starcoinManager.client.HeaderByNumber(context.Background(), h)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		//fmt.Println(hdr)
+		hdrs = append(hdrs, hdr)
+	}
+	j, err := json.Marshal(hdrs)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("--------------- starcoin block headers ----------------")
+	fmt.Println(string(j))
+
+	filePath := "testjson.json"
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 777)
+	defer file.Close()
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	_, err = file.WriteString(string(j))
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 }
 
 func getTestStarcoinManager(t *testing.T) *StarcoinManager {
