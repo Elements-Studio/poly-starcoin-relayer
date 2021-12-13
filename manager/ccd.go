@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
@@ -74,6 +75,24 @@ func (ccd *CrossChainData) checkIfFromChainTxExist(fromChainId uint64, fromChain
 	return toBool(extractSingleResult(r))
 }
 
+// this a test method only
+func (ccd *CrossChainData) getSparseMerkleRootHash() ([]byte, error) {
+	addr, _, err := parseModuleId(ccd.module)
+	if err != nil {
+		return nil, err
+	}
+	c := stcclient.ContractCall{
+		FunctionId: addr + "::CrossChainData::get_merkle_root_hash",
+		TypeArgs:   []string{addr + "::CrossChainType::Starcoin"}, //todo as parameter?
+		Args:       []string{},
+	}
+	r, err := ccd.starcoinClient.CallContract(context.Background(), c)
+	if err != nil {
+		return nil, err
+	}
+	return toBytes(extractSingleResult(r))
+}
+
 func (ccd *CrossChainData) getFunctionId(funcName string) string {
 	return ccd.module + "::" + funcName
 }
@@ -119,4 +138,12 @@ func toUint64(i interface{}) (uint64, error) {
 		return uint64(r), err
 	}
 	return 0, fmt.Errorf("unknown type to uint64 %t", i)
+}
+
+func parseModuleId(str string) (string, string, error) {
+	ss := strings.Split(str, "::")
+	if len(ss) < 2 {
+		return "", "", fmt.Errorf("module Id string format error")
+	}
+	return ss[0], ss[1], nil
 }

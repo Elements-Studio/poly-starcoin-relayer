@@ -22,3 +22,14 @@ func TestGetCurEpochConPubKeyBytes(t *testing.T) {
 	fmt.Println(h)
 	fmt.Println(err)
 }
+
+func TestGetSparseMerkleRootHash(t *testing.T) {
+	client := stcclient.NewStarcoinClient("https://halley-seed.starcoin.org")
+	ccd := NewCrossChainData(&client, "0x57aa381a5d7c0141da3965393eed9958::CrossChainScript")
+	h, err := ccd.getSparseMerkleRootHash()
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(h)
+}
