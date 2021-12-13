@@ -186,6 +186,32 @@ func (w *MySqlDB) SetPolyTxStatus(txHash string, status string) error {
 	return w.db.Save(px).Error
 }
 
+func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string) error {
+	px := PolyTx{}
+	if err := w.db.Where(&PolyTx{
+		TxHash: txHash,
+	}).First(&px).Error; err != nil {
+		return err
+	}
+	px.Status = STATUS_PROCESSING
+	px.StarcoinTxHash = starcoinTxHash
+	//px.UpdatedAt = currentTimeMillis()
+	return w.db.Save(px).Error
+}
+
+func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, starcoinTxHash string) error {
+	px := PolyTx{}
+	if err := w.db.Where(&PolyTx{
+		TxHash: txHash,
+	}).First(&px).Error; err != nil {
+		return err
+	}
+	px.Status = STATUS_PROCESSED
+	px.StarcoinTxHash = starcoinTxHash
+	//px.UpdatedAt = currentTimeMillis()
+	return w.db.Save(px).Error
+}
+
 func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	var list []PolyTx
 	err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
@@ -230,10 +256,28 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	tx.Status = STATUS_PROCESSING
 
 	err = w.db.Create(tx).Error
+
 	if err != nil {
 		return 0, err
 	}
-	return tx.TxIndex, err
+	return tx.TxIndex, nil
+}
+
+func IsDuplicatePolyTxError(db DB, tx *PolyTx, err error) (bool, error) {
+	var mysqlErr *gomysql.MySQLError
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 { // Duplicate entry error
+		oldData, getErr := db.GetPolyTx(tx.TxHash)
+		if getErr != nil {
+			return false, getErr
+		}
+		if bytes.Equal([]byte(tx.PolyTxProof), []byte(oldData.PolyTxProof)) {
+			return true, nil
+		} else {
+			return false, err
+		}
+	} else {
+		return false, err
+	}
 }
 
 func (w *MySqlDB) updatePolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
@@ -418,7 +462,7 @@ func (m *SmtNodeMapStore) Set(key []byte, value []byte) error { // Set updates t
 	}
 	err := m.db.db.Create(n).Error
 	var mysqlErr *gomysql.MySQLError
-	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 { // Duplicate entry error
 		oldData, err := m.Get(key)
 		if err != nil {
 			return err

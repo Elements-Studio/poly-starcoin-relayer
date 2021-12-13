@@ -158,10 +158,12 @@ func (this *PolyManager) MonitorChain() {
 				}
 				blockHandleResult = this.handleDepositEvents(this.currentHeight)
 				if blockHandleResult == false {
+					log.Warnf("PolyManager.MonitorChain - handleDepositEvents return false, height: %d", this.currentHeight) //todo remove this
 					break
 				}
 				this.currentHeight++
 			}
+			log.Warnf("PolyManager.MonitorChain - about to UpdatePolyHeight: %d", this.currentHeight-1) //todo remove this
 			if err = this.db.UpdatePolyHeight(this.currentHeight - 1); err != nil {
 				log.Errorf("PolyManager.MonitorChain - failed to save height of poly: %v", err)
 			}
@@ -183,6 +185,7 @@ func (this *PolyManager) MonitorFailedPolyTx() {
 				continue
 			}
 			if polyTx != nil {
+				log.Warnf("Get failed poly Tx. hash: %s", polyTx.TxHash) //todo remove this...
 				ok := sender.sendPolyTxToStarcoin(polyTx)
 				if !ok {
 					log.Errorf("PolyManager.MonitorFailedPolyTx - failed to sendPolyTxToStarcoin")
@@ -288,12 +291,12 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 				//todo Is this ok???
 				sent, saved := sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
 				if !sent {
-					log.Debugf("handleDepositEvents - failed to commitDepositEventsWithHeader, not sent.")
+					log.Errorf("handleDepositEvents - failed to commitDepositEventsWithHeader, not sent. Poly tx hash: %s", event.TxHash)
 				}
 				if !saved {
+					log.Errorf("handleDepositEvents - failed to commitDepositEventsWithHeader, not saved. Poly tx hash: %s", event.TxHash)
 					return false
 				}
-
 			}
 		}
 	}
@@ -576,6 +579,14 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	_, err = this.db.PutPolyTx(polyTx)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - db.PutPolyTx error: %s", err.Error())
+		duplicate, err := db.IsDuplicatePolyTxError(this.db, polyTx, err)
+		if err != nil {
+			return false, false
+		}
+		if duplicate {
+			log.Warnf("commitDepositEventsWithHeader - duplicate poly tx. hash: %s", polyTx.TxHash)
+			return false, true
+		}
 		return false, false
 	}
 
@@ -584,7 +595,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 }
 
 func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
-
+	this.db.SetPolyTxStatusProcessing(polyTx.TxHash, "") //todo is this ok?
 	stcTxInfo, err := this.polyTxToStarcoinTxInfo(polyTx)
 	if err != nil {
 		return false
@@ -797,10 +808,11 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	if isSuccess {
 		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
-		this.db.SetPolyTxStatus(txInfo.polyTxHash, db.STATUS_PROCESSED)
+		this.db.SetPolyTxStatusProcessed(txInfo.polyTxHash, txhash)
 	} else {
 		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
+		this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txhash)
 	}
 	return nil
 }

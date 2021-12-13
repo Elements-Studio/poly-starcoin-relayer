@@ -257,6 +257,14 @@ func (w *BoltDB) SetPolyTxStatus(txHash string, status string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) SetPolyTxStatusProcessed(txHash string, starcoinTxHash string) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }

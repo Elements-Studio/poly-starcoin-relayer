@@ -222,14 +222,14 @@ func (this *StarcoinManager) rollBackToCommAncestor() {
 			//todo remove this...
 			hdrInPoly, err := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 				append(append([]byte(scom.HEADER_INDEX), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), raw...))
-			log.Warnf("header in poly: %s", hex.EncodeToString(hdrInPoly))
+			log.Warnf("rollBackToCommAncestor - header in poly: %s", hex.EncodeToString(hdrInPoly))
 			fmt.Println(err)
 			//todo remove this...
 			// ------------------------------------
 			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(block hash) %s(header hash) (number: %d)", hdr.BlockHash, hex.EncodeToString(hdrhash), this.currentHeight)
 			break
 		} else {
-			log.Warnf("hdr hash: %s, raw hash from poly: %s", hex.EncodeToString(hdrhash), hex.EncodeToString(raw)) //todo remove this warning
+			log.Warnf("rollBackToCommAncestor - hdr hash: %s, raw hash from poly: %s", hex.EncodeToString(hdrhash), hex.EncodeToString(raw)) //todo remove this warning
 		}
 	}
 	this.header4sync = make([][]byte, 0)

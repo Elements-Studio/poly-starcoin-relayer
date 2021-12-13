@@ -56,9 +56,11 @@ type PolyTx struct {
 	// sidenodes in the proof when decompacted. This is only set if the proof is compact.
 	SmtProofNumSideNodes int
 
-	UpdatedAt int64 `gorm:"autoUpdateTime:milli"`
+	UpdatedAt int64 `gorm:"autoUpdateTime:milli;index"`
 
-	Status string `gorm:"size:20"`
+	Status string `gorm:"size:20;index"`
+
+	StarcoinTxHash string `gorm:"size:66"`
 }
 
 func (p *PolyTx) GetNonMembershipProof() (*smt.SparseMerkleProof, error) {

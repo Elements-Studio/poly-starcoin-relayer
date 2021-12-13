@@ -37,6 +37,10 @@ type DB interface {
 
 	SetPolyTxStatus(txHash string, status string) error
 
+	SetPolyTxStatusProcessing(txHash string, starcoinTxHash string) error
+
+	SetPolyTxStatusProcessed(txHash string, starcoinTxHash string) error
+
 	GetFirstFailedPolyTx() (*PolyTx, error)
 
 	Close()
