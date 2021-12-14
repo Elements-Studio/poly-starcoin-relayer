@@ -108,8 +108,8 @@ func (this *StarcoinManager) init() error {
 }
 
 func (this *StarcoinManager) MonitorChain() {
-	fetchBlockTicker := time.NewTicker(200 * time.Millisecond) //todo remove this
-	//fetchBlockTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
+	//fetchBlockTicker := time.NewTicker(200 * time.Millisecond) //todo remove this
+	fetchBlockTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
 	var blockHandleResult bool
 	for {
 		select {
@@ -144,14 +144,16 @@ func (this *StarcoinManager) MonitorChain() {
 				this.currentHeight++
 				// try to commit header if more than 50 headers needed to be syned
 				if len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch {
+					fmt.Println("--------- len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch --------")
 					fmt.Println("----------------- len(header4sync) -----------------") //todo remove this
 					fmt.Println(len(this.header4sync))
-					fmt.Println("--------------- this.header4sync[0] ----------------")
-					fmt.Println(string(this.header4sync[0]))
+					fmt.Println("--------------- this.header4sync ----------------")
+					printHeader4sync(this.header4sync)
 					fmt.Println("--------------- this.currentHeight ----------------")
 					fmt.Println(this.currentHeight)
 					fmt.Println("---------------- commit headers... ------------------")
 					if res := this.commitHeader(); res != 0 {
+						log.Errorf("StarcoinManager.MonitorChain - commitHeader error, current height: %d", this.currentHeight)
 						blockHandleResult = false
 						break
 					}
@@ -164,8 +166,13 @@ func (this *StarcoinManager) MonitorChain() {
 			fmt.Println("--------------- this.currentHeight ----------------")
 			fmt.Println(this.currentHeight)
 			if blockHandleResult && len(this.header4sync) > 0 {
-				fmt.Println("---------------- commit headers... ------------------")
-				this.commitHeader()
+				fmt.Println("--------------- this.header4sync ----------------")
+				printHeader4sync(this.header4sync)
+				fmt.Println("---------------- commit headers... ------------------") //todo remove this
+				res := this.commitHeader()
+				if res != 0 {
+					log.Errorf("StarcoinManager.MonitorChain - commitHeader error, current height: %d", this.currentHeight)
+				}
 			}
 		case <-this.exitChan:
 			return
@@ -173,6 +180,19 @@ func (this *StarcoinManager) MonitorChain() {
 	}
 }
 
+// this is a test method
+func printHeader4sync(headers [][]byte) {
+	fmt.Println("[")
+	for i, h := range headers {
+		if i != 0 {
+			fmt.Println(",")
+		}
+		fmt.Println(string(h))
+	}
+	fmt.Println("]")
+}
+
+// if success, return 0
 func (this *StarcoinManager) commitHeader() int {
 	tx, err := this.polySdk.Native.Hs.SyncBlockHeader(
 		this.config.StarcoinConfig.SideChainId,
@@ -194,12 +214,28 @@ func (this *StarcoinManager) commitHeader() int {
 	tick := time.NewTicker(100 * time.Millisecond)
 	var h uint32
 	for range tick.C {
-		h, _ = this.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
-		curr, _ := this.polySdk.GetCurrentBlockHeight()
+		h, err = this.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
+		if err != nil {
+			log.Debugf("StarcoinManager.commitHeader - GetBlockHeightByTxHash: %d", h) //todo remove this???
+		}
+		curr, err := this.polySdk.GetCurrentBlockHeight()
+		if err != nil {
+			log.Debugf("StarcoinManager.commitHeader - GetCurrentBlockHeight: %d", curr) //todo remove this???
+		}
+		//
+		// todo ignore errors?
+		// h, _ = this.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
+		// curr, _ := this.polySdk.GetCurrentBlockHeight()
+		//
 		if h > 0 && curr > h {
+			//todo remove this line:
+			log.Warnf("Break! GetCurrentBlockHeight() > GetBlockHeightByTxHash(tx.ToHexString()). Tx height: %d, current block height: %d", h, curr)
 			break
 		}
+		//todo remove this line:
+		log.Debugf("Waiting GetCurrentBlockHeight() > GetBlockHeightByTxHash(tx.ToHexString()). Tx height: %d, current block height: %d", h, curr)
 	}
+
 	log.Infof("commitHeader - send transaction %s to poly chain and confirmed on height %d", tx.ToHexString(), h)
 	this.header4sync = make([][]byte, 0)
 	return 0
@@ -246,6 +282,10 @@ func (this *StarcoinManager) rollBackToCommAncestor() {
 		}
 	}
 	this.header4sync = make([][]byte, 0)
+	fmt.Println("---------------- rollBackToCommAncestor, len(this.header4sync) --------------") //todo remove this
+	fmt.Println(this.header4sync)
+	fmt.Println("---------------- rollBackToCommAncestor,  this.currentHeight --------------")
+	fmt.Println(this.currentHeight)
 }
 
 func (this *StarcoinManager) handleNewBlock(height uint64) bool {
@@ -299,12 +339,13 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	rawHdr, _ := json.Marshal(hdr)
 	raw, _ := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
-	hdrhash, err := hdr.BlockHeader.Hash()
+	// this var `raw` is block(header) hash saved in poly
+	hdrhash, err := hdr.BlockHeader.Hash() //calculated hash
 	if err != nil {
 		log.Errorf("handleBlockHeader - get header hash on height :%d failed", height)
 		return false
 	}
-	blockhash, err := tools.HexToBytes(hdr.BlockHeader.BlockHash)
+	blockhash, err := tools.HexToBytes(hdr.BlockHeader.BlockHash) // hash returned by JSON RPC
 	if err != nil {
 		log.Errorf("handleBlockHeader - get hdr.BlockHeader.BlockHash on height :%d failed", height)
 		return false
