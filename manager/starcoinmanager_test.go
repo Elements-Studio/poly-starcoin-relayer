@@ -247,7 +247,7 @@ func TestMisc(t *testing.T) {
 
 func TestGetStarcoinHeaderInPoly(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
-	var height uint64 = 222626
+	var height uint64 = 222623
 	hdr, err := getStarcoinHeaderInPoly(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, height)
 	if err != nil {
 		fmt.Println(err)
@@ -259,7 +259,9 @@ func TestGetStarcoinHeaderInPoly(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println(h)
+	fmt.Println("--------------- starcoin header ---------------")
+	fmt.Println(h.Number)
+	fmt.Printf("timestamp: %d\n", h.Timestamp)
 
 }
 
