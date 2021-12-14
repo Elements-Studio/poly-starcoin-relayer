@@ -148,6 +148,8 @@ func (this *StarcoinManager) MonitorChain() {
 					fmt.Println(len(this.header4sync))
 					fmt.Println("--------------- this.header4sync[0] ----------------")
 					fmt.Println(string(this.header4sync[0]))
+					fmt.Println("--------------- this.currentHeight ----------------")
+					fmt.Println(this.currentHeight)
 					fmt.Println("---------------- commit headers... ------------------")
 					if res := this.commitHeader(); res != 0 {
 						blockHandleResult = false
@@ -155,10 +157,12 @@ func (this *StarcoinManager) MonitorChain() {
 					}
 				}
 			}
-			fmt.Println("----------------- blockHandleResult -----------------")
+			fmt.Println("----------------- blockHandleResult -----------------") //todo remove this
 			fmt.Println(blockHandleResult)
 			fmt.Println("----------------- len(header4sync) -----------------")
 			fmt.Println(len(this.header4sync))
+			fmt.Println("--------------- this.currentHeight ----------------")
+			fmt.Println(this.currentHeight)
 			if blockHandleResult && len(this.header4sync) > 0 {
 				fmt.Println("---------------- commit headers... ------------------")
 				this.commitHeader()

@@ -245,6 +245,24 @@ func TestMisc(t *testing.T) {
 
 }
 
+func TestGetStarcoinHeaderInPoly(t *testing.T) {
+	starcoinManager := getTestStarcoinManager(t)
+	var height uint64 = 222626
+	hdr, err := getStarcoinHeaderInPoly(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, height)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(hex.EncodeToString(hdr))
+	h, err := types.BcsDeserializeBlockHeader(hdr)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(h)
+
+}
+
 func TestGetBlockHeaders(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	var height uint64 = 222625
@@ -269,13 +287,17 @@ func TestGetBlockHeaders(t *testing.T) {
 	fmt.Println(string(j))
 
 	filePath := "testjson.json"
+	writeTextFile(filePath, string(j), t)
+}
+
+func writeTextFile(filePath string, content string, t *testing.T) {
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	_, err = file.WriteString(string(j))
+	defer file.Close()
+	_, err = file.WriteString(content)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
