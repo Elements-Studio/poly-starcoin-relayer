@@ -4,32 +4,45 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/elements-studio/poly-starcoin-relayer/config"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
 func TestGetCurEpochStartHeight(t *testing.T) {
-	client := stcclient.NewStarcoinClient("http://localhost:9850")
-	ccd := NewCrossChainData(&client, "0x569AB535990a17Ac9Afd1bc57Faec683::CrossChainScript")
+	ccd := newCCD(t)
 	h, err := ccd.getCurEpochStartHeight()
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 	fmt.Println(h)
-	fmt.Println(err)
 }
 
 func TestGetCurEpochConPubKeyBytes(t *testing.T) {
-	client := stcclient.NewStarcoinClient("http://localhost:9850")
-	ccd := NewCrossChainData(&client, "0x569AB535990a17Ac9Afd1bc57Faec683::CrossChainScript")
+	ccd := newCCD(t)
 	h, err := ccd.getCurEpochConPubKeyBytes()
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 	fmt.Println(h)
-	fmt.Println(err)
 }
 
 func TestGetSparseMerkleRootHash(t *testing.T) {
-	client := stcclient.NewStarcoinClient("https://halley-seed.starcoin.org")
-	ccd := NewCrossChainData(&client, "0x57aa381a5d7c0141da3965393eed9958::CrossChainScript")
+	ccd := newCCD(t)
 	h, err := ccd.getSparseMerkleRootHash()
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
 	fmt.Println(h)
+}
+
+func newCCD(t *testing.T) *CrossChainData {
+	servConfig := config.NewServiceConfig("../config-devnet.json")
+	if servConfig == nil {
+		t.FailNow()
+	}
+	client := stcclient.NewStarcoinClient("https://halley-seed.starcoin.org")
+	return NewCrossChainData(&client, servConfig.StarcoinConfig.CCDModule)
 }

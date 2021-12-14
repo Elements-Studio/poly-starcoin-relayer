@@ -269,7 +269,7 @@ func TestGetBlockHeaders(t *testing.T) {
 	fmt.Println(string(j))
 
 	filePath := "testjson.json"
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 777)
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
