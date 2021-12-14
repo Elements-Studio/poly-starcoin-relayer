@@ -223,7 +223,7 @@ func (this *StarcoinManager) commitHeader() int {
 			log.Debugf("StarcoinManager.commitHeader - GetCurrentBlockHeight: %d", curr) //todo remove this???
 		}
 		//
-		// todo ignore errors?
+		// todo ignore errors? like this:
 		// h, _ = this.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
 		// curr, _ := this.polySdk.GetCurrentBlockHeight()
 		//

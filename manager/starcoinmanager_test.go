@@ -259,8 +259,8 @@ func TestGetStarcoinHeaderInPoly(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println("--------------- starcoin header ---------------")
-	fmt.Println(h.Number)
+	fmt.Println("--------------- get starcoin block header in poly ---------------")
+	fmt.Printf("height(number): %d\n", h.Number)
 	fmt.Printf("timestamp: %d\n", h.Timestamp)
 
 }
