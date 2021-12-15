@@ -310,6 +310,28 @@ func TestGetBlockHeaders(t *testing.T) {
 	writeTextFile(filePath, string(j), t)
 }
 
+func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
+	starcoinManager := getTestStarcoinManager(t)
+	var height uint64 = 222610
+	h, err := starcoinManager.client.GetBlockHeaderAndBlockInfoByNumber(context.Background(), height)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	j, err := json.Marshal(h)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(string(j))
+	//fmt.Println(hex.EncodeToString(j))
+	// /////////////////////////////////////////////////////
+	//note: poly may use this hex to init genesis...
+	filePath := fmt.Sprintf("blockHeaderAndBlockInfoHex-%d.txt", height)
+	writeTextFile(filePath, hex.EncodeToString(j), t)
+	// /////////////////////////////////////////////////////
+}
+
 func writeTextFile(filePath string, content string, t *testing.T) {
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
