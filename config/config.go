@@ -96,6 +96,9 @@ func NewServiceConfig(configFilePath string) *ServiceConfig {
 		log.Errorf("NewServiceConfig: failed, err: %s", err.Error())
 		return nil
 	}
+	// /////////////////////////////////////////
+	fileContent = replaceJsonEnvs(fileContent)
+	// /////////////////////////////////////////
 	servConfig := &ServiceConfig{}
 	err = json.Unmarshal(fileContent, servConfig)
 	if err != nil {

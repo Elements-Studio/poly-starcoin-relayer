@@ -312,7 +312,7 @@ func TestGetBlockHeaders(t *testing.T) {
 
 func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
-	var height uint64 = 222610
+	var height uint64 = 222550
 	h, err := starcoinManager.client.GetBlockHeaderAndBlockInfoByNumber(context.Background(), height)
 	if err != nil {
 		fmt.Println(err)

@@ -37,6 +37,7 @@ func TestGetMethods(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(h)
+	return
 	p, err := testDB.GetPolyTx("foo")
 	if err != nil {
 		t.FailNow()
