@@ -317,7 +317,7 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	// 	return false
 	// }
 
-	hdr, err := this.client.HeaderWithDifficutyInfoByNumber(context.Background(), height) //block.BlockHeader
+	hdr, err := this.client.HeaderWithDifficultyInfoByNumber(context.Background(), height) //block.BlockHeader
 	if err != nil {
 		log.Errorf("handleBlockHeader - HeaderWithDifficutyInfoByNumber on height :%d failed", height)
 		return false
