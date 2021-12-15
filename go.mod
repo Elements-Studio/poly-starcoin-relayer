@@ -9,6 +9,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.7
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/novifinancial/serde-reflection/serde-generate/runtime/golang v0.0.0-20211013011333-6820d5b97d8c
 	github.com/ontio/ontology v1.11.1-0.20200812075204-26cf1fa5dd47
 	github.com/ontio/ontology-crypto v1.0.9

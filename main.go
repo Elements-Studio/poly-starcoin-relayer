@@ -30,6 +30,7 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/db"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	"github.com/elements-studio/poly-starcoin-relayer/manager"
+	"github.com/joho/godotenv"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 	"github.com/urfave/cli"
@@ -178,7 +179,11 @@ func initPolyServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolySdk, 
 }
 
 func main() {
-	log.Infof("main - Starcoin relayer starting...")
+	log.Debugf("main - Starcoin relayer starting...")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Debugf("main - Load .env file failed...")
+	}
 	if err := setupApp().Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
