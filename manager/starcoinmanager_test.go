@@ -248,21 +248,39 @@ func TestMisc(t *testing.T) {
 func TestGetStarcoinHeaderInPoly(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	var height uint64 = 222623
-	hdr, err := getStarcoinHeaderInPoly(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, height)
-	if err != nil {
-		fmt.Println(err)
-		t.FailNow()
-	}
-	fmt.Println(hex.EncodeToString(hdr))
-	h, err := types.BcsDeserializeBlockHeader(hdr)
-	if err != nil {
-		fmt.Println(err)
-		t.FailNow()
-	}
-	fmt.Println("--------------- get starcoin block header in poly ---------------")
-	fmt.Printf("height(number): %d\n", h.Number)
-	fmt.Printf("timestamp: %d\n", h.Timestamp)
+	blockCount := 3
+	for i := 0; i < blockCount; i++ {
+		hdr, err := getStarcoinHeaderInPoly(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, height)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		//fmt.Println(hex.EncodeToString(hdr))
+		h, err := types.BcsDeserializeBlockHeader(hdr)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		fmt.Println("--------------- get starcoin block header in poly ---------------")
+		fmt.Printf("Height(number): %d\n", h.Number)
+		fmt.Printf("Timestamp: %d\n", h.Timestamp)
+		fmt.Printf("ParentHash: %s\n", tools.EncodeToHex(h.ParentHash[:]))
+		fmt.Printf("Difficulty: %s\n", tools.EncodeToHex(h.Difficulty[:]))
 
+		hdrOnChain, err := starcoinManager.client.HeaderByNumber(context.Background(), height)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		j, err := json.Marshal(hdrOnChain)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		fmt.Println("--------------- get starcoin block header on-chain ----------------")
+		fmt.Println(string(j))
+		height++
+	}
 }
 
 func TestGetBlockHeaders(t *testing.T) {
