@@ -131,7 +131,7 @@ func (this *StarcoinManager) MonitorChain() {
 				// ////////////////////////////////
 				// todo if len(this.header4sync) is too large, should not continue???
 				// ////////////////////////////////
-				if len(this.header4sync) >= 500 {
+				if len(this.header4sync) >= 200 {
 					log.Infof("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d", this.currentHeight)
 					time.Sleep(time.Second * 10)
 					break

@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -35,7 +36,7 @@ func TestGetSparseMerkleRootHash(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println(h)
+	fmt.Println(hex.EncodeToString(h))
 }
 
 func newCCD(t *testing.T) *CrossChainData {

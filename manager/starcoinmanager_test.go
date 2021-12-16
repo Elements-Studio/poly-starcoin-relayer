@@ -114,6 +114,27 @@ func TestDeserializeCrossChainEventData(t *testing.T) {
 	fmt.Println(hex.EncodeToString(ccEvent.RawData))
 }
 
+func TestGetToMerkleValueFromProof(t *testing.T) {
+	p, err := hex.DecodeString("f0202d052233fd5ae70d16898ca3eb40f55adbccc3dfe34e362c4bec50ec161c3461da000000000000001000000000000000000000000000000000209b6092ccf4b2dfde71914755713ff1a550a71f1d6ef0d82c00958504c5f7d6591057aa381a5d7c0141da3965393eed9958da0000000000000034307835376161333831613564376330313431646133393635333933656564393935383a3a43726f7373436861696e53637269707406756e6c6f636b3f0d3078313a3a5354433a3a53544310e498d62f5d1f469d2f72eb3e9dc8f23087d6120000000000000000000000000000000000000000000000000000000000")
+	if err != nil {
+		t.FailNow()
+	}
+	ps := pcommon.NewZeroCopySource(p)
+	d, _ := ps.NextVarBytes()
+	fmt.Println(d)
+	fmt.Println(hex.EncodeToString(d))
+
+	param := &common2.ToMerkleValue{}
+	if err = param.Deserialization(pcommon.NewZeroCopySource(d)); err != nil {
+		//log.Errorf("handleDepositEvents - failed to deserialize MakeTxParam (value: %x, err: %v)", value, err)
+		fmt.Print(err)
+		t.FailNow()
+	}
+	fmt.Println(param)
+	fmt.Println(hex.EncodeToString(param.TxHash))
+
+}
+
 func TestDeserializeCrossChainEventRawData2(t *testing.T) {
 	rawData := "1000000000000000000000000000000000203fa1016c3440ad9c0290a4abbe24fc9e994c6879f48346ab4ddc54aec3b07219102d81a0427d64ff61b11ede9085efa5adda0000000000000034307832643831613034323764363466663631623131656465393038356566613561643a3a43726f7373436861696e53637269707406756e6c6f636b3f0d3078313a3a5354433a3a53544310bd7e8be8fae9f60f2f5136433e36a0911027000000000000000000000000000000000000000000000000000000000000"
 	v, err := hex.DecodeString(rawData)
