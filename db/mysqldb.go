@@ -174,6 +174,21 @@ func (w *MySqlDB) GetPolyTx(txHash string) (*PolyTx, error) {
 	return &px, nil
 }
 
+func (w *MySqlDB) GetPolyTxByIndex(idx uint64) (*PolyTx, error) {
+	px := PolyTx{}
+	if err := w.db.Where(&PolyTx{
+		TxIndex: idx,
+	}).First(&px).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			//fmt.Println("errors.Is(err, gorm.ErrRecordNotFound)")
+			return nil, nil
+		}
+	}
+	return &px, nil
+}
+
 func (w *MySqlDB) SetPolyTxStatus(txHash string, status string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
@@ -280,6 +295,25 @@ func IsDuplicatePolyTxError(db DB, tx *PolyTx, err error) (bool, error) {
 	}
 }
 
+func (w *MySqlDB) calculatePloyTxInclusionRootHash(tx *PolyTx) ([]byte, error) {
+	nodeStore := NewSmtNodeMapStore(w)
+	valueStore := NewPolyTxMapStore(w, tx)
+	nonMemberRootHash, err := hex.DecodeString(tx.SmtNonMembershipRootHash)
+	if err != nil {
+		return nil, err
+	}
+	smt := csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), nonMemberRootHash)
+	h, err := hex.DecodeString(tx.TxHash)
+	if err != nil {
+		return nil, err
+	}
+	newRootHash, err := smt.Update(h, PolyTxExistsValue)
+	if err != nil {
+		return nil, err
+	}
+	return newRootHash, nil
+}
+
 func (w *MySqlDB) updatePolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
 	nodeStore := NewSmtNodeMapStore(w)
 	valueStore := NewPolyTxMapStore(w, tx)
@@ -292,13 +326,21 @@ func (w *MySqlDB) updatePolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) erro
 			return err
 		}
 		smt = csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), preRootHash)
-		_, err = smt.Update([]byte(preTx.TxHash), PolyTxExistsValue)
+		h, err := hex.DecodeString(tx.TxHash)
+		if err != nil {
+			return err
+		}
+		_, err = smt.Update(h, PolyTxExistsValue)
 		if err != nil {
 			return err
 		}
 	}
 	tx.SmtNonMembershipRootHash = hex.EncodeToString(smt.Root()) //string `gorm:"size:66"`
-	proof, err := smt.ProveUpdatable([]byte(tx.TxHash))
+	h, err := hex.DecodeString(tx.TxHash)
+	if err != nil {
+		return err
+	}
+	proof, err := smt.ProveUpdatable(h)
 	if err != nil {
 		return err
 	}

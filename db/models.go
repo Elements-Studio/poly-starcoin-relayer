@@ -61,6 +61,7 @@ type PolyTx struct {
 	Status string `gorm:"size:20;index"`
 
 	StarcoinTxHash string `gorm:"size:66"`
+	EventTxHash    string `gorm:"size:66"`
 }
 
 func (p *PolyTx) GetNonMembershipProof() (*smt.SparseMerkleProof, error) {
@@ -107,7 +108,7 @@ func (p *PolyTx) GetSmtProofSiblingData() ([]byte, error) {
 	return nil, nil
 }
 
-func NewPolyTx(polyTxHash string, proof []byte, header []byte, headerProof []byte, anchorHeader []byte, sigs []byte) (*PolyTx, error) {
+func NewPolyTx(txHash []byte, proof []byte, header []byte, headerProof []byte, anchorHeader []byte, sigs []byte, eventTxHash string) (*PolyTx, error) {
 	p := &PolyTxProof{
 		Proof:        hex.EncodeToString(proof),
 		Header:       hex.EncodeToString(header),
@@ -120,9 +121,10 @@ func NewPolyTx(polyTxHash string, proof []byte, header []byte, headerProof []byt
 		return nil, err
 	}
 	return &PolyTx{
-		TxHash:      polyTxHash,
-		TxHashHash:  Hash256Hex([]byte(polyTxHash)), //todo is this ok
+		TxHash:      hex.EncodeToString(txHash),
+		TxHashHash:  Hash256Hex([]byte(eventTxHash)), //todo is this ok
 		PolyTxProof: string(j),
+		EventTxHash: eventTxHash,
 	}, nil
 }
 

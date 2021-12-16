@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/starcoinorg/starcoin-go/client"
@@ -97,13 +96,37 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 	}
 }
 
+// func TestHash(t *testing.T) {
+// 	h := "2d052233fd5ae70d16898ca3eb40f55adbccc3dfe34e362c4bec50ec161c3461"
+// 	txhash, _ := hex.DecodeString(h)
+// 	hasher := New256Hasher()
+// 	hasher.Write(txhash)
+// 	hh := hasher.Sum(nil)
+// 	fmt.Println(hex.EncodeToString(hh))
+// }
+
+func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
+	mysqldb := testDB.(*MySqlDB)
+	polyTx, err := mysqldb.GetPolyTxByIndex(1)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	rootHash, err := mysqldb.calculatePloyTxInclusionRootHash(polyTx)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(hex.EncodeToString(rootHash)) //eef849c21d4ceb722c7f4546f87ef6a2bb822765117cf6b848298007884fa80f
+}
+
 func TestPutPolyTx(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
-	h := Hash256Hex(v)
+
 	tx, err := NewPolyTx(
 		//TxHash:
-		hex.EncodeToString(v),
+		v,
 		//Proof:
 		v,
 		//Header:
@@ -113,38 +136,46 @@ func TestPutPolyTx(t *testing.T) {
 		//AnchorHeader:
 		v,
 		//HeaderSig:
-		v)
+		v,
+		hex.EncodeToString(v),
+	)
 	//SmtRootHash:  hex.EncodeToString(v),
 	//TxHashHash:   h,
 	//SmtProofSideNodes:  hex.EncodeToString(v),
 	if err != nil {
+		fmt.Println(err)
 		t.FailNow()
 	}
+	//return
 
 	p, err := tx.GetPolyTxProof()
 	if err != nil {
+		fmt.Println(err)
 		t.FailNow()
 	}
 	fmt.Println(p)
+	//return
 
-	idx, err := testDB.PutPolyTx(tx) //hex.EncodeToString(v))
-	fmt.Println(idx, err)
-	if err != nil {
-		t.FailNow()
-	}
+	// idx, err := testDB.PutPolyTx(tx) //hex.EncodeToString(v))
+	// fmt.Println(idx, err)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	t.FailNow()
+	// }
 
-	m := NewPolyTxMapStore(testDB.(*MySqlDB), nil)
-	hh, _ := hex.DecodeString(h)
-	d, err := m.Get(hh)
-	fmt.Println(d, err)
-	if err != nil {
-		t.FailNow()
-	}
+	//h := Hash256Hex(v)
+	// m := NewPolyTxMapStore(testDB.(*MySqlDB), nil)
+	// hh, _ := hex.DecodeString(h)
+	// d, err := m.Get(hh)
+	// fmt.Println(d, err)
+	// if err != nil {
+	// 	t.FailNow()
+	// }
 
-	err = m.Set(hh, PolyTxExistsValue)
-	if err != nil {
-		t.FailNow()
-	}
+	// err = m.Set(hh, PolyTxExistsValue)
+	// if err != nil {
+	// 	t.FailNow()
+	// }
 
 }
 
@@ -179,9 +210,9 @@ func TestGetFirstFailedPolyTx(t *testing.T) {
 	}
 	fmt.Println(px)
 }
-func TestMisc(t *testing.T) {
-	currentMillis := time.Now().UnixNano() / 1000000
-	fmt.Println(currentMillis)
 
-	fmt.Println(currentTimeMillis())
-}
+// func TestMisc(t *testing.T) {
+// 	currentMillis := time.Now().UnixNano() / 1000000
+// 	fmt.Println(currentMillis)
+// 	fmt.Println(currentTimeMillis())
+// }

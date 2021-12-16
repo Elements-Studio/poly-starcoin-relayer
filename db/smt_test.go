@@ -160,7 +160,7 @@ func TestDBMapStores(t *testing.T) {
 		t.FailNow()
 	}
 
-	return
+	//return
 
 	// Initialise two new key-value store to store the nodes and values of the tree
 	//nodeStore := smt.NewSimpleMap()
@@ -266,7 +266,7 @@ func TestDBMapStores(t *testing.T) {
 }
 
 func addTestPolyTx(db DB, key string) {
-	polyTx, err := NewPolyTx(key, nil, nil, nil, nil, nil)
+	polyTx, err := NewPolyTx([]byte(key), nil, nil, nil, nil, nil, key)
 	if err != nil {
 		panic(err)
 	}
