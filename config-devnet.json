@@ -1,0 +1,46 @@
+{
+  "PolyConfig": {
+    "RestURL": "http://40.115.136.96:40336",
+    "EntranceContractAddress": "0300000000000000000000000000000000000000",
+    "WalletFile": "../../polynetwork/poly/wallet.dat",
+    "WalletPwd": "123456"
+  },
+  "StarcoinConfig": {
+    "SideChainId": 218,
+    "RestURL": "https://halley-seed.starcoin.org",
+    "ChainId": 253,
+    "CCMModule": "0x3809644a7409cca52138ce747c56eaf2::CrossChainScript",
+    "CCDModule": "0x3809644a7409cca52138ce747c56eaf2::CrossChainScript",
+    "CrossChainEventAddress": "0x3809644a7409cca52138ce747c56eaf2",
+    "CrossChainEventTypeTag": "0x3809644a7409cca52138ce747c56eaf2::CrossChainManager::CrossChainEvent",
+    "PrivateKeys": [
+      {
+        "0x3809644a7409cca52138ce747c56eaf2": "${PRIVATE_KEY_C56EAF2}"
+      }
+    ],
+    "BlockConfirmations": 6,
+    "HeadersPerBatch": 50,
+    "MonitorInterval": 1,
+    "MaxGasAmount": 40000000
+  },
+  "BoltDbPath": "./db-devnet",
+  "MySqlDSN": "${MYSQL_DSN}",
+  "RoutineNum": 64,
+  "ProxyOrAssetContracts": [
+    {
+      "0x3809644a7409cca52138ce747c56eaf2::CrossChainManager": {
+        "outbound": [
+          1,
+          2,
+          218
+        ]
+      },
+      "0x3809644a7409cca52138ce747c56eaf2::CrossChainScript": {
+        "inbound": [
+          2,
+          218
+        ]
+      }
+    }
+  ]
+}
