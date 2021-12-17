@@ -128,20 +128,26 @@ func (this *StarcoinManager) MonitorChain() {
 				if this.currentHeight%10 == 0 {
 					log.Infof("StarcoinManager.MonitorChain - handle confirmed starcoin block height: %d", this.currentHeight)
 				}
-				// ////////////////////////////////
-				// todo if len(this.header4sync) is too large, should not continue???
-				// ////////////////////////////////
-				if len(this.header4sync) >= 200 {
-					log.Infof("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d", this.currentHeight)
-					time.Sleep(time.Second * 10)
-					break
-				}
+				// // ////////////////////////////////
+				// // todo if len(this.header4sync) is too large, should not continue???
+				// // ////////////////////////////////
+				// if len(this.header4sync) >= 1 { //todo
+				// 	log.Infof("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d", this.currentHeight)
+				// 	time.Sleep(time.Second * 10)
+				// 	break
+				// }
 
 				blockHandleResult = this.handleNewBlock(this.currentHeight + 1)
+				fmt.Println("----------------- this.handleNewBlock() result -----------------") //todo remove this
+				fmt.Println(blockHandleResult)
 				if blockHandleResult == false {
 					break
 				}
 				this.currentHeight++
+				fmt.Println("--------------- this.currentHeight++ ----------------")
+				fmt.Println(this.currentHeight)
+				fmt.Println("----------------- len(header4sync) -----------------") //todo remove this
+				fmt.Println(len(this.header4sync))
 				// try to commit header if more than 50 headers needed to be syned
 				if len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch {
 					fmt.Println("--------- len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch --------")
@@ -354,9 +360,14 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 		log.Errorf("handleBlockHeader - hdr.Hash(): %s <> hdr.BlockHeader.BlockHash: %s", hex.EncodeToString(hdrhash), hex.EncodeToString(blockhash))
 		return false //panic(1)
 	}
-	if len(raw) == 0 || !bytes.Equal(raw, hdrhash) {
-		this.header4sync = append(this.header4sync, rawHdr)
-	}
+	// //////////// forcely rewrite now!!! //////////////
+	_ = raw
+	this.header4sync = append(this.header4sync, rawHdr)
+	// //////////////////////////////////////////////////
+	// todo: Or shoud use this normally???
+	// if len(raw) == 0 || !bytes.Equal(raw, hdrhash) {
+	// 	this.header4sync = append(this.header4sync, rawHdr)
+	// }
 	return true
 }
 

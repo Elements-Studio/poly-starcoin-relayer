@@ -269,26 +269,10 @@ func TestMisc(t *testing.T) {
 func TestGetStarcoinHeaderInPoly(t *testing.T) {
 	starcoinManager := getTestStarcoinManager(t)
 	var height uint64 = 222623
-	blockCount := 3
+	blockCount := 1
 	for i := 0; i < blockCount; i++ {
-		hdr, err := getStarcoinHeaderInPoly(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, height)
-		if err != nil {
-			fmt.Println(err)
-			t.FailNow()
-		}
-		//fmt.Println(hex.EncodeToString(hdr))
-		h, err := types.BcsDeserializeBlockHeader(hdr)
-		if err != nil {
-			fmt.Println(err)
-			t.FailNow()
-		}
-		fmt.Println("--------------- get starcoin block header in poly ---------------")
-		fmt.Printf("Height(number): %d\n", h.Number)
-		fmt.Printf("Timestamp: %d\n", h.Timestamp)
-		fmt.Printf("ParentHash: %s\n", tools.EncodeToHex(h.ParentHash[:]))
-		fmt.Printf("Difficulty: %s\n", tools.EncodeToHex(h.Difficulty[:]))
 
-		hdrOnChain, err := starcoinManager.client.HeaderByNumber(context.Background(), height)
+		hdrOnChain, err := starcoinManager.client.HeaderWithDifficultyInfoByNumber(context.Background(), height)
 		if err != nil {
 			fmt.Println(err)
 			t.FailNow()
@@ -300,8 +284,72 @@ func TestGetStarcoinHeaderInPoly(t *testing.T) {
 		}
 		fmt.Println("--------------- get starcoin block header on-chain ----------------")
 		fmt.Println(string(j))
+		hdrhash, err := hdrOnChain.BlockHeader.Hash()
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		fmt.Println("Calculated Hash in starcoin: " + hex.EncodeToString(hdrhash))
+
+		// ////////////////////////////////////////
+
+		//fmt.Println("--------------- get starcoin block header in poly (by height) ---------------")
+		//hdr, err := getStarcoinHeaderInPoly(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, height)
+		// get by hash
+		fmt.Println("--------------- get starcoin block header in poly (by hash) ---------------")
+		hdr, err := getStarcoinHeaderInPolyByHash(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, hdrhash)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		//fmt.Println(hex.EncodeToString(hdr))
+		h, err := types.BcsDeserializeBlockHeader(hdr)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		fmt.Printf("Height(number): %d\n", h.Number)
+		fmt.Printf("Timestamp: %d\n", h.Timestamp)
+		fmt.Printf("ParentHash: %s\n", tools.EncodeToHex(h.ParentHash[:]))
+		fmt.Printf("Difficulty: %s\n", tools.EncodeToHex(h.Difficulty[:]))
+		fmt.Printf("StateRoot: %s\n", tools.EncodeToHex(h.StateRoot[:]))
+		fmt.Println("--------------- get starcoin block hash in poly (by height) ---------------")
+		hdrhashInPoly, err := getStarcoinHeaderHashInPoly(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, height)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		fmt.Printf("HeaderHash: %s\n", tools.EncodeToHex(hdrhashInPoly))
+
 		height++
 	}
+}
+
+func TestGetBlockHeaderInPolyByHash(t *testing.T) {
+	starcoinManager := getTestStarcoinManager(t)
+	hdrhash, err := tools.HexToBytes("0x3b6f3a5bb470a45e4870d13ada0947dec4504259cf3aa0eeebadf48f66d74995")
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	hdr, err := getStarcoinHeaderInPolyByHash(starcoinManager.polySdk, starcoinManager.config.StarcoinConfig.SideChainId, hdrhash)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	//fmt.Println(hex.EncodeToString(hdr))
+	h, err := types.BcsDeserializeBlockHeader(hdr)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("--------------- get starcoin block header in poly (by hash) ---------------")
+	fmt.Println(hex.EncodeToString(hdr))
+	fmt.Printf("Height(number): %d\n", h.Number)
+	fmt.Printf("Timestamp: %d\n", h.Timestamp)
+	fmt.Printf("ParentHash: %s\n", tools.EncodeToHex(h.ParentHash[:]))
+	fmt.Printf("Difficulty: %s\n", tools.EncodeToHex(h.Difficulty[:]))
+	fmt.Printf("StateRoot: %s\n", tools.EncodeToHex(h.StateRoot[:]))
 }
 
 func TestGetBlockHeaders(t *testing.T) {
@@ -402,4 +450,9 @@ func getTestStarcoinManager(t *testing.T) *StarcoinManager {
 	// starcoinManager.init()
 	// ---------------------------------------------------------------
 	return starcoinManager
+}
+
+func TestMisc2(t *testing.T) {
+	s := "{\"header\":{\"timestamp\":\"1639375200198\",\"author\":\"0x00e4ea282432073992bc04ab278ddd60\",\"author_auth_key\":null,\"block_accumulator_root\":\"0xfa55091e7f19023cd70d55bc147c194d09649585ac90cade4898302530c50bda\",\"block_hash\":\"0xb6c0a3c14df4133e5ce8b89f7adff3add41e1df10b818da39c8eab54f26225cb\",\"body_hash\":\"0xc01e0329de6d899348a8ef4bd51db56175b3fa0988e57c3dcec8eaf13a164d97\",\"chain_id\":253,\"difficulty\":\"0x80\",\"difficulty_number\":0,\"extra\":\"0x00000000\",\"gas_used\":\"0\",\"Nonce\":3108099670,\"number\":\"222625\",\"parent_hash\":\"0xf976fea99030c3442508b6deac2596b338d9dc9d3a2bcc886ebed1bcd70b1fce\",\"state_root\":\"0xa0f7a539ecaeabe08e47ba2a11e698684f75db18e623cacbd4dd83724bf4a945\",\"txn_accumulator_root\":\"0x0b4bbaefcb7a509b32ae41681b39ad6e4917e79220aa2883d6b995b7f94b55c0\"},\"block_time_target\":5000,\"block_difficulty_window\":24,\"block_info\":{\"block_id\":\"0xb6c0a3c14df4133e5ce8b89f7adff3add41e1df10b818da39c8eab54f26225cb\",\"total_difficulty\":\"0x029bb161\",\"txn_accumulator_info\":{\"accumulator_root\":\"0x0b4bbaefcb7a509b32ae41681b39ad6e4917e79220aa2883d6b995b7f94b55c0\",\"frozen_subtree_roots\":[\"0x0e475fde7a9b246667cb2959040806f7fc1c3b838bc57ac7fb7ffdcf2cd83e09\",\"0xb8430591e9bc195ba37f3fe547bf17c811329ba4502c7026b23dd90412cc8d20\",\"0x8483fe396477fabde168d2fc7157f4da104b1b0bdb24546106e2431394e440cf\",\"0x568c93a6d640e8914cd84e34bf503cc9b44f13bff570c97046676560b4a33643\",\"0x3b9537dcce9b09f0f86a3bb53c850e9bdfc9cc7e319ab03dd78073730b5aea4c\",\"0x460e665c61bec4e9d82c793c5fbe16f442fb81c8938e63519450b419eaedd271\",\"0xe7ce04f5e738da78c33cdd1ea85b0b2af31cf3b1bf153b047114fb0ac6d88228\",\"0x33a7a75916d27fc243a0192b1840c9ebf490c03c3b86606d670e751c43934f05\",\"0x11f81290ce50e7adfd1558c93c98609d631e9a4b97e670b46e15056543080f83\",\"0x2e9bff7bb711c4ef7037d9ff4daf9068a4789b0b74c0c94e92a71dd732e945f3\",\"0xc3e977dafca6a6b1070abb034ba07bcc4f43f8a117706d55108a7f88ed12073f\",\"0xba183643e4de7f9b39253967c7b93bd60e609f7969d12cb107267e8313b4753c\"],\"num_leaves\":254271,\"num_nodes\":508530},\"block_accumulator_info\":{\"accumulator_root\":\"0x1d2d1802b1468edf403fced476ee2b97349bfec24dcd05822909acba2b49d3f4\",\"frozen_subtree_roots\":[\"0xb30a1da75cb78d9a842d9deaa43c9a3262cf0744ac5ccf23e84880da2de84df0\",\"0xda5f9b05b4e56cbd6fe53395ea2f195fc5f6ede7050dfad22d4e723d31c9add5\",\"0xbb503e3c2c6aa00b146ae282080e5072a4c98048242e8c40636a3b0d7009f511\",\"0x6c10758b358dd4d1ede5e626c4fd1ac2722cb5adf23532eb1f582f44acddfa39\",\"0x7de9f8440ff2ad23242fb36dde4de0c2158f2abdd32052f7e61e71d9a90696a2\",\"0x1b57796a2df27f33adc2e97e1263e041d19ddb1a36be8a62100e36c5a3eadab4\",\"0x46f68f4e616c94dedad1a5050f78982ac0e0792b4c7669cabc0a07d6762267f2\",\"0xa22e7d51a7352eec7246ce6441b215ab0d3cabcaea247c19a28ff587a4b1541a\",\"0xca68f6f0740fd4a13cb3ebba15fc74c907f4c813d779652ef3019f49d66ee71d\"],\"num_leaves\":222626,\"num_nodes\":445243}}}"
+	fmt.Println(s)
 }
