@@ -24,7 +24,6 @@ import (
 	"runtime"
 	"syscall"
 
-	//"github.com/elements-studio/poly-starcoin-relayer/cmd"
 	"github.com/elements-studio/poly-starcoin-relayer/cmd"
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"

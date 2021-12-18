@@ -545,14 +545,15 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 			continue
 		}
 		//1. decode events
-		key := crosstx.txIndex
-		fmt.Println(key) //todo remove this line
-		//keyBytes, err := eth.MappingKeyAt(key, "01") //todo starcoin version...
-		if err != nil {
-			log.Errorf("handleLockDepositEvents - MappingKeyAt error:%s\n", err.Error())
-			continue
-		}
+		//key := crosstx.txIndex
+		//fmt.Println(key)
+		//keyBytes, err := eth.MappingKeyAt(key, "01") //starcoin version...
+		// if err != nil {
+		// 	log.Errorf("handleLockDepositEvents - MappingKeyAt error:%s\n", err.Error())
+		// 	continue
+		// }
 		if refHeight <= crosstx.height+this.config.StarcoinConfig.BlockConfirmations {
+			log.Infof("handleLockDepositEvents - this height(%d) is not confirmed yet.", crosstx.height) //todo remove this
 			continue
 		}
 		//height := int64(refHeight - this.config.StarcoinConfig.BlockConfirmations)
@@ -568,7 +569,10 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 			return err // todo or continue???
 		}
 		proof, err := tools.GetTransactionProof(this.config.StarcoinConfig.RestURL, this.restClient, evt.BlockHash, txGlobalIdx, &eventIdx)
-
+		if err != nil {
+			log.Errorf("handleLockDepositEvents - GetTransactionProof error :%s\n", err.Error())
+			return err
+		}
 		// proof, err := tools.GetProof(this.config.StarcoinConfig.RestURL, this.config.StarcoinConfig.CCDContractAddress, proofKey, heightHex, this.restClient)
 		// if err != nil {
 		// 	log.Errorf("handleLockDepositEvents - error :%s\n", err.Error())
@@ -578,7 +582,7 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		height, err := strconv.ParseUint(evt.BlockNumber, 10, 64)
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - ParseUint error :%s\n", err.Error())
-			return err // todo or continue???
+			return err
 		}
 		// evtMsg, err := json.Marshal(evt)
 		// if err != nil {
@@ -625,15 +629,15 @@ func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []by
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("--------- parameters of polySdk.Native.Ccm.ImportOuterTransfer ----------") // remove this...
-	fmt.Println(this.config.StarcoinConfig.SideChainId)                                      // sourceChainId uint64,
-	fmt.Println(hex.EncodeToString(value))                                                   // txData []byte, // CrossChainEvent.RawData
-	fmt.Println(height)                                                                      // height
-	fmt.Println(string(proof))                                                               // proof []byte,
-	fmt.Println(hex.EncodeToString(relayAddr))                                               // relayAddr
-	fmt.Println(string(eventMsg))                                                            // headerOrCrossChainMsg
-	fmt.Println(this.polySigner.Address.ToHexString())                                       // polySigner
-	fmt.Println("------- end of params of polySdk.Native.Ccm.ImportOuterTransfer ---------") // remove this...
+	// fmt.Println("--------- parameters of polySdk.Native.Ccm.ImportOuterTransfer ----------") // remove this...
+	// fmt.Println(this.config.StarcoinConfig.SideChainId)                                      // sourceChainId uint64,
+	// fmt.Println(hex.EncodeToString(value))                                                   // txData []byte, // CrossChainEvent.RawData
+	// fmt.Println(height)                                                                      // height
+	//fmt.Println(string(proof))                                                               // proof []byte,
+	// fmt.Println(hex.EncodeToString(relayAddr)) // relayAddr
+	// fmt.Println(string(eventMsg))              // headerOrCrossChainMsg
+	//fmt.Println(this.polySigner.Address.ToHexString())                                       // polySigner
+	// fmt.Println("------- end of params of polySdk.Native.Ccm.ImportOuterTransfer ---------") // remove this...
 
 	tx, err := this.polySdk.Native.Ccm.ImportOuterTransfer(
 		this.config.StarcoinConfig.SideChainId, //sourceChainId uint64,
