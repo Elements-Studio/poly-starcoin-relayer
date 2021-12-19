@@ -2,8 +2,8 @@
   "PolyConfig": {
     "RestURL": "http://40.115.136.96:40336",
     "EntranceContractAddress": "0300000000000000000000000000000000000000",
-    "WalletFile": "../../polynetwork/poly/wallet.dat",
-    "WalletPwd": "123456"
+    "WalletFile": "${POLY_WALLET_FILE}",
+    "WalletPwd": "${POLY_WALLET_PASSWORD}"
   },
   "StarcoinConfig": {
     "SideChainId": 218,
