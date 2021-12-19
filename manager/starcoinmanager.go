@@ -589,7 +589,16 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		// 	log.Errorf("handleLockDepositEvents - json.Marshal(evt) error :%s\n", err.Error())
 		// 	return err
 		// }
-		txHash, err := this.commitProof(uint32(height), []byte(proof), crosstx.value, crosstx.txId, []byte{})
+		evtMsg := StarcoinToPolyHeaderOrCrossChainMsg{
+			EventIndex: &eventIdx,
+			AccessPath: nil,
+		}
+		evtMsgBS, err := json.Marshal(evtMsg) // like this: {"event_index":1}
+		if err != nil {
+			log.Errorf("handleLockDepositEvents - json.Marshal(evtMsg) error :%s\n", err.Error())
+			return err
+		}
+		txHash, err := this.commitProof(uint32(height), []byte(proof), crosstx.value, crosstx.txId, evtMsgBS)
 		if err != nil {
 			if strings.Contains(err.Error(), "chooseUtxos, current utxo is not enough") {
 				log.Infof("handleLockDepositEvents - invokeNativeContract error: %s", err.Error())
@@ -759,4 +768,9 @@ func (this *CrossTransfer) Deserialization(source *common.ZeroCopySource) error 
 	this.toChain = toChain
 	this.height = height
 	return nil
+}
+
+type StarcoinToPolyHeaderOrCrossChainMsg struct {
+	EventIndex *int    `json:"event_index,omitempty"`
+	AccessPath *string `json:"access_path,omitempty"`
 }
