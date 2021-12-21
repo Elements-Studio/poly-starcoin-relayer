@@ -18,7 +18,7 @@ require (
 	github.com/polynetwork/bridge-common v0.0.20 // indirect
 	github.com/polynetwork/poly v1.3.1
 	github.com/polynetwork/poly-go-sdk v0.0.0-20210114120411-3dcba035134f
-	github.com/starcoinorg/starcoin-go v0.0.0-20211217145739-a0ec6193f3e0
+	github.com/starcoinorg/starcoin-go v0.0.0-20211220071913-92d7b8505d16
 	github.com/urfave/cli v1.22.4
 	github.com/valyala/fasthttp v1.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2

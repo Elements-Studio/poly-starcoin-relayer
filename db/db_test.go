@@ -105,6 +105,15 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 // 	fmt.Println(hex.EncodeToString(hh))
 // }
 
+func TestUpdatePolyTxNonMembershipProofByIndex(t *testing.T) {
+	mysqldb := testDB.(*MySqlDB)
+	err := mysqldb.UpdatePolyTxNonMembershipProofByIndex(2)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+}
+
 func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
 	mysqldb := testDB.(*MySqlDB)
 	polyTx, err := mysqldb.GetPolyTxByIndex(1)
@@ -193,6 +202,10 @@ func TestHasher(t *testing.T) {
 	hasher.Write(oneByte)
 	fmt.Println(hasher.Sum(nil))
 	fmt.Println(Hash256(helloworld))
+
+	h, _ := hex.DecodeString("655e5461d6f009e968b1416ddde8407545144e98206f05bad4fdcba587907fbe")
+	fmt.Println(hex.EncodeToString(Hash256(h))) //b908e1ffba13efa46efa2b92e8bb97cfa8a75d133e660631b247ca67f9da7f93
+
 }
 
 func TestSetPolyTxStatus(t *testing.T) {

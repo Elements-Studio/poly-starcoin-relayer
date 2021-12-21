@@ -260,10 +260,15 @@ func TestMisc(t *testing.T) {
 	// var proof []byte = []byte("{}")
 	// fmt.Print(proof)
 
-	sink := pcommon.NewZeroCopySink(nil)
-	sink.WriteUint64(1)
-	fmt.Println(hex.EncodeToString(sink.Bytes()))
+	// sink := pcommon.NewZeroCopySink(nil)
+	// sink.WriteUint64(1)
+	// fmt.Println(hex.EncodeToString(sink.Bytes()))
 
+	var bs []byte = nil
+	fmt.Println(len(bs)) // even bs is null, return 0
+
+	var s *string = nil
+	fmt.Println(len(*s))
 }
 
 func TestGetStarcoinHeaderInPoly(t *testing.T) {

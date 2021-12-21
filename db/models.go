@@ -122,7 +122,7 @@ func NewPolyTx(txHash []byte, proof []byte, header []byte, headerProof []byte, a
 	}
 	return &PolyTx{
 		TxHash:      hex.EncodeToString(txHash),
-		TxHashHash:  Hash256Hex([]byte(eventTxHash)), //todo is this ok
+		TxHashHash:  Hash256Hex(txHash),
 		PolyTxProof: string(j),
 		EventTxHash: eventTxHash,
 	}, nil

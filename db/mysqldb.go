@@ -314,6 +314,22 @@ func (w *MySqlDB) calculatePloyTxInclusionRootHash(tx *PolyTx) ([]byte, error) {
 	return newRootHash, nil
 }
 
+func (w *MySqlDB) UpdatePolyTxNonMembershipProofByIndex(idx uint64) error {
+	tx, err := w.GetPolyTxByIndex(idx)
+	if tx == nil || err != nil {
+		return fmt.Errorf("cannot get PolyTx by index: %d", idx)
+	}
+	preTx, err := w.GetPolyTxByIndex(idx - 1)
+	if err != nil {
+		return fmt.Errorf("cannot get PolyTx by index: %d", idx-1)
+	}
+	err = w.updatePolyTxNonMembershipProof(tx, preTx)
+	if err != nil {
+		return fmt.Errorf("updatePolyTxNonMembershipProof error: %s", err.Error())
+	}
+	return w.db.Save(tx).Error
+}
+
 func (w *MySqlDB) updatePolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
 	nodeStore := NewSmtNodeMapStore(w)
 	valueStore := NewPolyTxMapStore(w, tx)
@@ -326,11 +342,11 @@ func (w *MySqlDB) updatePolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) erro
 			return err
 		}
 		smt = csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), preRootHash)
-		h, err := hex.DecodeString(tx.TxHash)
+		preTxHash, err := hex.DecodeString(preTx.TxHash)
 		if err != nil {
 			return err
 		}
-		_, err = smt.Update(h, PolyTxExistsValue)
+		_, err = smt.Update(preTxHash, PolyTxExistsValue)
 		if err != nil {
 			return err
 		}
@@ -435,6 +451,10 @@ func NewPolyTxMapStore(db *MySqlDB, currentTx *PolyTx) *PolyTxMapStore {
 
 func (m *PolyTxMapStore) Get(key []byte) ([]byte, error) { // Get gets the value for a key.
 	h := hex.EncodeToString(key)
+	// fmt.Println("------------------- *PolyTxMapStore.Get -------------------")
+	// fmt.Println(m.currentPolyTx)
+	// fmt.Println(h)
+	// fmt.Println("------------------- *PolyTxMapStore.Get -------------------")
 	if m.currentPolyTx != nil && strings.EqualFold(m.currentPolyTx.TxHashHash, h) {
 		return PolyTxExistsValue, nil
 	}

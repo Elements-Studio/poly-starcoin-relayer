@@ -29,7 +29,7 @@ func TestGetCurEpochConPubKeyBytes(t *testing.T) {
 	fmt.Println(h)
 }
 
-func TestGetSparseMerkleRootHash(t *testing.T) {
+func TestGetNonMembershipSparseMerkleRootHashOnChain(t *testing.T) {
 	ccd := newCCD(t)
 	h, err := ccd.getSparseMerkleRootHash()
 	if err != nil {
