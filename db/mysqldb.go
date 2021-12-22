@@ -295,6 +295,7 @@ func IsDuplicatePolyTxError(db DB, tx *PolyTx, err error) (bool, error) {
 	}
 }
 
+// calculate SMT root hash after current transaction included.
 func (w *MySqlDB) calculatePloyTxInclusionRootHash(tx *PolyTx) ([]byte, error) {
 	nodeStore := NewSmtNodeMapStore(w)
 	valueStore := NewPolyTxMapStore(w, tx)
