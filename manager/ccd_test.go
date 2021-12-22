@@ -37,6 +37,7 @@ func TestGetNonMembershipSparseMerkleRootHashOnChain(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(hex.EncodeToString(h)) //6c6e4784a4692516afaf129656f58dd40770f93aba116647afdd80ddc69b206f
+	fmt.Println(h)
 }
 
 func newCCD(t *testing.T) *CrossChainData {

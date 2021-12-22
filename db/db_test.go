@@ -6,38 +6,25 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/google/uuid"
 	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
 )
 
-var (
-	testDB DB
-)
-
-func init() {
-	//db, err := NewBoltDB("test-boltdb")
-	db, err := NewMySqlDB("root:123456@tcp(127.0.0.1:3306)/poly_starcoin?charset=utf8mb4&parseTime=True&loc=Local")
-	if err != nil {
-		fmt.Println(err)
-		//t.FailNow()
-	}
-	testDB = db
-}
-
 // func TestUpdatePolyHeight(t *testing.T) {
-// 	err := testDB.UpdatePolyHeight(141)
+// 	err := testDB().UpdatePolyHeight(141)
 // 	fmt.Println(err)
 // }
 
 func TestGetMethods(t *testing.T) {
-	h, err := testDB.GetPolyHeight()
+	h, err := testDB().GetPolyHeight()
 	if err != nil {
 		t.FailNow()
 	}
 	fmt.Println(h)
 	return
-	p, err := testDB.GetPolyTx("foo")
+	p, err := testDB().GetPolyTx("foo")
 	if err != nil {
 		t.FailNow()
 	}
@@ -45,7 +32,7 @@ func TestGetMethods(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(p)
-	testMySqlDB := testDB.(*MySqlDB)
+	testMySqlDB := testDB().(*MySqlDB)
 	p2, err := testMySqlDB.getPolyTxByTxHashHash("15291f67d99ea7bc578c3544dadfbb991e66fa69cb36ff70fe30e798e111ff5f")
 	if err != nil {
 		t.FailNow()
@@ -61,17 +48,17 @@ func TestPutStarcoinTxCheck(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	k := strings.Replace(uuid.String(), "-", "", -1)
 	v, _ := uuid.MarshalBinary()
-	err := testDB.PutStarcoinTxCheck(k, v, client.Event{})
+	err := testDB().PutStarcoinTxCheck(k, v, client.Event{})
 	if err != nil {
 		t.FailNow()
 	}
 }
 
 func TestGetAndDeleteAllStarcoinTxCheck(t *testing.T) {
-	m, _ := testDB.GetAllStarcoinTxCheck()
+	m, _ := testDB().GetAllStarcoinTxCheck()
 	fmt.Println(m)
 	for k, _ := range m {
-		err := testDB.DeleteStarcoinTxCheck(k)
+		err := testDB().DeleteStarcoinTxCheck(k)
 		if err != nil {
 			t.FailNow()
 		}
@@ -81,18 +68,18 @@ func TestGetAndDeleteAllStarcoinTxCheck(t *testing.T) {
 func TestPutStarcoinTxRetry(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
-	err := testDB.PutStarcoinTxRetry(v, client.Event{})
+	err := testDB().PutStarcoinTxRetry(v, client.Event{})
 	if err != nil {
 		t.FailNow()
 	}
 }
 
 func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
-	cs, es, _ := testDB.GetAllStarcoinTxRetry()
+	cs, es, _ := testDB().GetAllStarcoinTxRetry()
 	fmt.Println(cs)
 	fmt.Println(es)
 	for _, v := range cs {
-		testDB.DeleteStarcoinTxRetry(v)
+		testDB().DeleteStarcoinTxRetry(v)
 	}
 }
 
@@ -106,7 +93,7 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 // }
 
 func TestUpdatePolyTxNonMembershipProofByIndex(t *testing.T) {
-	mysqldb := testDB.(*MySqlDB)
+	mysqldb := testDB().(*MySqlDB)
 	err := mysqldb.UpdatePolyTxNonMembershipProofByIndex(2)
 	if err != nil {
 		fmt.Println(err)
@@ -115,7 +102,7 @@ func TestUpdatePolyTxNonMembershipProofByIndex(t *testing.T) {
 }
 
 func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
-	mysqldb := testDB.(*MySqlDB)
+	mysqldb := testDB().(*MySqlDB)
 	polyTx, err := mysqldb.GetPolyTxByIndex(3)
 	if err != nil {
 		fmt.Println(err)
@@ -127,6 +114,7 @@ func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(hex.EncodeToString(rootHash)) //eef849c21d4ceb722c7f4546f87ef6a2bb822765117cf6b848298007884fa80f
+	fmt.Println(rootHash)
 }
 
 func TestPutPolyTx(t *testing.T) {
@@ -165,7 +153,7 @@ func TestPutPolyTx(t *testing.T) {
 	fmt.Println(p)
 	//return
 
-	// idx, err := testDB.PutPolyTx(tx) //hex.EncodeToString(v))
+	// idx, err := testDB().PutPolyTx(tx) //hex.EncodeToString(v))
 	// fmt.Println(idx, err)
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -173,7 +161,7 @@ func TestPutPolyTx(t *testing.T) {
 	// }
 
 	//h := Hash256Hex(v)
-	// m := NewPolyTxMapStore(testDB.(*MySqlDB), nil)
+	// m := NewPolyTxMapStore(testDB().(*MySqlDB), nil)
 	// hh, _ := hex.DecodeString(h)
 	// d, err := m.Get(hh)
 	// fmt.Println(d, err)
@@ -210,14 +198,14 @@ func TestHasher(t *testing.T) {
 
 func TestSetPolyTxStatus(t *testing.T) {
 	txHash := "testKey2"
-	err := testDB.SetPolyTxStatus(txHash, STATUS_PROCESSED)
+	err := testDB().SetPolyTxStatus(txHash, STATUS_PROCESSED)
 	if err != nil {
 		t.FailNow()
 	}
 }
 
 func TestGetFirstFailedPolyTx(t *testing.T) {
-	px, err := testDB.GetFirstFailedPolyTx()
+	px, err := testDB().GetFirstFailedPolyTx()
 	if err != nil {
 		t.FailNow()
 	}
@@ -229,3 +217,28 @@ func TestGetFirstFailedPolyTx(t *testing.T) {
 // 	fmt.Println(currentMillis)
 // 	fmt.Println(currentTimeMillis())
 // }
+
+// var (
+// 	testDB DB
+// )
+
+// func init() {
+// 	//db, err := NewBoltDB("test-boltdb")
+// 	db, err := NewMySqlDB("root:123456@tcp(127.0.0.1:3306)/poly_starcoin?charset=utf8mb4&parseTime=True&loc=Local")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		//t.FailNow()
+// 	}
+// 	testDB = db
+// }
+
+func testDB() DB {
+	config := config.NewServiceConfig("../config-devnet.json")
+	fmt.Println(config)
+	db, err := NewMySqlDB(config.MySqlDSN)
+	if err != nil {
+		fmt.Println(err)
+		panic(1)
+	}
+	return db
+}
