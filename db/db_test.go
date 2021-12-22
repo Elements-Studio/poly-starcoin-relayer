@@ -116,7 +116,7 @@ func TestUpdatePolyTxNonMembershipProofByIndex(t *testing.T) {
 
 func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
 	mysqldb := testDB.(*MySqlDB)
-	polyTx, err := mysqldb.GetPolyTxByIndex(1)
+	polyTx, err := mysqldb.GetPolyTxByIndex(3)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()

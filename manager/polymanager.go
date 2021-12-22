@@ -163,7 +163,7 @@ func (this *PolyManager) MonitorChain() {
 				}
 				this.currentHeight++
 			}
-			log.Warnf("PolyManager.MonitorChain - about to UpdatePolyHeight: %d", this.currentHeight-1) //todo remove this
+			//log.Debugf("PolyManager.MonitorChain - about to UpdatePolyHeight: %d", this.currentHeight-1)
 			if err = this.db.UpdatePolyHeight(this.currentHeight - 1); err != nil {
 				log.Errorf("PolyManager.MonitorChain - failed to save height of poly: %v", err)
 			}
@@ -687,7 +687,7 @@ func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*Starcoin
 		sigs,
 		rootHash,
 		leafData,
-		diemtypes.VecBytes(sideNodes),
+		concatByteSlices(sideNodes),
 	)
 
 	return &StarcoinTxInfo{
@@ -697,6 +697,14 @@ func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*Starcoin
 		//gasLimit:   stcclient.DEFAULT_MAX_GAS_AMOUNT, //gasLimit,
 		polyTxHash: polyTxHash,
 	}, nil
+}
+
+func concatByteSlices(ss [][]byte) []byte {
+	r := make([]byte, 0, len(ss)*32)
+	for _, s := range ss {
+		r = append(r, s...)
+	}
+	return r
 }
 
 // commitHeader

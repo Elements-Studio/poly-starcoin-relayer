@@ -76,7 +76,7 @@ func (ccd *CrossChainData) checkIfFromChainTxExist(fromChainId uint64, fromChain
 }
 
 // this a test method only
-func (ccd *CrossChainData) getSparseMerkleRootHash() ([]byte, error) {
+func (ccd *CrossChainData) getNonMembershipSparseMerkleRootHash() ([]byte, error) {
 	addr, _, err := parseModuleId(ccd.module)
 	if err != nil {
 		return nil, err
