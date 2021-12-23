@@ -1,4 +1,4 @@
-package db
+package smt
 
 import (
 	"bytes"
@@ -11,10 +11,10 @@ const (
 )
 
 var (
-	defaultValue = []byte{}
-	hasher       = sha3.New256()
-	leafPrefix   = []byte{0}
-	nodePrefix   = []byte{1}
+	//defaultValue = []byte{}
+	hasher     = sha3.New256()
+	leafPrefix = []byte{0}
+	nodePrefix = []byte{1}
 )
 
 func UpdateRoot(path []byte, value []byte, sideNodes [][]byte, oldLeafData []byte) ([]byte, error) {
