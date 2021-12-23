@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/celestiaorg/smt"
+	rsmt "github.com/elements-studio/poly-starcoin-relayer/smt"
 )
 
 func TestDBSmtNodeMapStore(t *testing.T) {
@@ -277,4 +278,23 @@ func addTestPolyTx(db DB, key string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func TestUpdateRoot(t *testing.T) {
+	path, _ := hex.DecodeString("8b4a296734b97f3c2028326c695f076e35de3183ada9d07cb7b9a32f1451d71f")
+	value := PolyTxExistsValue
+	sideNodes, err := DecodeSmtProofSideNodes(`
+	["6f9bb267d56d0feecdd121f682df52b22d366fa7652975bec3ddabe457207eab"]
+	`)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	oldLeafData, _ := hex.DecodeString("0080be6638e99f15d7942bd0130b9118125010293dcc2054fdbf26bf997d0173f42767f15c8af2f2c7225d5273fdd683edc714110a987d1054697c348aed4e6cc7")
+
+	r, err := rsmt.UpdateRoot(path, value, sideNodes, oldLeafData)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(hex.EncodeToString(r)) //755e48a4526b0c5b3f7e26d00da398ffec97dc784777e16132681aa208b16be3
 }
