@@ -280,7 +280,7 @@ func addTestPolyTx(db DB, key string) {
 	}
 }
 
-func TestUpdateRoot(t *testing.T) {
+func TestUpdateRoot_1(t *testing.T) {
 	path, _ := hex.DecodeString("8b4a296734b97f3c2028326c695f076e35de3183ada9d07cb7b9a32f1451d71f")
 	value := PolyTxExistsValue
 	sideNodes, err := DecodeSmtProofSideNodes(`
@@ -297,4 +297,23 @@ func TestUpdateRoot(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(hex.EncodeToString(r)) //755e48a4526b0c5b3f7e26d00da398ffec97dc784777e16132681aa208b16be3
+}
+
+func TestUpdateRoot_2(t *testing.T) {
+	path, _ := hex.DecodeString("c6281edc54637499646ddbd7e93636f91b8d3bb6974d7191452983fa6a015278") // hash of string "testKey3"
+	value := PolyTxExistsValue
+	sideNodes, err := DecodeSmtProofSideNodes(`
+	["a18880b51b4475f45c663c66e9baff5bfdf01f9e552c9cfd84cfeb2494ea0bbd","da3c17cfd8be129f09b61272f8afcf42bf5b77cf7e405f5aa20c30684a205488"]
+	`)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	oldLeafData, _ := hex.DecodeString("00c0359bc303b37a066ce3a91aa14628accb3eb5dd6ed2c49c93f7bc60d29c797e2767f15c8af2f2c7225d5273fdd683edc714110a987d1054697c348aed4e6cc7")
+
+	r, err := rsmt.UpdateRoot(path, value, sideNodes, oldLeafData)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(hex.EncodeToString(r)) //7a379f33e0def9fe3555bc83b4f67f0b8ac23927352829603bff53c03fc58992
 }
