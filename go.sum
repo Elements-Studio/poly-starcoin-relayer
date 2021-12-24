@@ -755,6 +755,10 @@ github.com/starcoinorg/starcoin-go v0.0.0-20211217145739-a0ec6193f3e0 h1:0KZjv6h
 github.com/starcoinorg/starcoin-go v0.0.0-20211217145739-a0ec6193f3e0/go.mod h1:P9XqzWTePMp9MxrXY9ND/diw388Gk3nUHs/QVaAZnzA=
 github.com/starcoinorg/starcoin-go v0.0.0-20211220071913-92d7b8505d16 h1:1N3jzuGnb+C7bfrk6FeaVViFZCAFNSuZC4QAUz2OpOM=
 github.com/starcoinorg/starcoin-go v0.0.0-20211220071913-92d7b8505d16/go.mod h1:P9XqzWTePMp9MxrXY9ND/diw388Gk3nUHs/QVaAZnzA=
+github.com/starcoinorg/starcoin-go v0.0.0-20211221024031-5f5d5e9d9f3a h1:VDA4BjLi27OeioL3+FiloMalyJJofYzFAMTybLNrie8=
+github.com/starcoinorg/starcoin-go v0.0.0-20211221024031-5f5d5e9d9f3a/go.mod h1:P9XqzWTePMp9MxrXY9ND/diw388Gk3nUHs/QVaAZnzA=
+github.com/starcoinorg/starcoin-go v0.0.0-20211224034005-51741472387f h1:/hRi+LFAegxWZ3g+5Zpr3b2QAJCsf/t+80WydPl4WTI=
+github.com/starcoinorg/starcoin-go v0.0.0-20211224034005-51741472387f/go.mod h1:P9XqzWTePMp9MxrXY9ND/diw388Gk3nUHs/QVaAZnzA=
 github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4/go.mod h1:RZLeN1LMWmRsyYjvAu+I6Dm9QmlDaIIt+Y+4Kd7Tp+Q=
 github.com/status-im/keycard-go v0.0.0-20190424133014-d95853db0f48 h1:ju5UTwk5Odtm4trrY+4Ca4RMj5OyXbmVeDAVad2T0Jw=
 github.com/status-im/keycard-go v0.0.0-20190424133014-d95853db0f48/go.mod h1:RZLeN1LMWmRsyYjvAu+I6Dm9QmlDaIIt+Y+4Kd7Tp+Q=

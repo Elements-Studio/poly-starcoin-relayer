@@ -18,7 +18,11 @@ func TestInitGenersis(t *testing.T) {
 	err := polyManager.InitGenesis(nil)
 	// var height uint32 = 1319999
 	// err := polyManager.InitGenesis(&height)
-	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("Init poly genesis ok.")
 }
 
 func TestHandleDepositEvents(t *testing.T) {
