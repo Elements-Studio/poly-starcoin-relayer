@@ -369,10 +369,10 @@ func TestGetBlockHeaders(t *testing.T) {
 
 	var height uint64 = 222625
 	blockCount := 25
-	var hdrs = make([]*stcclient.BlockHeaderAndBlockInfo, 0, blockCount)
+	var hdrs = make([]*stcclient.BlockHeaderWithDifficultyInfo, 0, blockCount)
 	for i := 0; i < blockCount; i++ {
 		h := height - uint64(i)
-		hdr, err := client.GetBlockHeaderAndBlockInfoByNumber(context.Background(), h)
+		hdr, err := client.HeaderWithDifficultyInfoByNumber(context.Background(), h)
 		if err != nil {
 			fmt.Println(err)
 			t.FailNow()
