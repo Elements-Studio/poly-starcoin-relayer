@@ -358,13 +358,21 @@ func TestGetBlockHeaderInPolyByHash(t *testing.T) {
 }
 
 func TestGetBlockHeaders(t *testing.T) {
-	starcoinManager := getTestStarcoinManager(t)
+	client := getTestStarcoinClient() //starcoinManager := getTestStarcoinManager(t)
+	node, err := client.GetNodeInfo(context.Background())
+	if err != nil {
+		t.FailNow()
+	}
+	currentHeight := node.PeerInfo.ChainInfo.Header.Height
+	fmt.Printf("Current chain height: %v\n", currentHeight)
+	//return
+
 	var height uint64 = 222625
 	blockCount := 25
-	var hdrs = make([]*stcclient.BlockHeader, 0, blockCount)
+	var hdrs = make([]*stcclient.BlockHeaderAndBlockInfo, 0, blockCount)
 	for i := 0; i < blockCount; i++ {
 		h := height - uint64(i)
-		hdr, err := starcoinManager.client.HeaderByNumber(context.Background(), h)
+		hdr, err := client.GetBlockHeaderAndBlockInfoByNumber(context.Background(), h)
 		if err != nil {
 			fmt.Println(err)
 			t.FailNow()
@@ -377,10 +385,10 @@ func TestGetBlockHeaders(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println("--------------- starcoin block headers ----------------")
-	fmt.Println(string(j))
+	//fmt.Println("--------------- starcoin block headers ----------------")
+	//fmt.Println(string(j))
 
-	filePath := "testjson.json"
+	filePath := fmt.Sprintf("starcoin_test_headers-%d.json", height)
 	writeTextFile(filePath, string(j), t)
 }
 
@@ -455,6 +463,13 @@ func getTestStarcoinManager(t *testing.T) *StarcoinManager {
 	// starcoinManager.init()
 	// ---------------------------------------------------------------
 	return starcoinManager
+}
+
+func getTestStarcoinClient() stcclient.StarcoinClient {
+	config := config.NewServiceConfig("../config-devnet.json")
+	fmt.Println(config)
+	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
+	return starcoinClient
 }
 
 // func TestMisc2(t *testing.T) {
