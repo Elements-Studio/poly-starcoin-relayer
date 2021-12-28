@@ -439,14 +439,15 @@ func (this *PolyManager) getPolyLastConfigBlockNumAtHeight(height uint32) (uint3
 	return blkInfo.LastConfigBlockNum, nil
 }
 
+// Get current poly epoch start height on Starcoin. Return 0 if error.
 func (this *PolyManager) findCurEpochStartHeight() uint32 {
 	//ethcommon.HexToAddress(this.config.StarcoinConfig.ECCDContractAddress)
 	//instance, err := eccd_abi.NewEthCrossChainData(address, this.ethClient)
-	instance := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
 	// if err != nil {
 	// 	log.Errorf("findCurEpochStartHeight - new eth cross chain failed: %s", err.Error())
 	// 	return 0
 	// }
+	instance := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
 	height, err := instance.getCurEpochStartHeight()
 	if err != nil {
 		log.Errorf("findCurEpochStartHeight - GetCurEpochStartHeight failed: %s", err.Error())
