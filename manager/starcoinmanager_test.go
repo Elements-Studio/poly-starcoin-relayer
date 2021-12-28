@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
@@ -358,7 +359,8 @@ func TestGetBlockHeaderInPolyByHash(t *testing.T) {
 }
 
 func TestGetBlockHeaders(t *testing.T) {
-	client := getTestStarcoinClient() //starcoinManager := getTestStarcoinManager(t)
+	//client := getTestStarcoinClient()
+	client := getLocalNodeStarcoinClient()
 	node, err := client.GetNodeInfo(context.Background())
 	if err != nil {
 		t.FailNow()
@@ -367,8 +369,11 @@ func TestGetBlockHeaders(t *testing.T) {
 	fmt.Printf("Current chain height: %v\n", currentHeight)
 	//return
 
-	var height uint64 = 222625
-	blockCount := 25
+	// -------- //222625 ---------
+	var height uint64 = 461665 //461660
+	// "number": "461635", --enable-seed
+	// "number": "461643", --disable-seed
+	blockCount := 30
 	var hdrs = make([]*stcclient.BlockHeaderWithDifficultyInfo, 0, blockCount)
 	for i := 0; i < blockCount; i++ {
 		h := height - uint64(i)
@@ -389,6 +394,10 @@ func TestGetBlockHeaders(t *testing.T) {
 	//fmt.Println(string(j))
 
 	filePath := fmt.Sprintf("starcoin_test_headers-%d.json", height)
+	if _, err := os.Stat(filePath); err == nil {
+		// file already exists
+		filePath = fmt.Sprintf("starcoin_test_headers-%d-%d.json", height, time.Now().UnixNano()/1000000000)
+	}
 	writeTextFile(filePath, string(j), t)
 }
 
@@ -469,6 +478,11 @@ func getTestStarcoinClient() stcclient.StarcoinClient {
 	config := config.NewServiceConfig("../config-devnet.json")
 	fmt.Println(config)
 	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
+	return starcoinClient
+}
+
+func getLocalNodeStarcoinClient() stcclient.StarcoinClient {
+	starcoinClient := stcclient.NewStarcoinClient("http://localhost:9850")
 	return starcoinClient
 }
 

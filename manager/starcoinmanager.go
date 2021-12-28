@@ -28,6 +28,10 @@ import (
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
+const (
+	ERROR_DESC_GET_PARENT_BLOCK_FAILED = "get the parent block failed"
+)
+
 type StarcoinManager struct {
 	client        *stcclient.StarcoinClient
 	polySdk       *polysdk.PolySdk
@@ -208,7 +212,7 @@ func (this *StarcoinManager) commitHeader() int {
 	)
 	if err != nil {
 		errDesc := err.Error()
-		if strings.Contains(errDesc, "get the parent block failed") || strings.Contains(errDesc, "missing required field") {
+		if strings.Contains(errDesc, ERROR_DESC_GET_PARENT_BLOCK_FAILED) || strings.Contains(errDesc, "missing required field") {
 			log.Warnf("StarcoinManager.commitHeader - send transaction to poly chain err: %s", errDesc)
 			this.rollBackToCommAncestor()
 			return 0
