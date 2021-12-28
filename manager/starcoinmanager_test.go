@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -402,9 +403,11 @@ func TestGetBlockHeaders(t *testing.T) {
 }
 
 func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
-	starcoinManager := getTestStarcoinManager(t)
-	var height uint64 = 291946
-	h, err := starcoinManager.client.GetBlockHeaderAndBlockInfoByNumber(context.Background(), height)
+	//starcoinManager := getTestStarcoinManager(t)
+	//var height uint64 = 291946
+	starcoinClient := getTestStarcoinClient()
+	height := getStarcoinHeight(t, &starcoinClient)
+	h, err := starcoinClient.GetBlockHeaderAndBlockInfoByNumber(context.Background(), height)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -421,6 +424,18 @@ func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
 	filePath := fmt.Sprintf("blockHeaderAndBlockInfoHex-%d.txt", height)
 	writeTextFile(filePath, hex.EncodeToString(j), t)
 	// /////////////////////////////////////////////////////
+}
+
+func getStarcoinHeight(t *testing.T, client *stcclient.StarcoinClient) uint64 {
+	nodeinfo, err := client.GetNodeInfo(context.Background())
+	if err != nil {
+		t.FailNow()
+	}
+	h, err := strconv.ParseUint(nodeinfo.PeerInfo.ChainInfo.Header.Height, 10, 64)
+	if err != nil {
+		t.FailNow()
+	}
+	return h
 }
 
 func writeTextFile(filePath string, content string, t *testing.T) {

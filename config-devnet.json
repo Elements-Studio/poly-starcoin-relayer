@@ -6,16 +6,16 @@
     "WalletPwd": "${POLY_WALLET_PASSWORD}"
   },
   "StarcoinConfig": {
-    "SideChainId": 218,
+    "SideChainId": 318,
     "RestURL": "https://halley-seed.starcoin.org",
     "ChainId": 253,
-    "CCMModule": "0xd77abeb1fc3891a3f8db6283b194bb07::CrossChainScript",
-    "CCDModule": "0xd77abeb1fc3891a3f8db6283b194bb07::CrossChainScript",
-    "CrossChainEventAddress": "0xd77abeb1fc3891a3f8db6283b194bb07",
-    "CrossChainEventTypeTag": "0xd77abeb1fc3891a3f8db6283b194bb07::CrossChainManager::CrossChainEvent",
+    "CCMModule": "0x8e703a2842b0137ada096335176d2c28::CrossChainScript",
+    "CCDModule": "0x8e703a2842b0137ada096335176d2c28::CrossChainScript",
+    "CrossChainEventAddress": "0x8e703a2842b0137ada096335176d2c28",
+    "CrossChainEventTypeTag": "0x8e703a2842b0137ada096335176d2c28::CrossChainManager::CrossChainEvent",
     "PrivateKeys": [
       {
-        "0xd77abeb1fc3891a3f8db6283b194bb07": "${PRIVATE_KEY_E4AD64A}"
+        "0x8e703a2842b0137ada096335176d2c28": "${PRIVATE_KEY_8e703a2}"
       }
     ],
     "BlockConfirmations": 6,
@@ -28,14 +28,14 @@
   "RoutineNum": 64,
   "ProxyOrAssetContracts": [
     {
-      "0xd77abeb1fc3891a3f8db6283b194bb07::CrossChainManager": {
+      "0x8e703a2842b0137ada096335176d2c28::CrossChainManager": {
         "outbound": [
           1,
           2,
           218
         ]
       },
-      "0xd77abeb1fc3891a3f8db6283b194bb07::CrossChainScript": {
+      "0x8e703a2842b0137ada096335176d2c28::CrossChainScript": {
         "inbound": [
           2,
           218
