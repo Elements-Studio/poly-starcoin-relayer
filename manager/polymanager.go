@@ -185,7 +185,7 @@ func (this *PolyManager) MonitorFailedPolyTx() {
 				continue
 			}
 			if polyTx != nil {
-				log.Warnf("Get failed poly Tx. hash: %s", polyTx.TxHash) //todo remove this...
+				log.Infof("Get failed poly Tx. hash: %s", polyTx.TxHash) //todo: remove this??
 				ok := sender.sendPolyTxToStarcoin(polyTx)
 				if !ok {
 					log.Errorf("PolyManager.MonitorFailedPolyTx - failed to sendPolyTxToStarcoin")
@@ -596,7 +596,14 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 }
 
 func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
-	this.db.SetPolyTxStatusProcessing(polyTx.TxHash, "") //todo is this ok?
+	// //////////////////////////////////////////////////////
+	//update PolyTx status to processing(sending to Starcoin)
+	err := this.db.SetPolyTxStatusProcessing(polyTx.TxHash, "")
+	if err != nil {
+		log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, txIndex: %d", err, polyTx.TxIndex)
+		return false
+	}
+	// //////////////////////////////////////////////////////
 	stcTxInfo, err := this.polyTxToStarcoinTxInfo(polyTx)
 	if err != nil {
 		return false
@@ -813,7 +820,7 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 
 	//isSuccess := this.waitTransactionConfirm(txInfo.polyTxHash, hash)
 	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
-	//todo hanlde error
+	//todo hanlde error???
 	if isSuccess {
 		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
@@ -821,7 +828,11 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	} else {
 		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
-		this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txhash)
+		err := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txhash)
+		if err != nil {
+			log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, polyTxHash: %d", err, txInfo.polyTxHash)
+			return err
+		}
 	}
 	return nil
 }

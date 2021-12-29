@@ -6,9 +6,11 @@ require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/celestiaorg/smt v0.2.1-0.20210927133715-225e28d5599a // indirect
+	github.com/crossoverJie/gorm-optimistic v0.0.7 // indirect
 	github.com/ethereum/go-ethereum v1.10.7
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/jinzhu/now v1.1.4 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/klauspost/compress v1.4.1 // indirect
 	github.com/klauspost/cpuid v1.2.0 // indirect
@@ -23,7 +25,7 @@ require (
 	github.com/valyala/fasthttp v1.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	gorm.io/driver/mysql v1.1.3
-	gorm.io/gorm v1.21.12
+	gorm.io/gorm v1.22.4
 )
 
 //replace github.com/starcoinorg/starcoin-go => ../../starcoinorg/starcoin-go

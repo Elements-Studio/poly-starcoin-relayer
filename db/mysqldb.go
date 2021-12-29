@@ -10,6 +10,7 @@ import (
 
 	"github.com/celestiaorg/smt"
 	csmt "github.com/celestiaorg/smt"
+	optimistic "github.com/crossoverJie/gorm-optimistic"
 	gomysql "github.com/go-sql-driver/mysql"
 	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
@@ -211,7 +212,10 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 	px.Status = STATUS_PROCESSING
 	px.StarcoinTxHash = starcoinTxHash
 	//px.UpdatedAt = currentTimeMillis()
-	return w.db.Save(px).Error
+	//return w.db.Save(px).Error
+	return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
+		return model
+	}, 1, 1)
 }
 
 func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, starcoinTxHash string) error {
@@ -229,7 +233,8 @@ func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, starcoinTxHash string)
 
 func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	var list []PolyTx
-	err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
+	//err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
+	err := w.db.Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -240,7 +245,12 @@ func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	if len(list) == 0 {
 		return nil, nil
 	}
-	return &list[0], nil
+	first := list[0]
+	if first.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000 {
+		return &first, nil
+	} else {
+		return nil, nil
+	}
 }
 
 func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {

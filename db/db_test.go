@@ -3,8 +3,10 @@ package db
 import (
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/google/uuid"
@@ -205,11 +207,49 @@ func TestSetPolyTxStatus(t *testing.T) {
 }
 
 func TestGetFirstFailedPolyTx(t *testing.T) {
-	px, err := testDB().GetFirstFailedPolyTx()
+	px1, err := testDB().GetFirstFailedPolyTx()
 	if err != nil {
 		t.FailNow()
 	}
-	fmt.Println(px)
+	if px1 != nil {
+		fmt.Printf("First failed PolyTx index: %v\n", px1.TxIndex)
+	} else {
+		fmt.Println(px1)
+	}
+	// // ////////////////////////
+	// px2, err := testDB().GetFirstFailedPolyTx()
+	// if err != nil {
+	// 	t.FailNow()
+	// }
+	// if px2 != nil {
+	// 	fmt.Printf("First failed PolyTx index: %v\n", px2.TxIndex)
+	// } else {
+	// 	fmt.Println(px2)
+	// }
+}
+
+func TestSetPolyTxStatusProcessing(t *testing.T) {
+	db := testDB()
+	px_TxHash := "5c2e8a588641472f74258e39ff19a88e4bd7104d05d72ae6ef65a30291823fa3"
+	px_StarcoinTxHash := "0x81cd5df1aff45149129cb21c93956c5e3308329cda1f23c74977d030d5e7d441"
+
+	for i := 0; i < 2; i++ {
+		go func() {
+			time.Sleep(time.Second * time.Duration(rand.Intn(3)))
+			//db.GetFirstFailedPolyTx()
+			tx, _ := db.GetPolyTx(px_TxHash)
+			if tx == nil || tx.Status == STATUS_CONFIRMED {
+				return
+			}
+			err := db.SetPolyTxStatusProcessing(px_TxHash, px_StarcoinTxHash)
+			if err != nil { //if errors.Is(err, optimistic.NewOptimisticError()) {
+				fmt.Println("------- optimistic SetPolyTxStatusProcessing error -------" + err.Error())
+			} else {
+				fmt.Println("--------------- SetPolyTxStatusProcessing ok -------------")
+			}
+		}()
+	}
+	time.Sleep(time.Second * 5)
 }
 
 // func TestMisc(t *testing.T) {

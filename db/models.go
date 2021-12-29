@@ -62,6 +62,17 @@ type PolyTx struct {
 
 	StarcoinTxHash string `gorm:"size:66"`
 	EventTxHash    string `gorm:"size:66"`
+
+	// version
+	Version int64 `gorm:"column:version;default:0;NOT NULL" json:"version"`
+}
+
+func (o *PolyTx) GetVersion() int64 {
+	return o.Version
+}
+
+func (o *PolyTx) SetVersion(version int64) {
+	o.Version = version
 }
 
 func (p *PolyTx) GetNonMembershipProof() (*smt.SparseMerkleProof, error) {
