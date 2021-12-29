@@ -62,7 +62,7 @@ var (
 
 	StarcoinStartForceFlag = cli.Uint64Flag{
 		Name:  "starcoinforce",
-		Usage: "starcoin start block height ",
+		Usage: "starcoin force start block height ",
 		Value: uint64(0),
 	}
 

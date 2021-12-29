@@ -36,6 +36,7 @@ type starcoinChainInfoRsp struct {
 	Id    uint          `json:"id"`
 }
 
+// Get starcoin node current height.
 func GetStarcoinNodeHeight(url string, restClient *RestClient) (uint64, error) {
 	req := &starcoinJsonRpcReq{
 		JsonRpc: "2.0",

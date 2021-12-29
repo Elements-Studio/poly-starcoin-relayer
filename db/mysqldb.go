@@ -248,7 +248,7 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	var lastIndex uint64
 	err := w.db.Last(lastTx).Error
 	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
+		if !errors.Is(err, gorm.ErrRecordNotFound) { // error only once
 			return 0, err
 		} else {
 			lastIndex = 0
