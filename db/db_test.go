@@ -238,7 +238,7 @@ func TestSetPolyTxStatusProcessing(t *testing.T) {
 			time.Sleep(time.Second * time.Duration(rand.Intn(3)))
 			//db.GetFirstFailedPolyTx()
 			tx, _ := db.GetPolyTx(px_TxHash)
-			if tx == nil || tx.Status == STATUS_CONFIRMED {
+			if tx == nil || tx.Status == STATUS_CONFIRMED || tx.Status == STATUS_PROCESSED {
 				return
 			}
 			err := db.SetPolyTxStatusProcessing(px_TxHash, px_StarcoinTxHash)

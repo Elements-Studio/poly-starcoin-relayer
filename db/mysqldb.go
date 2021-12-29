@@ -20,10 +20,19 @@ import (
 )
 
 const (
-	STATUS_PROCESSING = "P"
-	STATUS_FAILED     = "F"
-	STATUS_PROCESSED  = "D"
-	STATUS_CONFIRMED  = "C"
+	STATUS_CREATED    = "N" //new
+	STATUS_PROCESSING = "P" //Processing
+	STATUS_FAILED     = "F" //Failed
+	STATUS_PROCESSED  = "D" //processed
+	STATUS_CONFIRMED  = "C" //Confirmed
+)
+
+var (
+	PolyTxExistsValue                = []byte{1}
+	PolyTxExistsValueHashHex         = Hash256Hex(PolyTxExistsValue)
+	SmtDefaultValue                  = []byte{} //defaut(empty) value
+	PolyTxMaxProcessingSeconds int64 = 120
+	PolyTxMaxRetryCount              = 10
 )
 
 type MySqlDB struct {
@@ -209,8 +218,19 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 	}).First(&px).Error; err != nil {
 		return err
 	}
+	if px.Status == STATUS_CONFIRMED || px.Status == STATUS_PROCESSED {
+		return fmt.Errorf("PolyTx status is already %s, TxHash: %s", px.Status, px.TxHash)
+	}
+	if px.Status == STATUS_PROCESSING {
+		if starcoinTxHash == "" && px.StarcoinTxHash == "" {
+			return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s", px.TxHash)
+		} else if starcoinTxHash != "" && px.StarcoinTxHash != "" {
+			return fmt.Errorf("PolyTx.StarcoinTxHash is already set to %s, TxHash: %s", px.StarcoinTxHash, px.TxHash)
+		}
+	}
 	px.Status = STATUS_PROCESSING
 	px.StarcoinTxHash = starcoinTxHash
+	px.RetryCount = px.RetryCount + 1
 	//px.UpdatedAt = currentTimeMillis()
 	//return w.db.Save(px).Error
 	return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
@@ -234,7 +254,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, starcoinTxHash string)
 func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	var list []PolyTx
 	//err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
-	err := w.db.Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
+	err := w.db.Where("retry_count < ?", PolyTxMaxRetryCount).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -278,7 +298,7 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	}
 
 	//tx.UpdatedAt = currentTimeMillis()
-	tx.Status = STATUS_PROCESSING
+	tx.Status = STATUS_CREATED
 
 	err = w.db.Create(tx).Error
 
@@ -440,13 +460,6 @@ func createOrUpdate(db *gorm.DB, dest interface{}) error {
 	}
 	return nil
 }
-
-var (
-	PolyTxExistsValue                = []byte{1}
-	PolyTxExistsValueHashHex         = Hash256Hex(PolyTxExistsValue)
-	SmtDefaultValue                  = []byte{} //defaut(empty) value
-	PolyTxMaxProcessingSeconds int64 = 120
-)
 
 type PolyTxMapStore struct {
 	db            *MySqlDB

@@ -63,8 +63,8 @@ type PolyTx struct {
 	StarcoinTxHash string `gorm:"size:66"`
 	EventTxHash    string `gorm:"size:66"`
 
-	// version
-	Version int64 `gorm:"column:version;default:0;NOT NULL" json:"version"`
+	RetryCount int   `gorm:"default:0;NOT NULL"`
+	Version    int64 `gorm:"column:version;default:0;NOT NULL"`
 }
 
 func (o *PolyTx) GetVersion() int64 {
