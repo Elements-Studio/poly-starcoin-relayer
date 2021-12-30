@@ -148,7 +148,7 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 			if strings.EqualFold("Executed", tx.Status) {
 				return true, nil
 			} else {
-				continue //todo return false on some statuses???
+				continue // TODO: return false on some statuses???
 			}
 		case <-exitTicker.C:
 			return false, fmt.Errorf("WaitTransactionConfirm exceed timeout %v", timeout)

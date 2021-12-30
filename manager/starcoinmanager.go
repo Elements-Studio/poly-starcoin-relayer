@@ -113,7 +113,7 @@ func (this *StarcoinManager) init() error {
 }
 
 func (this *StarcoinManager) MonitorChain() {
-	//fetchBlockTicker := time.NewTicker(200 * time.Millisecond) //todo remove this
+	//fetchBlockTicker := time.NewTicker(200 * time.Millisecond) // for test
 	fetchBlockTicker := time.NewTicker(time.Duration(this.config.StarcoinConfig.MonitorInterval) * time.Second)
 	var blockHandleResult bool
 	for {
@@ -134,7 +134,7 @@ func (this *StarcoinManager) MonitorChain() {
 					log.Infof("StarcoinManager.MonitorChain - handle confirmed starcoin block height: %d", this.currentHeight)
 				}
 				// ////////////////////////////////////////////////////////////////////
-				// todo if len(this.header4sync) is too large, should not continue???
+				// TODO: if len(this.header4sync) is too large, should not continue???
 				// ////////////////////////////////////////////////////////////////////
 				if len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch*3 {
 					log.Infof("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d", this.currentHeight)
@@ -143,20 +143,20 @@ func (this *StarcoinManager) MonitorChain() {
 				}
 
 				blockHandleResult = this.handleNewBlock(this.currentHeight + 1)
-				// fmt.Println("----------------- this.handleNewBlock() result -----------------") //todo remove this
+				// fmt.Println("----------------- this.handleNewBlock() result -----------------")
 				// fmt.Println(blockHandleResult)
 				if blockHandleResult == false {
 					break
 				}
 				this.currentHeight++
-				fmt.Println("--------------- this.currentHeight++ ----------------")
-				fmt.Println(this.currentHeight)
-				fmt.Println("----------------- len(header4sync) -----------------") //todo remove this
-				fmt.Println(len(this.header4sync))
+				// fmt.Println("--------------- this.currentHeight++ ----------------")
+				// fmt.Println(this.currentHeight)
+				// fmt.Println("----------------- len(header4sync) -----------------")
+				// fmt.Println(len(this.header4sync))
 				// try to commit header if more than 50 headers needed to be syned
 				if len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch {
 					// fmt.Println("--------- len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch --------")
-					// fmt.Println("----------------- len(header4sync) -----------------") //todo remove this
+					// fmt.Println("----------------- len(header4sync) -----------------")
 					// fmt.Println(len(this.header4sync))
 					// fmt.Println("--------------- this.header4sync ----------------")
 					// printHeader4sync(this.header4sync)
@@ -170,7 +170,7 @@ func (this *StarcoinManager) MonitorChain() {
 					}
 				}
 			}
-			// fmt.Println("----------------- blockHandleResult -----------------") //todo remove this
+			// fmt.Println("----------------- blockHandleResult -----------------")
 			// fmt.Println(blockHandleResult)
 			// fmt.Println("----------------- len(header4sync) -----------------")
 			// fmt.Println(len(this.header4sync))
@@ -178,8 +178,8 @@ func (this *StarcoinManager) MonitorChain() {
 			// fmt.Println(this.currentHeight)
 			if blockHandleResult && len(this.header4sync) > 0 {
 				// fmt.Println("--------------- this.header4sync ----------------")
-				// printHeader4sync(this.header4sync)                                   //todo remove this
-				// fmt.Println("---------------- commit headers... ------------------") //todo remove this
+				// printHeader4sync(this.header4sync)
+				// fmt.Println("---------------- commit headers... ------------------")
 				res := this.commitHeader()
 				if res != 0 {
 					log.Errorf("StarcoinManager.MonitorChain - commitHeader error, current height: %d", this.currentHeight)
@@ -192,16 +192,16 @@ func (this *StarcoinManager) MonitorChain() {
 }
 
 // this is a test method
-func printHeader4sync(headers [][]byte) {
-	fmt.Println("[")
-	for i, h := range headers {
-		if i != 0 {
-			fmt.Println(",")
-		}
-		fmt.Println(string(h))
-	}
-	fmt.Println("]")
-}
+// func printHeader4sync(headers [][]byte) {
+// 	fmt.Println("[")
+// 	for i, h := range headers {
+// 		if i != 0 {
+// 			fmt.Println(",")
+// 		}
+// 		fmt.Println(string(h))
+// 	}
+// 	fmt.Println("]")
+// }
 
 // if success, return 0
 func (this *StarcoinManager) commitHeader() int {
@@ -234,7 +234,7 @@ func (this *StarcoinManager) commitHeader() int {
 			_ = err //log.Debugf("StarcoinManager.commitHeader - GetCurrentBlockHeight: %d", curr)
 		}
 		//
-		// todo ignore errors? like this:
+		// TODO: ignore errors? like this:
 		// h, _ = this.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
 		// curr, _ := this.polySdk.GetCurrentBlockHeight()
 		//
@@ -273,7 +273,7 @@ func (this *StarcoinManager) rollBackToCommAncestor() {
 			log.Errorf("rollBackToCommAncestor - failed to get header hash, so we wait for one second to retry: %v", err)
 			time.Sleep(time.Second)
 			this.currentHeight++
-			continue // todo is this ok??
+			continue // TODO: is this ok??
 		}
 		if bytes.Equal(hdrhash, raw) {
 			// // ---------------- debug code... -------------------
@@ -425,20 +425,20 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) (bool, error)
 		}
 		var isTarget bool
 		if len(this.config.ProxyOrAssetContracts) > 0 {
-			// fmt.Println(tools.EncodeToHex(ccEvent.Sender))
-			fmt.Println("---------------- height -----------------")
-			fmt.Println(height)
-			fmt.Println("---------------- ProxyOrAssetContract -----------------")
-			fmt.Println(ccEvent.ProxyOrAssetContract)
-			fmt.Println(string(ccEvent.ProxyOrAssetContract)) //tools.EncodeToHex(ccEvent.ProxyOrAssetContract)
-			fmt.Println("---------------- TxId(CrossChainEvent.TxId) -----------------")
-			fmt.Println(tools.EncodeToHex(ccEvent.TxId))
-			fmt.Println("---------------- ToChainId -----------------")
-			fmt.Println(ccEvent.ToChainId)
-			fmt.Println("---------------- ToContract -----------------")
-			fmt.Println(string(ccEvent.ToContract))
-			fmt.Println("---------------- RawData -----------------")
-			fmt.Println(tools.EncodeToHex(ccEvent.RawData))
+			// // fmt.Println(tools.EncodeToHex(ccEvent.Sender))
+			// fmt.Println("---------------- height -----------------")
+			// fmt.Println(height)
+			// fmt.Println("---------------- ProxyOrAssetContract -----------------")
+			// fmt.Println(ccEvent.ProxyOrAssetContract)
+			// fmt.Println(string(ccEvent.ProxyOrAssetContract)) //tools.EncodeToHex(ccEvent.ProxyOrAssetContract)
+			// fmt.Println("---------------- TxId(CrossChainEvent.TxId) -----------------")
+			// fmt.Println(tools.EncodeToHex(ccEvent.TxId))
+			// fmt.Println("---------------- ToChainId -----------------")
+			// fmt.Println(ccEvent.ToChainId)
+			// fmt.Println("---------------- ToContract -----------------")
+			// fmt.Println(string(ccEvent.ToContract))
+			// fmt.Println("---------------- RawData -----------------")
+			// fmt.Println(tools.EncodeToHex(ccEvent.RawData))
 			//var proxyOrAssetContract string
 			proxyOrAssetContract := string(ccEvent.ProxyOrAssetContract) // for 'source' proxy contract, filter is outbound chain Id.
 			for _, v := range this.config.ProxyOrAssetContracts {        // renamed TargetContracts
@@ -479,8 +479,8 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) (bool, error)
 			log.Errorf("fetchLockDepositEvents - tools.HexWithPrefixToBytes error: %s", err.Error())
 			return false, err
 		}
-		fmt.Println("---------------- Starcoin Transaction Hash -----------------") //todo remove this...
-		fmt.Println(tools.EncodeToHex(txHash))                                      //todo remove this...
+		// fmt.Println("---------------- Starcoin Transaction Hash -----------------")
+		// fmt.Println(tools.EncodeToHex(txHash))
 		crossTx := &CrossTransfer{
 			txIndex: tools.EncodeBigInt(index), // tools.EncodeBigInt(ccEvent.TxId to big.Int),
 			txId:    txHash,                    // starcoin tx hash
@@ -525,17 +525,17 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		return fmt.Errorf("handleLockDepositEvents - this.db.GetAllStarcoinTxRetry error: %s", err.Error())
 	}
 	for i, v := range retryList {
-		fmt.Println("------------------------ event from retry list ----------------------------")
-		fmt.Println(hex.EncodeToString(v)) //todo remove this
+		// fmt.Println("------------------------ event from retry list ----------------------------")
+		// fmt.Println(hex.EncodeToString(v))
 		time.Sleep(time.Second * 1)
 		crosstx := new(CrossTransfer)
 		err := crosstx.Deserialization(common.NewZeroCopySource(v))
-		fmt.Println("------------------------ crosstx deserialized ----------------------------")
-		fmt.Printf("crosstx.height: %d\n", crosstx.height) //todo remove this
-		fmt.Printf("crosstx.toChain: %d\n", crosstx.toChain)
-		fmt.Println("crosstx.txIndex: " + crosstx.txIndex + " // tools.EncodeBigInt(CrossChainEvent.TxId to big.Int)")
-		fmt.Println("crosstx.txId: " + hex.EncodeToString(crosstx.txId) + " // starcoin tx hash")
-		fmt.Println("crosstx.value: " + hex.EncodeToString(crosstx.value) + " // CrossChainEvent.RawData")
+		// fmt.Println("------------------------ crosstx deserialized ----------------------------")
+		// fmt.Printf("crosstx.height: %d\n", crosstx.height)
+		// fmt.Printf("crosstx.toChain: %d\n", crosstx.toChain)
+		// fmt.Println("crosstx.txIndex: " + crosstx.txIndex + " // tools.EncodeBigInt(CrossChainEvent.TxId to big.Int)")
+		// fmt.Println("crosstx.txId: " + hex.EncodeToString(crosstx.txId) + " // starcoin tx hash")
+		// fmt.Println("crosstx.value: " + hex.EncodeToString(crosstx.value) + " // CrossChainEvent.RawData")
 
 		// //////////////////////
 		evt := eventList[i]
@@ -553,7 +553,7 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		// 	continue
 		// }
 		if refHeight <= crosstx.height+this.config.StarcoinConfig.BlockConfirmations {
-			log.Infof("handleLockDepositEvents - this height(%d) is not confirmed yet.", crosstx.height) //todo remove this
+			log.Debugf("handleLockDepositEvents - this height(%d) is not confirmed yet.", crosstx.height)
 			continue
 		}
 		//height := int64(refHeight - this.config.StarcoinConfig.BlockConfirmations)
@@ -566,7 +566,7 @@ func (this *StarcoinManager) handleLockDepositEvents(refHeight uint64) error {
 		txGlobalIdx, err := strconv.ParseUint(evt.TransactionGlobalIndex, 10, 64)
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - ParseUint error :%s\n", err.Error())
-			return err // todo or continue???
+			return err // TODO: or continue???
 		}
 		proof, err := tools.GetTransactionProof(this.config.StarcoinConfig.RestURL, this.restClient, evt.BlockHash, txGlobalIdx, &eventIdx)
 		if err != nil {
@@ -639,15 +639,15 @@ func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []by
 	if err != nil {
 		return "", err
 	}
-	// fmt.Println("--------- parameters of polySdk.Native.Ccm.ImportOuterTransfer ----------") // remove this...
+	// fmt.Println("--------- parameters of polySdk.Native.Ccm.ImportOuterTransfer ----------")
 	// fmt.Println(this.config.StarcoinConfig.SideChainId)                                      // sourceChainId uint64,
 	// fmt.Println(hex.EncodeToString(value))                                                   // txData []byte, // CrossChainEvent.RawData
 	// fmt.Println(height)                                                                      // height
-	//fmt.Println(string(proof))                                                               // proof []byte,
+	// fmt.Println(string(proof))                                                               // proof []byte,
 	// fmt.Println(hex.EncodeToString(relayAddr)) // relayAddr
 	// fmt.Println(string(eventMsg))              // headerOrCrossChainMsg
-	//fmt.Println(this.polySigner.Address.ToHexString())                                       // polySigner
-	// fmt.Println("------- end of params of polySdk.Native.Ccm.ImportOuterTransfer ---------") // remove this...
+	// fmt.Println(this.polySigner.Address.ToHexString())                                       // polySigner
+	// fmt.Println("------- end of params of polySdk.Native.Ccm.ImportOuterTransfer ---------")
 
 	tx, err := this.polySdk.Native.Ccm.ImportOuterTransfer(
 		this.config.StarcoinConfig.SideChainId, //sourceChainId uint64,

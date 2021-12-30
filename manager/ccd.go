@@ -83,7 +83,7 @@ func (ccd *CrossChainData) getNonMembershipSparseMerkleRootHash() ([]byte, error
 	}
 	c := stcclient.ContractCall{
 		FunctionId: addr + "::CrossChainData::get_merkle_root_hash",
-		TypeArgs:   []string{addr + "::CrossChainType::Starcoin"}, //todo as parameter?
+		TypeArgs:   []string{addr + "::CrossChainType::Starcoin"}, // TODO: as parameter?
 		Args:       []string{},
 	}
 	r, err := ccd.starcoinClient.CallContract(context.Background(), c)

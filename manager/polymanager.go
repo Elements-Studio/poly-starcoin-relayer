@@ -119,7 +119,7 @@ func (this *PolyManager) init() bool {
 		log.Infof("PolyManager init - start height from flag: %d", this.currentHeight)
 		return true
 	}
-	this.currentHeight, _ = this.db.GetPolyHeight() // todo handle db error...
+	this.currentHeight, _ = this.db.GetPolyHeight() // TODO: handle db error???
 	curEpochStart := this.findCurEpochStartHeight()
 	if curEpochStart > this.currentHeight {
 		this.currentHeight = curEpochStart
@@ -158,7 +158,7 @@ func (this *PolyManager) MonitorChain() {
 				}
 				blockHandleResult = this.handleDepositEvents(this.currentHeight)
 				if blockHandleResult == false {
-					log.Warnf("PolyManager.MonitorChain - handleDepositEvents return false, height: %d", this.currentHeight) //todo remove this
+					//log.Debugf("PolyManager.MonitorChain - handleDepositEvents return false, height: %d", this.currentHeight)
 					break
 				}
 				this.currentHeight++
@@ -185,7 +185,7 @@ func (this *PolyManager) MonitorFailedPolyTx() {
 				continue
 			}
 			if polyTx != nil {
-				log.Infof("Get failed poly Tx. hash: %s", polyTx.TxHash) //todo: remove this??
+				//log.Debugf("Get failed poly Tx. hash: %s", polyTx.TxHash)
 				ok := sender.sendPolyTxToStarcoin(polyTx)
 				if !ok {
 					log.Errorf("PolyManager.MonitorFailedPolyTx - failed to sendPolyTxToStarcoin")
@@ -288,7 +288,6 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 				//	return false
 				//}
 				// //////////////////////////
-				//todo Is this ok???
 				sent, saved := sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
 				if !sent {
 					log.Errorf("handleDepositEvents - failed to commitDepositEventsWithHeader, not sent. Poly tx hash: %s", event.TxHash)
@@ -383,18 +382,18 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 		log.Errorf("InitGenesis - GetAccountSequenceNumber error:%s", err.Error())
 		return err
 	}
-	fmt.Println("---------------------- hdr ----------------------")
-	rawHdr := hdr.GetMessage()
-	//fmt.Println(len(rawHdr))
-	//fmt.Println(rawHdr)
-	fmt.Println(hex.EncodeToString(rawHdr))
-	fmt.Println("------------------ publickeys -------------------")
-	//fmt.Println(len(publickeys))
-	fmt.Println(publickeys)
-	fmt.Println(hex.EncodeToString(publickeys))
-	fmt.Println("---------------- header.SigData ------------------")
-	fmt.Println(hex.EncodeToString(encodeHeaderSigData(hdr)))
-	fmt.Println("--------------------------------------------------")
+	// fmt.Println("---------------------- hdr ----------------------")
+	// rawHdr := hdr.GetMessage()
+	// //fmt.Println(len(rawHdr))
+	// //fmt.Println(rawHdr)
+	// fmt.Println(hex.EncodeToString(rawHdr))
+	// fmt.Println("------------------ publickeys -------------------")
+	// //fmt.Println(len(publickeys))
+	// fmt.Println(publickeys)
+	// fmt.Println(hex.EncodeToString(publickeys))
+	// fmt.Println("---------------- header.SigData ------------------")
+	// fmt.Println(hex.EncodeToString(encodeHeaderSigData(hdr)))
+	// fmt.Println("--------------------------------------------------")
 	txPayload := stcpoly.EncodeInitGenesisTxPayload(this.config.StarcoinConfig.CCMModule, hdr.GetMessage(), publickeys)
 
 	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT*4, seqNum)
@@ -407,8 +406,9 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 		log.Errorf("InitGenesis - SubmitTransaction error:%s", err.Error())
 		return err
 	}
-	fmt.Println("--------------- starcoin tx hash ----------------")
-	fmt.Println(txHash)
+	_ = txHash
+	// fmt.Println("--------------- starcoin tx hash ----------------")
+	// fmt.Println(txHash)
 	err = this.db.UpdatePolyHeight(cfgBlockNum)
 	if err != nil {
 		log.Errorf("InitGenesis - UpdatePolyHeight error:%s", err.Error())
@@ -434,8 +434,8 @@ func (this *PolyManager) getPolyLastConfigBlockNumAtHeight(height uint32) (uint3
 	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
 		return 0, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err.Error())
 	}
-	fmt.Printf("---------------- LastConfigBlockNum at %d -----------------\n", height)
-	fmt.Println(blkInfo.LastConfigBlockNum)
+	// fmt.Printf("---------------- LastConfigBlockNum at %d -----------------\n", height)
+	// fmt.Println(blkInfo.LastConfigBlockNum)
 	return blkInfo.LastConfigBlockNum, nil
 }
 
@@ -538,7 +538,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// // }
 	// fromTx := [32]byte{}
 	// copy(fromTx[:], param.TxHash[:32])
-	// res, _ := ccd.checkIfFromChainTxExist(param.FromChainID, fromTx[:]) //todo remove this???
+	// res, _ := ccd.checkIfFromChainTxExist(param.FromChainID, fromTx[:])
 	// if res {
 	// 	log.Debugf("already relayed to starcoin: ( from_chain_id: %d, from_txhash: %x,  param.Txhash: %x)",
 	// 		param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)
@@ -571,7 +571,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
 	// 	sigs)
 
-	polyTx, err := db.NewPolyTx(param.TxHash, rawAuditPath, headerData, rawProof, rawAnchor, sigs, eventTxHash) //todo param.TxHash
+	polyTx, err := db.NewPolyTx(param.TxHash, rawAuditPath, headerData, rawProof, rawAnchor, sigs, eventTxHash)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - db.NewPolyTx error: %s", err.Error())
 		return false, false
@@ -591,7 +591,6 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 		return false, false
 	}
 
-	//todo ???
 	return this.sendPolyTxToStarcoin(polyTx), true
 }
 
@@ -634,7 +633,7 @@ func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 			}
 		}()
 	}
-	//TODO: could be blocked
+	// TODO:: could be blocked
 	c <- stcTxInfo
 	return true
 }
@@ -741,7 +740,7 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 	// 	From: this.acc.Address, To: &contractaddr, Gas: 0, GasPrice: gasPrice,
 	// 	Value: big.NewInt(0), Data: txData,
 	// }
-	// gasLimit, err := this.ethClient.EstimateGas(context.Background(), callMsg) // todo gasLimit...
+	// gasLimit, err := this.ethClient.EstimateGas(context.Background(), callMsg) // TODO: gasLimit...
 	// if err != nil {
 	// 	log.Errorf("changeBookKeeper - estimate gas limit error: %s", err.Error())
 	// 	return false
@@ -758,13 +757,13 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 	// }
 
 	rawUserTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address, txPayload, gasPrice, this.config.StarcoinConfig.MaxGasAmount, nonce)
-	//todo use max gas???
+	// TODO: use max gas???
 	if err != nil {
 		log.Errorf("changeBookKeeper - BuildRawUserTransaction error: %s", err.Error())
 		return false
 	}
 	var txhash string
-	//txhash := signedtx.Hash() //todo cal txhash self???
+	//txhash := signedtx.Hash() // TODO: cal txhash self???
 	if txhash, err = this.starcoinClient.SubmitTransaction(context.Background(), this.keyStore.GetPrivateKey(), rawUserTx); err != nil {
 		log.Errorf("changeBookKeeper - send transaction error:%s\n", err.Error())
 		return false
@@ -772,7 +771,7 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 
 	hdrhash := header.Hash()
 	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
-	//todo handle error???
+	// TODO: handle error???
 	if isSuccess {
 		log.Infof("successful to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
@@ -806,7 +805,7 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 
 	rawUserTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), this.acc.Address,
 		txInfo.txPayload, gasPrice, this.config.StarcoinConfig.MaxGasAmount, nonce)
-	//todo use max gas???
+	// TODO: use max gas???
 	if err != nil {
 		log.Errorf("sendTxToStarcoin - BuildRawUserTransaction error: %s", err.Error())
 		return err
@@ -816,11 +815,11 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 		log.Errorf("sendTxToStarcoin - submit transaction error:%s\n", err.Error())
 		return err
 	}
-	//todo cal txhash self???
+	// TODO: cal txhash self???
 
 	//isSuccess := this.waitTransactionConfirm(txInfo.polyTxHash, hash)
 	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
-	//todo hanlde error???
+	// TODO: hanlde error???
 	if isSuccess {
 		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
@@ -898,7 +897,7 @@ func encodeHeaderSigData(header *polytypes.Header) []byte {
 	return sigs
 }
 
-// func (this *StarcoinSender) waitTransactionConfirm(polyTxHash string, hash ethcommon.Hash) bool { //todo starcoin...
+// func (this *StarcoinSender) waitTransactionConfirm(polyTxHash string, hash ethcommon.Hash) bool {
 // 	for {
 // 		time.Sleep(time.Second * 1)
 // 		_, ispending, err := this.ethClient.TransactionByHash(context.Background(), hash)
