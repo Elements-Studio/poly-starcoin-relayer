@@ -224,7 +224,9 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 	if px.Status == STATUS_PROCESSING {
 		// when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
 		if starcoinTxHash == "" && px.StarcoinTxHash == "" {
-			return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s", px.TxHash)
+			if !(px.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
+				return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s", px.TxHash)
+			}
 		} else if starcoinTxHash != "" && px.StarcoinTxHash != "" {
 			return fmt.Errorf("PolyTx.StarcoinTxHash is already set to %s, TxHash: %s", px.StarcoinTxHash, px.TxHash)
 		}
