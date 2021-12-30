@@ -228,6 +228,15 @@ func TestGetFirstFailedPolyTx(t *testing.T) {
 	// }
 }
 
+func TestUpdatePolyTransactionsToProcessedBeforeIndex(t *testing.T) {
+	db := testDB().(*MySqlDB)
+	err := db.updatePolyTransactionsToProcessedBeforeIndex(17)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+}
+
 func TestSetPolyTxStatusProcessing(t *testing.T) {
 	db := testDB()
 	px_TxHash := "5c2e8a588641472f74258e39ff19a88e4bd7104d05d72ae6ef65a30291823fa3"

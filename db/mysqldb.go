@@ -222,6 +222,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 		return fmt.Errorf("PolyTx status is already %s, TxHash: %s", px.Status, px.TxHash)
 	}
 	if px.Status == STATUS_PROCESSING {
+		// when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
 		if starcoinTxHash == "" && px.StarcoinTxHash == "" {
 			return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s", px.TxHash)
 		} else if starcoinTxHash != "" && px.StarcoinTxHash != "" {
@@ -233,6 +234,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 	px.RetryCount = px.RetryCount + 1
 	//px.UpdatedAt = currentTimeMillis()
 	//return w.db.Save(px).Error
+	// use optimistic lock here
 	return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
 		return model
 	}, 1, 1)
@@ -248,6 +250,9 @@ func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, starcoinTxHash string)
 	px.Status = STATUS_PROCESSED
 	px.StarcoinTxHash = starcoinTxHash
 	//px.UpdatedAt = currentTimeMillis()
+	go func() {
+		w.updatePolyTransactionsToProcessedBeforeIndex(px.TxIndex)
+	}()
 	return w.db.Save(px).Error
 }
 
@@ -271,6 +276,33 @@ func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	} else {
 		return nil, nil
 	}
+}
+
+func (w *MySqlDB) updatePolyTransactionsToProcessedBeforeIndex(index uint64) error {
+	var list []PolyTx
+	indexDiff := uint64(50)
+	indexAfter := uint64(1)
+	if index > indexDiff {
+		indexAfter = index - uint64(indexDiff)
+	}
+	limit := 10
+	err := w.db.Where("tx_index < ? and tx_index >= ? and status IN ?", index, indexAfter, []string{STATUS_PROCESSING}).Limit(limit).Find(&list).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		} else {
+			return nil
+		}
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	for _, v := range list {
+		v.Status = STATUS_PROCESSED
+		err := w.db.Save(v).Error
+		_ = err //ignore error?
+	}
+	return nil
 }
 
 func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
