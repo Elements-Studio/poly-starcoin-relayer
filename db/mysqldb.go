@@ -20,10 +20,10 @@ import (
 )
 
 const (
-	STATUS_CREATED    = "N" //new
+	STATUS_CREATED    = "N" //New
 	STATUS_PROCESSING = "P" //Processing
 	STATUS_FAILED     = "F" //Failed
-	STATUS_PROCESSED  = "D" //processed
+	STATUS_PROCESSED  = "D" //processeD
 	STATUS_CONFIRMED  = "C" //Confirmed
 )
 
@@ -31,8 +31,8 @@ var (
 	PolyTxExistsValue                = []byte{1}
 	PolyTxExistsValueHashHex         = Hash256Hex(PolyTxExistsValue)
 	SmtDefaultValue                  = []byte{} //defaut(empty) value
-	PolyTxMaxProcessingSeconds int64 = 120
-	PolyTxMaxRetryCount              = 10
+	PolyTxMaxProcessingSeconds int64 = 120      // TODO: is this ok?
+	PolyTxMaxRetryCount              = 10       // TODO: is this ok?
 )
 
 type MySqlDB struct {
@@ -234,7 +234,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 	px.Status = STATUS_PROCESSING
 	px.StarcoinTxHash = starcoinTxHash
 	px.RetryCount = px.RetryCount + 1
-	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic!
+	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic need this!
 	//return w.db.Save(px).Error
 	// use optimistic lock here
 	return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
@@ -282,10 +282,10 @@ func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 
 func (w *MySqlDB) updatePolyTransactionsToProcessedBeforeIndex(index uint64) error {
 	var list []PolyTx
-	indexDiff := uint64(50)
+	indexDiffLimit := uint64(50) // TODO: is this ok??
 	indexAfter := uint64(1)
-	if index > indexDiff {
-		indexAfter = index - uint64(indexDiff)
+	if index > indexDiffLimit {
+		indexAfter = index - indexDiffLimit
 	}
 	limit := 10
 	err := w.db.Where("tx_index < ? and tx_index >= ? and status IN ?", index, indexAfter, []string{STATUS_PROCESSING}).Limit(limit).Find(&list).Error
@@ -326,7 +326,7 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	// 	TxHash:  txHash,
 	// }
 	tx.TxIndex = lastIndex + 1
-	err = w.updatePolyTxNonMembershipProof(tx, lastTx)
+	err = w.setPolyTxNonMembershipProof(tx, lastTx)
 	if err != nil {
 		return 0, err
 	}
@@ -388,14 +388,15 @@ func (w *MySqlDB) UpdatePolyTxNonMembershipProofByIndex(idx uint64) error {
 	if err != nil {
 		return fmt.Errorf("cannot get PolyTx by index: %d", idx-1)
 	}
-	err = w.updatePolyTxNonMembershipProof(tx, preTx)
+	err = w.setPolyTxNonMembershipProof(tx, preTx)
 	if err != nil {
 		return fmt.Errorf("updatePolyTxNonMembershipProof error: %s", err.Error())
 	}
 	return w.db.Save(tx).Error
 }
 
-func (w *MySqlDB) updatePolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
+// set PolyTx non-membership proof info.
+func (w *MySqlDB) setPolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
 	nodeStore := NewSmtNodeMapStore(w)
 	valueStore := NewPolyTxMapStore(w, tx)
 	var smt *csmt.SparseMerkleTree
@@ -605,12 +606,12 @@ func (m *SmtNodeMapStore) Delete(key []byte) error { // Delete deletes a key.
 	return nil
 }
 
-func fmtPrintlnNodeData(d []byte) {
-	r := hex.EncodeToString(d[33:65])
-	if strings.EqualFold(r, PolyTxExistsValueHashHex) {
-		r = "hashOf([]byte{1})"
-	}
-	fmt.Println("-------- parse node data --------")
-	fmt.Printf("prefix: %s, left hash(or leaf path): %s, right hash(or value hash): %s\n",
-		hex.EncodeToString(d[0:1]), hex.EncodeToString(d[1:33]), r)
-}
+// func fmtPrintlnNodeData(d []byte) {
+// 	r := hex.EncodeToString(d[33:65])
+// 	if strings.EqualFold(r, PolyTxExistsValueHashHex) {
+// 		r = "hashOf([]byte{1})"
+// 	}
+// 	fmt.Println("-------- parse node data --------")
+// 	fmt.Printf("prefix: %s, left hash(or leaf path): %s, right hash(or value hash): %s\n",
+// 		hex.EncodeToString(d[0:1]), hex.EncodeToString(d[1:33]), r)
+// }
