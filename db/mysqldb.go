@@ -219,7 +219,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 		return err
 	}
 	if px.Status == STATUS_CONFIRMED || px.Status == STATUS_PROCESSED {
-		return fmt.Errorf("PolyTx status is already %s, TxHash: %s", px.Status, px.TxHash)
+		return fmt.Errorf("PolyTx status is already '%s', TxHash: %s", px.Status, px.TxHash)
 	}
 	if px.Status == STATUS_PROCESSING {
 		// when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
@@ -234,7 +234,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 	px.Status = STATUS_PROCESSING
 	px.StarcoinTxHash = starcoinTxHash
 	px.RetryCount = px.RetryCount + 1
-	//px.UpdatedAt = currentTimeMillis()
+	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic!
 	//return w.db.Save(px).Error
 	// use optimistic lock here
 	return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
