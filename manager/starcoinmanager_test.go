@@ -133,8 +133,10 @@ func TestGetToMerkleValueFromProof(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(param)
+	fmt.Println("-------------- ToMerkleValue.TxHash --------------")
 	fmt.Println(hex.EncodeToString(param.TxHash))
-
+	fmt.Println("-------------- ToMerkleValue.MakeTxParam.TxHash --------------")
+	fmt.Println(hex.EncodeToString(param.MakeTxParam.TxHash))
 }
 
 func TestDeserializeCrossChainEventRawData2(t *testing.T) {

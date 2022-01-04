@@ -169,10 +169,11 @@ func (w *MySqlDB) GetPolyHeight() (uint32, error) {
 	return ch.Height, nil
 }
 
-func (w *MySqlDB) GetPolyTx(txHash string) (*PolyTx, error) {
+func (w *MySqlDB) GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error) {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
-		TxHash: txHash,
+		TxHash:      txHash,
+		FromChainID: fromChainID,
 	}).First(&px).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -199,10 +200,11 @@ func (w *MySqlDB) GetPolyTxByIndex(idx uint64) (*PolyTx, error) {
 	return &px, nil
 }
 
-func (w *MySqlDB) SetPolyTxStatus(txHash string, status string) error {
+func (w *MySqlDB) SetPolyTxStatus(txHash string, fromChainID uint64, status string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
-		TxHash: txHash,
+		TxHash:      txHash,
+		FromChainID: fromChainID,
 	}).First(&px).Error; err != nil {
 		return err
 	}
@@ -211,24 +213,25 @@ func (w *MySqlDB) SetPolyTxStatus(txHash string, status string) error {
 	return w.db.Save(px).Error
 }
 
-func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string) error {
+func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64, starcoinTxHash string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
-		TxHash: txHash,
+		TxHash:      txHash,
+		FromChainID: fromChainID,
 	}).First(&px).Error; err != nil {
 		return err
 	}
 	if px.Status == STATUS_CONFIRMED || px.Status == STATUS_PROCESSED {
-		return fmt.Errorf("PolyTx status is already '%s', TxHash: %s", px.Status, px.TxHash)
+		return fmt.Errorf("PolyTx status is already '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
 	}
 	if px.Status == STATUS_PROCESSING {
 		// when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
 		if starcoinTxHash == "" && px.StarcoinTxHash == "" {
 			if !(px.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
-				return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s", px.TxHash)
+				return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s, FromChainID: %d", px.TxHash, px.FromChainID)
 			}
 		} else if starcoinTxHash != "" && px.StarcoinTxHash != "" {
-			return fmt.Errorf("PolyTx.StarcoinTxHash is already set to %s, TxHash: %s", px.StarcoinTxHash, px.TxHash)
+			return fmt.Errorf("PolyTx.StarcoinTxHash is already set to %s, TxHash: %s, FromChainID: %d", px.StarcoinTxHash, px.TxHash, px.FromChainID)
 		}
 	}
 	px.Status = STATUS_PROCESSING
@@ -242,10 +245,11 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string
 	}, 1, 1)
 }
 
-func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, starcoinTxHash string) error {
+func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, starcoinTxHash string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
-		TxHash: txHash,
+		TxHash:      txHash,
+		FromChainID: fromChainID,
 	}).First(&px).Error; err != nil {
 		return err
 	}
@@ -345,7 +349,7 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 func IsDuplicatePolyTxError(db DB, tx *PolyTx, err error) (bool, error) {
 	var mysqlErr *gomysql.MySQLError
 	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 { // Duplicate entry error
-		oldData, getErr := db.GetPolyTx(tx.TxHash)
+		oldData, getErr := db.GetPolyTx(tx.TxHash, tx.FromChainID)
 		if getErr != nil {
 			return false, getErr
 		}
@@ -368,11 +372,11 @@ func (w *MySqlDB) calculatePloyTxInclusionRootHash(tx *PolyTx) ([]byte, error) {
 		return nil, err
 	}
 	smt := csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), nonMemberRootHash)
-	h, err := hex.DecodeString(tx.TxHash)
+	k, err := tx.GetSmtTxKey()
 	if err != nil {
 		return nil, err
 	}
-	newRootHash, err := smt.Update(h, PolyTxExistsValue)
+	newRootHash, err := smt.Update(k, PolyTxExistsValue)
 	if err != nil {
 		return nil, err
 	}
@@ -408,21 +412,21 @@ func (w *MySqlDB) setPolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
 			return err
 		}
 		smt = csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), preRootHash)
-		preTxHash, err := hex.DecodeString(preTx.TxHash)
+		preTxKey, err := preTx.GetSmtTxKey()
 		if err != nil {
 			return err
 		}
-		_, err = smt.Update(preTxHash, PolyTxExistsValue)
+		_, err = smt.Update(preTxKey, PolyTxExistsValue)
 		if err != nil {
 			return err
 		}
 	}
 	tx.SmtNonMembershipRootHash = hex.EncodeToString(smt.Root()) //string `gorm:"size:66"`
-	h, err := hex.DecodeString(tx.TxHash)
+	k, err := tx.GetSmtTxKey()
 	if err != nil {
 		return err
 	}
-	proof, err := smt.ProveUpdatable(h)
+	proof, err := smt.ProveUpdatable(k)
 	if err != nil {
 		return err
 	}
@@ -466,10 +470,10 @@ func DecodeSmtProofSideNodes(s string) ([][]byte, error) {
 	return bs, nil
 }
 
-func (w *MySqlDB) getPolyTxByTxHashHash(txHashHash string) (*PolyTx, error) {
+func (w *MySqlDB) getPolyTxBySmtTxPath(path string) (*PolyTx, error) {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
-		TxHashHash: txHashHash,
+		SmtTxPath: path,
 	}).First(&px).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -509,15 +513,15 @@ func NewPolyTxMapStore(db *MySqlDB, currentTx *PolyTx) *PolyTxMapStore {
 }
 
 func (m *PolyTxMapStore) Get(key []byte) ([]byte, error) { // Get gets the value for a key.
-	h := hex.EncodeToString(key)
+	path := hex.EncodeToString(key)
 	// fmt.Println("------------------- *PolyTxMapStore.Get -------------------")
 	// fmt.Println(m.currentPolyTx)
 	// fmt.Println(h)
 	// fmt.Println("------------------- *PolyTxMapStore.Get -------------------")
-	if m.currentPolyTx != nil && strings.EqualFold(m.currentPolyTx.TxHashHash, h) {
+	if m.currentPolyTx != nil && strings.EqualFold(m.currentPolyTx.SmtTxPath, path) {
 		return PolyTxExistsValue, nil
 	}
-	polyTx, err := m.db.getPolyTxByTxHashHash(h)
+	polyTx, err := m.db.getPolyTxBySmtTxPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -531,11 +535,11 @@ func (m *PolyTxMapStore) Set(key []byte, value []byte) error { // Set updates th
 	if !bytes.Equal(PolyTxExistsValue, value) {
 		return fmt.Errorf("invalid value error(must be [1])")
 	}
-	h := hex.EncodeToString(key)
-	if m.currentPolyTx != nil && strings.EqualFold(m.currentPolyTx.TxHashHash, h) {
+	path := hex.EncodeToString(key)
+	if m.currentPolyTx != nil && strings.EqualFold(m.currentPolyTx.SmtTxPath, path) {
 		return nil
 	}
-	_, err := m.Get(key)
+	_, err := m.Get(key) // It must already exists.
 	return err
 }
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/celestiaorg/smt"
+	pcommon "github.com/polynetwork/poly/common"
 )
 
 type ChainHeight struct {
@@ -31,10 +32,11 @@ type StarcoinTxRetry struct {
 // Poly transaction(to Starcoin)
 type PolyTx struct {
 	TxIndex     uint64 `gorm:"primaryKey;autoIncrement:false"`
-	TxHash      string `gorm:"size:66;uniqueIndex"` // Poly Tx. hash //TxData   string `gorm:"size:5000"`
+	FromChainID uint64 `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"`
+	TxHash      string `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"` // Poly Tx. hash //TxData   string `gorm:"size:5000"`
 	PolyTxProof string `gorm:"size:36000"`
 	//------------------- for Non-Membership proof -------------------
-	TxHashHash               string `gorm:"size:66;uniqueIndex"`
+	SmtTxPath                string `gorm:"size:66;uniqueIndex"`
 	SmtNonMembershipRootHash string `gorm:"size:66"`
 	SmtProofSideNodes        string `gorm:"size:18000"`
 
@@ -119,7 +121,7 @@ func (p *PolyTx) GetSmtProofSiblingData() ([]byte, error) {
 	return nil, nil
 }
 
-func NewPolyTx(txHash []byte, proof []byte, header []byte, headerProof []byte, anchorHeader []byte, sigs []byte, eventTxHash string) (*PolyTx, error) {
+func NewPolyTx(txHash []byte, fromChainID uint64, proof []byte, header []byte, headerProof []byte, anchorHeader []byte, sigs []byte, eventTxHash string) (*PolyTx, error) {
 	p := &PolyTxProof{
 		Proof:        hex.EncodeToString(proof),
 		Header:       hex.EncodeToString(header),
@@ -133,10 +135,26 @@ func NewPolyTx(txHash []byte, proof []byte, header []byte, headerProof []byte, a
 	}
 	return &PolyTx{
 		TxHash:      hex.EncodeToString(txHash),
-		TxHashHash:  Hash256Hex(txHash),
+		FromChainID: fromChainID,
+		SmtTxPath:   Hash256Hex(concatFromChainIDAndTxHash(fromChainID, txHash)),
 		PolyTxProof: string(j),
 		EventTxHash: eventTxHash,
 	}, nil
+}
+
+func concatFromChainIDAndTxHash(fromChainID uint64, txHash []byte) []byte {
+	sink := pcommon.NewZeroCopySink(nil)
+	sink.WriteUint64(fromChainID)
+	sink.WriteVarBytes(txHash)
+	return sink.Bytes()
+}
+
+func (p *PolyTx) GetSmtTxKey() ([]byte, error) {
+	h, err := hex.DecodeString(p.TxHash)
+	if err != nil {
+		return nil, err
+	}
+	return concatFromChainIDAndTxHash(p.FromChainID, h), nil
 }
 
 func (p *PolyTx) GetPolyTxProof() (*PolyTxProof, error) {

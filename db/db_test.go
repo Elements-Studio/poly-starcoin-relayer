@@ -20,13 +20,14 @@ import (
 // }
 
 func TestGetMethods(t *testing.T) {
+	fromChainID := uint64(218)
 	h, err := testDB().GetPolyHeight()
 	if err != nil {
 		t.FailNow()
 	}
 	fmt.Println(h)
 	return
-	p, err := testDB().GetPolyTx("foo")
+	p, err := testDB().GetPolyTx("foo", fromChainID)
 	if err != nil {
 		t.FailNow()
 	}
@@ -35,11 +36,11 @@ func TestGetMethods(t *testing.T) {
 	}
 	fmt.Println(p)
 	testMySqlDB := testDB().(*MySqlDB)
-	p2, err := testMySqlDB.getPolyTxByTxHashHash("15291f67d99ea7bc578c3544dadfbb991e66fa69cb36ff70fe30e798e111ff5f")
+	p2, err := testMySqlDB.getPolyTxBySmtTxPath("15291f67d99ea7bc578c3544dadfbb991e66fa69cb36ff70fe30e798e111ff5f")
 	if err != nil {
 		t.FailNow()
 	}
-	if p2.TxHashHash != "15291f67d99ea7bc578c3544dadfbb991e66fa69cb36ff70fe30e798e111ff5f" {
+	if p2.SmtTxPath != "15291f67d99ea7bc578c3544dadfbb991e66fa69cb36ff70fe30e798e111ff5f" {
 		t.FailNow()
 	}
 	fmt.Println(p2)
@@ -122,10 +123,11 @@ func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
 func TestPutPolyTx(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
-
+	fromChainId := uint64(218)
 	tx, err := NewPolyTx(
 		//TxHash:
 		v,
+		fromChainId,
 		//Proof:
 		v,
 		//Header:
@@ -139,7 +141,7 @@ func TestPutPolyTx(t *testing.T) {
 		hex.EncodeToString(v),
 	)
 	//SmtRootHash:  hex.EncodeToString(v),
-	//TxHashHash:   h,
+	//SmtTxPath:   ...,
 	//SmtProofSideNodes:  hex.EncodeToString(v),
 	if err != nil {
 		fmt.Println(err)
@@ -199,8 +201,9 @@ func TestHasher(t *testing.T) {
 }
 
 func TestSetPolyTxStatus(t *testing.T) {
+	fromChainID := uint64(218)
 	txHash := "testKey2"
-	err := testDB().SetPolyTxStatus(txHash, STATUS_PROCESSED)
+	err := testDB().SetPolyTxStatus(txHash, fromChainID, STATUS_PROCESSED)
 	if err != nil {
 		t.FailNow()
 	}
@@ -241,16 +244,17 @@ func TestSetPolyTxStatusProcessing(t *testing.T) {
 	db := testDB()
 	px_TxHash := "5c2e8a588641472f74258e39ff19a88e4bd7104d05d72ae6ef65a30291823fa3"
 	px_StarcoinTxHash := "0x81cd5df1aff45149129cb21c93956c5e3308329cda1f23c74977d030d5e7d441"
+	fromChainID := uint64(218)
 
 	for i := 0; i < 2; i++ {
 		go func() {
 			time.Sleep(time.Second * time.Duration(rand.Intn(3)))
 			//db.GetFirstFailedPolyTx()
-			tx, _ := db.GetPolyTx(px_TxHash)
+			tx, _ := db.GetPolyTx(px_TxHash, fromChainID)
 			if tx == nil || tx.Status == STATUS_CONFIRMED || tx.Status == STATUS_PROCESSED {
 				return
 			}
-			err := db.SetPolyTxStatusProcessing(px_TxHash, px_StarcoinTxHash)
+			err := db.SetPolyTxStatusProcessing(px_TxHash, fromChainID, px_StarcoinTxHash)
 			if err != nil { //if errors.Is(err, optimistic.NewOptimisticError()) {
 				fmt.Println("------- optimistic SetPolyTxStatusProcessing error -------" + err.Error())
 			} else {
@@ -259,6 +263,13 @@ func TestSetPolyTxStatusProcessing(t *testing.T) {
 		}()
 	}
 	time.Sleep(time.Second * 5)
+}
+
+func TestConcatFromChainIdAndTxHash(t *testing.T) {
+	fromChainId := uint64(218)
+	var txHash []byte = []byte("hello world") // len(txHash) == 11
+	r := concatFromChainIDAndTxHash(fromChainId, txHash)
+	fmt.Println(r) // [218 0 0 0 0 0 0 0 11 104 101 108 108 111 32 119 111 114 108 100]
 }
 
 // func TestMisc(t *testing.T) {

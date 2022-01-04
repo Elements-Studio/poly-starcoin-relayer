@@ -141,9 +141,10 @@ func TestDBMapStores(t *testing.T) {
 	if true {
 		return
 	}
+	fromChainID := uint64(218)
 	key := "foo"
 	var tx *PolyTx
-	tx, err := testDB().GetPolyTx(key)
+	tx, err := testDB().GetPolyTx(key, fromChainID)
 	if err != nil {
 		t.FailNow()
 	}
@@ -155,7 +156,7 @@ func TestDBMapStores(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	// keyHash, err := hex.DecodeString(tx.TxHashHash)
+// keyHash, err := hex.DecodeString(tx.SmtTxPath)
 	// if err != nil {
 	// 	t.FailNow()
 	// }
@@ -270,7 +271,8 @@ func TestDBMapStores(t *testing.T) {
 }
 
 func addTestPolyTx(db DB, key string) {
-	polyTx, err := NewPolyTx([]byte(key), nil, nil, nil, nil, nil, key)
+	fromChainId := uint64(218)
+	polyTx, err := NewPolyTx([]byte(key), fromChainId, nil, nil, nil, nil, nil, key)
 	if err != nil {
 		panic(err)
 	}

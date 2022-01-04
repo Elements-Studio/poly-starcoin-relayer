@@ -31,15 +31,15 @@ type DB interface {
 
 	GetPolyHeight() (uint32, error)
 
-	GetPolyTx(txHash string) (*PolyTx, error)
+	GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error)
 
 	PutPolyTx(tx *PolyTx) (uint64, error)
 
-	SetPolyTxStatus(txHash string, status string) error
+	SetPolyTxStatus(txHash string, fromChainID uint64, status string) error
 
-	SetPolyTxStatusProcessing(txHash string, starcoinTxHash string) error
+	SetPolyTxStatusProcessing(txHash string, fromChainID uint64, starcoinTxHash string) error
 
-	SetPolyTxStatusProcessed(txHash string, starcoinTxHash string) error
+	SetPolyTxStatusProcessed(txHash string, fromChainID uint64, starcoinTxHash string) error
 
 	GetFirstFailedPolyTx() (*PolyTx, error)
 

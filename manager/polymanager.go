@@ -571,7 +571,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
 	// 	sigs)
 
-	polyTx, err := db.NewPolyTx(param.TxHash, rawAuditPath, headerData, rawProof, rawAnchor, sigs, eventTxHash)
+	polyTx, err := db.NewPolyTx(param.TxHash, param.FromChainID, rawAuditPath, headerData, rawProof, rawAnchor, sigs, eventTxHash)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - db.NewPolyTx error: %s", err.Error())
 		return false, false
@@ -597,7 +597,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 	// //////////////////////////////////////////////////////
 	//update PolyTx status to processing(sending to Starcoin)
-	err := this.db.SetPolyTxStatusProcessing(polyTx.TxHash, "")
+	err := this.db.SetPolyTxStatusProcessing(polyTx.TxHash, polyTx.FromChainID, "")
 	if err != nil {
 		log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, txIndex: %d", err, polyTx.TxIndex)
 		return false
@@ -639,7 +639,7 @@ func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 }
 
 func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*StarcoinTxInfo, error) {
-	polyTxHash := polyTx.TxHash
+	//polyTxHash := polyTx.TxHash
 	p, err := polyTx.GetPolyTxProof()
 	if err != nil {
 		return nil, err
@@ -702,7 +702,8 @@ func (this *StarcoinSender) polyTxToStarcoinTxInfo(polyTx *db.PolyTx) (*Starcoin
 		//contractAddr: contractaddr,
 		//gasPrice:   gasPrice,
 		//gasLimit:   stcclient.DEFAULT_MAX_GAS_AMOUNT, //gasLimit,
-		polyTxHash: polyTxHash,
+		polyTxHash:      polyTx.TxHash,
+		polyFromChainID: polyTx.FromChainID,
 	}, nil
 }
 
@@ -823,11 +824,11 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	if isSuccess {
 		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
-		this.db.SetPolyTxStatusProcessed(txInfo.polyTxHash, txhash)
+		this.db.SetPolyTxStatusProcessed(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 	} else {
 		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
-		err := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txhash)
+		err := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 		if err != nil {
 			log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, polyTxHash: %d", err, txInfo.polyTxHash)
 			return err
@@ -855,7 +856,8 @@ type StarcoinTxInfo struct {
 	//gasLimit  uint64
 	//gasPrice int
 	//contractAddr ethcommon.Address
-	polyTxHash string
+	polyTxHash      string
+	polyFromChainID uint64
 }
 
 func readBookKeeperPublicKeyBytes(hdr *polytypes.Header) ([]byte, error) {

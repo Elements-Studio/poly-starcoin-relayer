@@ -245,7 +245,7 @@ func (w *BoltDB) GetPolyHeight() (uint32, error) {
 	return h, nil
 }
 
-func (w *BoltDB) GetPolyTx(txHash string) (*PolyTx, error) {
+func (w *BoltDB) GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
@@ -253,15 +253,15 @@ func (w *BoltDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	return 0, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetPolyTxStatus(txHash string, status string) error {
+func (w *BoltDB) SetPolyTxStatus(txHash string, fromChainID uint64, status string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetPolyTxStatusProcessing(txHash string, starcoinTxHash string) error {
+func (w *BoltDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64, starcoinTxHash string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetPolyTxStatusProcessed(txHash string, starcoinTxHash string) error {
+func (w *BoltDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, starcoinTxHash string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
