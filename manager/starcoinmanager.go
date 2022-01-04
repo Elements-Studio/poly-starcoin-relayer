@@ -133,12 +133,20 @@ func (this *StarcoinManager) MonitorChain() {
 				if this.currentHeight%10 == 0 {
 					log.Infof("StarcoinManager.MonitorChain - handle confirmed starcoin block height: %d", this.currentHeight)
 				}
-				// ////////////////////////////////////////////////////////////////////
+				// ///////////////////////////////////////////////////////////////////////////
 				// TODO: if len(this.header4sync) is too large, should not continue???
-				// ////////////////////////////////////////////////////////////////////
-				if len(this.header4sync) >= this.config.StarcoinConfig.HeadersPerBatch*3 {
-					log.Infof("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d", this.currentHeight)
+				// ///////////////////////////////////////////////////////////////////////////
+				if len(this.header4sync) > this.config.StarcoinConfig.HeadersPerBatch*3 {
+					log.Error("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d. Reset!", this.currentHeight)
 					time.Sleep(time.Second * 10)
+					// ////////////////////////////////////////////////////////////////////
+					// reset???
+					//if this.currentHeight > uint64(len(this.header4sync)) {
+					this.currentHeight = this.currentHeight - uint64(len(this.header4sync))
+					this.header4sync = make([][]byte, 0)
+					//}
+					blockHandleResult = false
+					// ////////////////////////////////////////////////////////////////////
 					break
 				}
 
