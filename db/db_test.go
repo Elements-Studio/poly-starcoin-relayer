@@ -20,14 +20,13 @@ import (
 // }
 
 func TestGetMethods(t *testing.T) {
-	fromChainID := uint64(218)
 	h, err := testDB().GetPolyHeight()
 	if err != nil {
 		t.FailNow()
 	}
 	fmt.Println(h)
 	return
-	p, err := testDB().GetPolyTx("foo", fromChainID)
+	p, err := testDB().GetPolyTx("foo", getTestFromChainId())
 	if err != nil {
 		t.FailNow()
 	}
@@ -123,7 +122,7 @@ func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
 func TestPutPolyTx(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
-	fromChainId := uint64(218)
+	fromChainId := getTestFromChainId()
 	tx, err := NewPolyTx(
 		//TxHash:
 		v,
@@ -201,7 +200,7 @@ func TestHasher(t *testing.T) {
 }
 
 func TestSetPolyTxStatus(t *testing.T) {
-	fromChainID := uint64(218)
+	fromChainID := getTestFromChainId()
 	txHash := "testKey2"
 	err := testDB().SetPolyTxStatus(txHash, fromChainID, STATUS_PROCESSED)
 	if err != nil {
@@ -244,17 +243,16 @@ func TestSetPolyTxStatusProcessing(t *testing.T) {
 	db := testDB()
 	px_TxHash := "5c2e8a588641472f74258e39ff19a88e4bd7104d05d72ae6ef65a30291823fa3"
 	px_StarcoinTxHash := "0x81cd5df1aff45149129cb21c93956c5e3308329cda1f23c74977d030d5e7d441"
-	fromChainID := uint64(218)
 
 	for i := 0; i < 2; i++ {
 		go func() {
 			time.Sleep(time.Second * time.Duration(rand.Intn(3)))
 			//db.GetFirstFailedPolyTx()
-			tx, _ := db.GetPolyTx(px_TxHash, fromChainID)
+			tx, _ := db.GetPolyTx(px_TxHash, getTestFromChainId())
 			if tx == nil || tx.Status == STATUS_CONFIRMED || tx.Status == STATUS_PROCESSED {
 				return
 			}
-			err := db.SetPolyTxStatusProcessing(px_TxHash, fromChainID, px_StarcoinTxHash)
+			err := db.SetPolyTxStatusProcessing(px_TxHash, getTestFromChainId(), px_StarcoinTxHash)
 			if err != nil { //if errors.Is(err, optimistic.NewOptimisticError()) {
 				fmt.Println("------- optimistic SetPolyTxStatusProcessing error -------" + err.Error())
 			} else {
@@ -266,9 +264,8 @@ func TestSetPolyTxStatusProcessing(t *testing.T) {
 }
 
 func TestConcatFromChainIdAndTxHash(t *testing.T) {
-	fromChainId := uint64(218)
 	var txHash []byte = []byte("hello world") // len(txHash) == 11
-	r := concatFromChainIDAndTxHash(fromChainId, txHash)
+	r := concatFromChainIDAndTxHash(getTestFromChainId(), txHash)
 	fmt.Println(r) // [218 0 0 0 0 0 0 0 11 104 101 108 108 111 32 119 111 114 108 100]
 }
 
@@ -301,4 +298,8 @@ func testDB() DB {
 		panic(1)
 	}
 	return db
+}
+
+func getTestFromChainId() uint64 {
+	return uint64(218)
 }

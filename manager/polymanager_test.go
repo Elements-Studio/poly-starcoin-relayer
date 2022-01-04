@@ -61,7 +61,8 @@ func TestSendPolyTxToStarcoin(t *testing.T) {
 	polyManager := getTestPolyManager(t)
 	//fmt.Println(polyManager)
 	polyTxHash := "0a2a6502415f878d8866ae3b7d646327ce28fe3c592f7f08091c6ed6db4e55ac"
-	polyTx, err := polyManager.db.GetPolyTx(polyTxHash)
+	fromChainId := uint64(218)
+	polyTx, err := polyManager.db.GetPolyTx(polyTxHash, fromChainId)
 	if err != nil {
 		t.FailNow()
 	}
