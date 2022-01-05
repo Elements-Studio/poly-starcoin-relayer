@@ -29,9 +29,9 @@ func TestGetCurEpochConPubKeyBytes(t *testing.T) {
 	fmt.Println(h)
 }
 
-func TestGetNonMembershipSparseMerkleRootHashOnChain(t *testing.T) {
+func TestGetOnChainTxSparseMerkleTreeRootHash(t *testing.T) {
 	ccd := newCCD(t)
-	h, err := ccd.getNonMembershipSparseMerkleRootHash()
+	h, err := ccd.getOnChainTxSparseMerkleTreeRootHash()
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()

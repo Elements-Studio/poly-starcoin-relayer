@@ -75,15 +75,19 @@ func (ccd *CrossChainData) checkIfFromChainTxExist(fromChainId uint64, fromChain
 	return toBool(extractSingleResult(r))
 }
 
-// this a test method only
-func (ccd *CrossChainData) getNonMembershipSparseMerkleRootHash() ([]byte, error) {
+// Get on-chain cross chain txn. SMT root hash.
+func (ccd *CrossChainData) getOnChainTxSparseMerkleTreeRootHash() ([]byte, error) {
 	addr, _, err := parseModuleId(ccd.module)
 	if err != nil {
 		return nil, err
 	}
+	// Move code:
+	// /// Query merkle root hash
+	// public fun get_merkle_root_hash(): vector<u8> acquires SparseMerkleTreeRoot {
+	// //...
 	c := stcclient.ContractCall{
 		FunctionId: addr + "::CrossChainData::get_merkle_root_hash",
-		TypeArgs:   []string{addr + "::CrossChainType::Starcoin"}, // TODO: as parameter?
+		TypeArgs:   []string{}, //{addr + "::CrossChainType::Starcoin"},
 		Args:       []string{},
 	}
 	r, err := ccd.starcoinClient.CallContract(context.Background(), c)
@@ -140,6 +144,7 @@ func toUint64(i interface{}) (uint64, error) {
 	return 0, fmt.Errorf("unknown type to uint64 %t", i)
 }
 
+// Parse module Id., return address and module name.
 func parseModuleId(str string) (string, string, error) {
 	ss := strings.Split(str, "::")
 	if len(ss) < 2 {
