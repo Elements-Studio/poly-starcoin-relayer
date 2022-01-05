@@ -145,8 +145,10 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 				continue
 			}
 			//log.Debug("Transaction status: " + tx.Status)
-			if strings.EqualFold("Executed", tx.Status) {
+			if strings.EqualFold("\"Executed\"", string(tx.Status)) {
 				return true, nil
+			} else if isKnownStarcoinTxAbortStatus(tx.Status) {
+				return false, fmt.Errorf("isKnownStarcoinTxAbortStatus: %s", string(tx.Status))
 			} else {
 				continue // TODO: return false on some statuses???
 			}
@@ -154,4 +156,21 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 			return false, fmt.Errorf("WaitTransactionConfirm exceed timeout %v", timeout)
 		}
 	}
+}
+
+func isKnownStarcoinTxAbortStatus(status []byte) bool {
+	jsonObj := make(map[string]interface{})
+	//fmt.Println(string(status))
+	err := json.Unmarshal(status, &jsonObj)
+	if err != nil {
+		return false
+	}
+	for k := range jsonObj {
+		//fmt.Println(k)
+		if strings.EqualFold("MoveAbort", k) {
+			return true
+		}
+	}
+	//fmt.Println(jsonObj)
+	return false
 }

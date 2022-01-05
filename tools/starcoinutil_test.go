@@ -1,7 +1,9 @@
 package tools
 
 import (
+	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -10,7 +12,7 @@ import (
 
 func TestWaitTransactionConfirm(t *testing.T) {
 	stcclient := stcclient.NewStarcoinClient("https://halley-seed.starcoin.org")
-	b, err := WaitTransactionConfirm(stcclient, "0x077fd430df5165a10caf5ebd175c58b14e05786d79d50d339e70a892c8aa68d0", time.Second*30)
+	b, err := WaitTransactionConfirm(stcclient, "0xb199fbbf9c7aeef9a0257f0d496ecd0f11ded014526965b4a294c66041272cae", time.Second*30)
 	fmt.Println(b, err)
 }
 
@@ -30,4 +32,17 @@ func TestGetTransactionProof(t *testing.T) {
 	}
 	fmt.Println("--------------- transaction proof -----------------")
 	fmt.Println(p)
+}
+
+func TestGetTransactionInfoByHash(t *testing.T) {
+	stcclient := stcclient.NewStarcoinClient("https://halley-seed.starcoin.org")
+	txInfo, err := stcclient.GetTransactionInfoByHash(context.Background(), "0xb199fbbf9c7aeef9a0257f0d496ecd0f11ded014526965b4a294c66041272cae")
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(strings.EqualFold("\"Executed\"", string(txInfo.Status)))
+	//{"MoveAbort":{"location":{"Module":{"address":"0x8e703a2842b0137ada096335176d2c28","name":"ZeroCopySource"}},"abort_code":"52481"}}
+	fmt.Println(txInfo.Status)
+	fmt.Println(isKnownStarcoinTxAbortStatus(txInfo.Status))
 }

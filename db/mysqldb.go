@@ -230,9 +230,9 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64, s
 			if !(px.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
 				return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s, FromChainID: %d", px.TxHash, px.FromChainID)
 			}
-		} else if starcoinTxHash != "" && px.StarcoinTxHash != "" {
-			return fmt.Errorf("PolyTx.StarcoinTxHash is already set to %s, TxHash: %s, FromChainID: %d", px.StarcoinTxHash, px.TxHash, px.FromChainID)
-		}
+		} // else if starcoinTxHash != "" && px.StarcoinTxHash != "" {
+		//	return fmt.Errorf("PolyTx.StarcoinTxHash is already set to %s, TxHash: %s, FromChainID: %d", px.StarcoinTxHash, px.TxHash, px.FromChainID)
+		//}
 	}
 	px.Status = STATUS_PROCESSING
 	px.StarcoinTxHash = starcoinTxHash

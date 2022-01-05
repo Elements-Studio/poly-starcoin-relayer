@@ -830,7 +830,7 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 		err := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 		if err != nil {
-			log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, polyTxHash: %d", err, txInfo.polyTxHash)
+			log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)
 			return err
 		}
 	}
