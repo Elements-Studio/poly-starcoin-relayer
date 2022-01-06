@@ -318,10 +318,10 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 
 	//eccdAddr := ethcommon.HexToAddress(this.config.StarcoinConfig.CCDContractAddress)
 	//eccd, err := eccd_abi.NewEthCrossChainData(eccdAddr, this.ethClient)
-	ccd := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
-	// if err != nil {
-	// 	return false, nil, fmt.Errorf("failed to new CCD: %v", err)
-	// }
+	ccd, err := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
+	if err != nil {
+		return false, nil, fmt.Errorf("failed to new CCD: %v", err)
+	}
 	rawKeepers, err := ccd.getCurEpochConPubKeyBytes()
 	if err != nil {
 		return false, nil, fmt.Errorf("failed to get current epoch keepers: %v", err)
@@ -447,7 +447,11 @@ func (this *PolyManager) findCurEpochStartHeight() uint32 {
 	// 	log.Errorf("findCurEpochStartHeight - new eth cross chain failed: %s", err.Error())
 	// 	return 0
 	// }
-	instance := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
+	instance, err := NewCrossChainData(this.starcoinClient, this.config.StarcoinConfig.CCDModule)
+	if err != nil {
+		log.Errorf("findCurEpochStartHeight - NewCrossChainData failed: %s", err.Error())
+		return 0
+	}
 	height, err := instance.getCurEpochStartHeight()
 	if err != nil {
 		log.Errorf("findCurEpochStartHeight - GetCurEpochStartHeight failed: %s", err.Error())

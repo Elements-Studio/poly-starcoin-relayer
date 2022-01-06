@@ -17,11 +17,15 @@ type CrossChainData struct {
 	module         string
 }
 
-func NewCrossChainData(client *stcclient.StarcoinClient, module string) *CrossChainData {
+func NewCrossChainData(client *stcclient.StarcoinClient, module string) (*CrossChainData, error) {
+	_, _, err := parseModuleId(module)
+	if err != nil {
+		return nil, err
+	}
 	return &CrossChainData{
 		starcoinClient: client,
 		module:         module,
-	}
+	}, nil
 }
 
 // Get Current Epoch Start Height of Poly chain block.
@@ -148,6 +152,8 @@ func toUint64(i interface{}) (uint64, error) {
 func parseModuleId(str string) (string, string, error) {
 	ss := strings.Split(str, "::")
 	if len(ss) < 2 {
+		return "", "", fmt.Errorf("module Id string format error")
+	} else if len(ss) > 2 {
 		return "", "", fmt.Errorf("module Id string format error")
 	}
 	return ss[0], ss[1], nil

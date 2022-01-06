@@ -10,7 +10,11 @@ import (
 )
 
 func TestGetCurEpochStartHeight(t *testing.T) {
-	ccd := newCCD(t)
+	ccd, err := newCCD(t)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 	h, err := ccd.getCurEpochStartHeight()
 	if err != nil {
 		fmt.Println(err)
@@ -20,7 +24,11 @@ func TestGetCurEpochStartHeight(t *testing.T) {
 }
 
 func TestGetCurEpochConPubKeyBytes(t *testing.T) {
-	ccd := newCCD(t)
+	ccd, err := newCCD(t)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 	h, err := ccd.getCurEpochConPubKeyBytes()
 	if err != nil {
 		fmt.Println(err)
@@ -30,7 +38,11 @@ func TestGetCurEpochConPubKeyBytes(t *testing.T) {
 }
 
 func TestGetOnChainTxSparseMerkleTreeRootHash(t *testing.T) {
-	ccd := newCCD(t)
+	ccd, err := newCCD(t)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 	h, err := ccd.getOnChainTxSparseMerkleTreeRootHash()
 	if err != nil {
 		fmt.Println(err)
@@ -40,7 +52,7 @@ func TestGetOnChainTxSparseMerkleTreeRootHash(t *testing.T) {
 	fmt.Println(h)
 }
 
-func newCCD(t *testing.T) *CrossChainData {
+func newCCD(t *testing.T) (*CrossChainData, error) {
 	servConfig := config.NewServiceConfig("../config-devnet.json")
 	if servConfig == nil {
 		t.FailNow()
