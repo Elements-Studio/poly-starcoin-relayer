@@ -407,7 +407,8 @@ func TestGetBlockHeaders(t *testing.T) {
 func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
 	//starcoinManager := getTestStarcoinManager(t)
 	//var height uint64 = 291946
-	starcoinClient := getTestStarcoinClient()
+	//starcoinClient := getDevNetStarcoinClient()
+	starcoinClient := getTestNetStarcoinClient()
 	height := getStarcoinHeight(t, &starcoinClient)
 	h, err := starcoinClient.GetBlockHeaderAndBlockInfoByNumber(context.Background(), height)
 	if err != nil {
@@ -425,6 +426,7 @@ func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
 	//note: poly may use this hex to init genesis...
 	filePath := fmt.Sprintf("blockHeaderAndBlockInfoHex-%d.txt", height)
 	writeTextFile(filePath, hex.EncodeToString(j), t)
+	fmt.Println(filePath + " exported.")
 	// /////////////////////////////////////////////////////
 }
 
@@ -491,8 +493,15 @@ func getTestStarcoinManager(t *testing.T) *StarcoinManager {
 	return starcoinManager
 }
 
-func getTestStarcoinClient() stcclient.StarcoinClient {
+func getDevNetStarcoinClient() stcclient.StarcoinClient {
 	config := config.NewServiceConfig("../config-devnet.json")
+	fmt.Println(config)
+	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
+	return starcoinClient
+}
+
+func getTestNetStarcoinClient() stcclient.StarcoinClient {
+	config := config.NewServiceConfig("../config-testnet.json")
 	fmt.Println(config)
 	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
 	return starcoinClient

@@ -1,0 +1,48 @@
+{
+  "PolyConfig": {
+    "RestURL": "http://40.115.136.96:40336",
+    "EntranceContractAddress": "0300000000000000000000000000000000000000",
+    "WalletFile": "${POLY_WALLET_FILE}",
+    "WalletPwd": "${POLY_WALLET_PASSWORD}"
+  },
+  "StarcoinConfig": {
+    "SideChainId": 318,
+    "RestURL": "https://barnard-seed.starcoin.org",
+    "ChainId": 253,
+    "CCMModule": "0x2d81a0427d64ff61b11ede9085efa5ad::CrossChainScript",
+    "CCDModule": "0x2d81a0427d64ff61b11ede9085efa5ad::CrossChainScript",
+    "CrossChainEventAddress": "0x2d81a0427d64ff61b11ede9085efa5ad",
+    "CrossChainEventTypeTag": "0x2d81a0427d64ff61b11ede9085efa5ad::CrossChainManager::CrossChainEvent",
+    "PrivateKeys": [
+      {
+        "0x2d81a0427d64ff61b11ede9085efa5ad": "${PRIVATE_KEY_2d81a04}"
+      }
+    ],
+    "BlockConfirmations": 6,
+    "HeadersPerBatch": 50,
+    "MonitorInterval": 1,
+    "MaxGasAmount": 40000000
+  },
+  "BoltDbPath": "./db-devnet",
+  "MySqlDSN": "${MYSQL_DSN}",
+  "RoutineNum": 64,
+  "ProxyOrAssetContracts": [
+    {
+      "0x2d81a0427d64ff61b11ede9085efa5ad::CrossChainManager": {
+        "outbound": [
+          1,
+          2,
+          218,
+          318
+        ]
+      },
+      "0x2d81a0427d64ff61b11ede9085efa5ad::CrossChainScript": {
+        "inbound": [
+          2,
+          218,
+          318
+        ]
+      }
+    }
+  ]
+}
