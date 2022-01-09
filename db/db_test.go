@@ -20,13 +20,13 @@ import (
 // }
 
 func TestGetMethods(t *testing.T) {
-	h, err := testDB().GetPolyHeight()
+	h, err := devNetDB().GetPolyHeight()
 	if err != nil {
 		t.FailNow()
 	}
 	fmt.Println(h)
 	return
-	p, err := testDB().GetPolyTx("foo", getTestFromChainId())
+	p, err := devNetDB().GetPolyTx("foo", getTestFromChainId())
 	if err != nil {
 		t.FailNow()
 	}
@@ -34,7 +34,7 @@ func TestGetMethods(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(p)
-	testMySqlDB := testDB().(*MySqlDB)
+	testMySqlDB := devNetDB().(*MySqlDB)
 	p2, err := testMySqlDB.getPolyTxBySmtTxPath("15291f67d99ea7bc578c3544dadfbb991e66fa69cb36ff70fe30e798e111ff5f")
 	if err != nil {
 		t.FailNow()
@@ -50,17 +50,17 @@ func TestPutStarcoinTxCheck(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	k := strings.Replace(uuid.String(), "-", "", -1)
 	v, _ := uuid.MarshalBinary()
-	err := testDB().PutStarcoinTxCheck(k, v, client.Event{})
+	err := devNetDB().PutStarcoinTxCheck(k, v, client.Event{})
 	if err != nil {
 		t.FailNow()
 	}
 }
 
 func TestGetAndDeleteAllStarcoinTxCheck(t *testing.T) {
-	m, _ := testDB().GetAllStarcoinTxCheck()
+	m, _ := devNetDB().GetAllStarcoinTxCheck()
 	fmt.Println(m)
 	for k, _ := range m {
-		err := testDB().DeleteStarcoinTxCheck(k)
+		err := devNetDB().DeleteStarcoinTxCheck(k)
 		if err != nil {
 			t.FailNow()
 		}
@@ -70,18 +70,18 @@ func TestGetAndDeleteAllStarcoinTxCheck(t *testing.T) {
 func TestPutStarcoinTxRetry(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	v, _ := uuid.MarshalBinary()
-	err := testDB().PutStarcoinTxRetry(v, client.Event{})
+	err := devNetDB().PutStarcoinTxRetry(v, client.Event{})
 	if err != nil {
 		t.FailNow()
 	}
 }
 
 func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
-	cs, es, _ := testDB().GetAllStarcoinTxRetry()
+	cs, es, _ := devNetDB().GetAllStarcoinTxRetry()
 	fmt.Println(cs)
 	fmt.Println(es)
 	for _, v := range cs {
-		testDB().DeleteStarcoinTxRetry(v)
+		devNetDB().DeleteStarcoinTxRetry(v)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 // }
 
 func TestUpdatePolyTxNonMembershipProofByIndex(t *testing.T) {
-	mysqldb := testDB().(*MySqlDB)
+	mysqldb := devNetDB().(*MySqlDB)
 	err := mysqldb.UpdatePolyTxNonMembershipProofByIndex(2)
 	if err != nil {
 		fmt.Println(err)
@@ -104,7 +104,7 @@ func TestUpdatePolyTxNonMembershipProofByIndex(t *testing.T) {
 }
 
 func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
-	mysqldb := testDB().(*MySqlDB)
+	mysqldb := devNetDB().(*MySqlDB)
 	polyTx, err := mysqldb.GetPolyTxByIndex(3)
 	if err != nil {
 		fmt.Println(err)
@@ -202,14 +202,14 @@ func TestHasher(t *testing.T) {
 func TestSetPolyTxStatus(t *testing.T) {
 	fromChainID := getTestFromChainId()
 	txHash := "testKey2"
-	err := testDB().SetPolyTxStatus(txHash, fromChainID, STATUS_PROCESSED)
+	err := devNetDB().SetPolyTxStatus(txHash, fromChainID, STATUS_PROCESSED)
 	if err != nil {
 		t.FailNow()
 	}
 }
 
 func TestGetFirstFailedPolyTx(t *testing.T) {
-	px1, err := testDB().GetFirstFailedPolyTx()
+	px1, err := devNetDB().GetFirstFailedPolyTx()
 	if err != nil {
 		t.FailNow()
 	}
@@ -231,7 +231,7 @@ func TestGetFirstFailedPolyTx(t *testing.T) {
 }
 
 func TestUpdatePolyTransactionsToProcessedBeforeIndex(t *testing.T) {
-	db := testDB().(*MySqlDB)
+	db := devNetDB().(*MySqlDB)
 	err := db.updatePolyTransactionsToProcessedBeforeIndex(17)
 	if err != nil {
 		fmt.Println(err)
@@ -240,7 +240,7 @@ func TestUpdatePolyTransactionsToProcessedBeforeIndex(t *testing.T) {
 }
 
 func TestSetPolyTxStatusProcessing(t *testing.T) {
-	db := testDB()
+	db := devNetDB()
 	px_TxHash := "5c2e8a588641472f74258e39ff19a88e4bd7104d05d72ae6ef65a30291823fa3"
 	px_StarcoinTxHash := "0x81cd5df1aff45149129cb21c93956c5e3308329cda1f23c74977d030d5e7d441"
 
@@ -289,7 +289,7 @@ func TestConcatFromChainIdAndTxHash(t *testing.T) {
 // 	testDB = db
 // }
 
-func testDB() DB {
+func devNetDB() DB {
 	config := config.NewServiceConfig("../config-devnet.json")
 	fmt.Println(config)
 	db, err := NewMySqlDB(config.MySqlDSN)

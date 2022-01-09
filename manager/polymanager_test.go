@@ -13,7 +13,7 @@ import (
 func TestInitGenersis(t *testing.T) {
 	// Poly devnet:
 	// http://138.91.6.226:40336
-	polyManager := getTestPolyManager(t)
+	polyManager := getDevNetPolyManager(t)
 	fmt.Println(polyManager)
 	err := polyManager.InitGenesis(nil)
 	// var height uint32 = 1319999
@@ -26,7 +26,7 @@ func TestInitGenersis(t *testing.T) {
 }
 
 func TestHandleDepositEvents(t *testing.T) {
-	polyManager := getTestPolyManager(t)
+	polyManager := getDevNetPolyManager(t)
 	fmt.Println(polyManager)
 	var height uint32 = 6003
 	ok := polyManager.handleDepositEvents(height)
@@ -41,7 +41,7 @@ func TestGetPolyHeightByTxHash(t *testing.T) {
 	//commitProof - send transaction to poly chain: ( poly_txhash: 61341c16ec50ec4b2c364ee3dfc3ccdb5af540eba38c89160de75afd3322052d,
 	//starcoin_txhash: 0x9cfb0f1a47fa8a3c7cf1a60b652434adc78adf147205fea34b3e74fa6fff9bff, height: 219972 )
 	polyTxHash := "61341c16ec50ec4b2c364ee3dfc3ccdb5af540eba38c89160de75afd3322052d"
-	polyManager := getTestPolyManager(t)
+	polyManager := getDevNetPolyManager(t)
 	h, err := polyManager.polySdk.GetBlockHeightByTxHash(polyTxHash)
 	if err != nil {
 		t.FailNow()
@@ -58,7 +58,7 @@ func TestGetPolyHeightByTxHash(t *testing.T) {
 }
 
 func TestSendPolyTxToStarcoin(t *testing.T) {
-	polyManager := getTestPolyManager(t)
+	polyManager := getDevNetPolyManager(t)
 	//fmt.Println(polyManager)
 	polyTxHash := "0a2a6502415f878d8866ae3b7d646327ce28fe3c592f7f08091c6ed6db4e55ac"
 	fromChainId := uint64(218)
@@ -82,19 +82,19 @@ func TestSendPolyTxToStarcoin(t *testing.T) {
 }
 
 func TestGetPolyCurrentBlockHeight(t *testing.T) {
-	polyManager := getTestPolyManager(t)
+	polyManager := getDevNetPolyManager(t)
 	fmt.Println(polyManager)
 	h, err := polyManager.polySdk.GetCurrentBlockHeight()
 	fmt.Println(h, err)
 }
 
 func TestGetPolyLastConfigBlockNumAtHeight(t *testing.T) {
-	polyManager := getTestPolyManager(t)
+	polyManager := getDevNetPolyManager(t)
 	fmt.Println(polyManager)
 	polyManager.getPolyLastConfigBlockNumAtHeight(1319999)
 }
 
-func getTestPolyManager(t *testing.T) *PolyManager {
+func getDevNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-devnet.json")
 	fmt.Println(config)
 	polySdk := polysdk.NewPolySdk()

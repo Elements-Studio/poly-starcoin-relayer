@@ -13,7 +13,8 @@ import (
 func TestDBSmtNodeMapStore(t *testing.T) {
 	// Initialise two new key-value store to store the nodes and values of the tree
 	//nodeStore := smt.NewSimpleMap()
-	nodeStore := NewSmtNodeMapStore(testDB().(*MySqlDB))
+	db := devNetDB().(*MySqlDB)
+	nodeStore := NewSmtNodeMapStore(db)
 	valueStore := smt.NewSimpleMap()
 	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
 	var value []byte
@@ -128,23 +129,25 @@ func TestPrintLeafDataHash(t *testing.T) {
 }
 
 func TestDBMapStores(t *testing.T) {
-	addTestPolyTx(testDB(), "foo")
-	addTestPolyTx(testDB(), "testKey")
-	addTestPolyTx(testDB(), "testKey2")
-	addTestPolyTx(testDB(), "testKey3")
-	addTestPolyTx(testDB(), "testKey4")
-	addTestPolyTx(testDB(), "testKey5")
-	addTestPolyTx(testDB(), "testKey6")
-	addTestPolyTx(testDB(), "testKey7")
-	addTestPolyTx(testDB(), "testKey8")
-	addTestPolyTx(testDB(), "testKey9")
+	db := devNetDB()
+
+	addTestPolyTx(db, "foo")
+	addTestPolyTx(db, "testKey")
+	addTestPolyTx(db, "testKey2")
+	addTestPolyTx(db, "testKey3")
+	addTestPolyTx(db, "testKey4")
+	addTestPolyTx(db, "testKey5")
+	addTestPolyTx(db, "testKey6")
+	addTestPolyTx(db, "testKey7")
+	addTestPolyTx(db, "testKey8")
+	addTestPolyTx(db, "testKey9")
 	if true {
 		return
 	}
 	fromChainID := getTestFromChainId()
 	key := "foo"
 	var tx *PolyTx
-	tx, err := testDB().GetPolyTx(key, fromChainID)
+	tx, err := db.GetPolyTx(key, fromChainID)
 	if err != nil {
 		t.FailNow()
 	}
@@ -169,8 +172,8 @@ func TestDBMapStores(t *testing.T) {
 
 	// Initialise two new key-value store to store the nodes and values of the tree
 	//nodeStore := smt.NewSimpleMap()
-	nodeStore := NewSmtNodeMapStore(testDB().(*MySqlDB))
-	valueStore := NewPolyTxMapStore(testDB().(*MySqlDB), nil)
+	nodeStore := NewSmtNodeMapStore(db.(*MySqlDB))
+	valueStore := NewPolyTxMapStore(db.(*MySqlDB), nil)
 	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
 	var value []byte
 	var has bool

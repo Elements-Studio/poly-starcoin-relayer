@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetCurEpochStartHeight(t *testing.T) {
-	ccd, err := newCCD(t)
+	ccd, err := newDevNetCCD(t)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -24,7 +24,7 @@ func TestGetCurEpochStartHeight(t *testing.T) {
 }
 
 func TestGetCurEpochConPubKeyBytes(t *testing.T) {
-	ccd, err := newCCD(t)
+	ccd, err := newDevNetCCD(t)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -38,7 +38,7 @@ func TestGetCurEpochConPubKeyBytes(t *testing.T) {
 }
 
 func TestGetOnChainTxSparseMerkleTreeRootHash(t *testing.T) {
-	ccd, err := newCCD(t)
+	ccd, err := newDevNetCCD(t)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -52,11 +52,12 @@ func TestGetOnChainTxSparseMerkleTreeRootHash(t *testing.T) {
 	fmt.Println(h)
 }
 
-func newCCD(t *testing.T) (*CrossChainData, error) {
+func newDevNetCCD(t *testing.T) (*CrossChainData, error) {
 	servConfig := config.NewServiceConfig("../config-devnet.json")
 	if servConfig == nil {
 		t.FailNow()
 	}
-	client := stcclient.NewStarcoinClient("https://halley-seed.starcoin.org")
+	//client := stcclient.NewStarcoinClient("https://halley-seed.starcoin.org")
+	client := stcclient.NewStarcoinClient(servConfig.StarcoinConfig.RestURL)
 	return NewCrossChainData(&client, servConfig.StarcoinConfig.CCDModule)
 }

@@ -23,7 +23,7 @@ import (
 )
 
 func TestFindSyncedHeight(t *testing.T) {
-	starcoinManager := getTestStarcoinManager(t)
+	starcoinManager := getDevNetStarcoinManager(t)
 	fmt.Println(starcoinManager)
 	h := starcoinManager.findSyncedHeight()
 	fmt.Println("------------------- findSyncedHeight ------------------")
@@ -31,7 +31,7 @@ func TestFindSyncedHeight(t *testing.T) {
 }
 
 func TestCommitHeader(t *testing.T) {
-	starcoinManager := getTestStarcoinManager(t)
+	starcoinManager := getDevNetStarcoinManager(t)
 	fmt.Println(starcoinManager)
 	ok := starcoinManager.handleBlockHeader(67859)
 	fmt.Println(ok)
@@ -47,7 +47,7 @@ func TestCommitHeader(t *testing.T) {
 }
 
 func TestFetchLockDepositEvents(t *testing.T) {
-	starcoinManager := getTestStarcoinManager(t)
+	starcoinManager := getDevNetStarcoinManager(t)
 	fmt.Println("---------- fetchLockDepositEvents -----------")
 	ok, err := starcoinManager.fetchLockDepositEvents(3434)
 	fmt.Println(ok)
@@ -70,7 +70,7 @@ func TestCommitProof(t *testing.T) {
 	rawData := "100000000000000000000000000000000120a0f00e61f7aeab63429ee742e321d5783611b1a60c7c0850625b86fa4c6dc16e102d81a0427d64ff61b11ede9085efa5adda0000000000000034307832643831613034323764363466663631623131656465393038356566613561643a3a43726f7373436861696e53637269707406756e6c6f636b3f0d3078313a3a5354433a3a53544310e498d62f5d1f469d2f72eb3e9dc8f230204e000000000000000000000000000000000000000000000000000000000000"
 	//---------------- Starcoin Transaction Hash -----------------
 	txHash := "0xd0d79fd03a490376aea99f5a6338dec0bef054b32c939ba8c31203739a9ff8b7"
-	starcoinManager := getTestStarcoinManager(t)
+	starcoinManager := getDevNetStarcoinManager(t)
 	fmt.Println(starcoinManager)
 	dataBS, _ := tools.HexToBytes(rawData)
 	txHashBS, _ := tools.HexToBytes(txHash)
@@ -87,7 +87,7 @@ func TestCommitProof(t *testing.T) {
 }
 
 func TestGetPolySmartContractEvent(t *testing.T) {
-	starcoinManager := getTestStarcoinManager(t)
+	starcoinManager := getDevNetStarcoinManager(t)
 	//fmt.Println(starcoinManager)
 	k := "0a2a6502415f878d8866ae3b7d646327ce28fe3c592f7f08091c6ed6db4e55ac"
 	e, err := starcoinManager.polySdk.GetSmartContractEvent(k)
@@ -276,7 +276,7 @@ func TestMisc(t *testing.T) {
 }
 
 func TestGetStarcoinHeaderInPoly(t *testing.T) {
-	starcoinManager := getTestStarcoinManager(t)
+	starcoinManager := getDevNetStarcoinManager(t)
 	var height uint64 = 222623
 	blockCount := 1
 	for i := 0; i < blockCount; i++ {
@@ -335,7 +335,7 @@ func TestGetStarcoinHeaderInPoly(t *testing.T) {
 }
 
 func TestGetBlockHeaderInPolyByHash(t *testing.T) {
-	starcoinManager := getTestStarcoinManager(t)
+	starcoinManager := getDevNetStarcoinManager(t)
 	hdrhash, err := tools.HexToBytes("0x3b6f3a5bb470a45e4870d13ada0947dec4504259cf3aa0eeebadf48f66d74995")
 	if err != nil {
 		fmt.Println(err)
@@ -456,7 +456,7 @@ func writeTextFile(filePath string, content string, t *testing.T) {
 	}
 }
 
-func getTestStarcoinManager(t *testing.T) *StarcoinManager {
+func getDevNetStarcoinManager(t *testing.T) *StarcoinManager {
 	config := config.NewServiceConfig("../config-devnet.json")
 	fmt.Println(config)
 	polySdk := polysdk.NewPolySdk()
