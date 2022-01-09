@@ -9,13 +9,13 @@
     "SideChainId": 318,
     "RestURL": "https://halley-seed.starcoin.org",
     "ChainId": 253,
-    "CCMModule": "0x8e703a2842b0137ada096335176d2c28::CrossChainScript",
-    "CCDModule": "0x8e703a2842b0137ada096335176d2c28::CrossChainScript",
-    "CrossChainEventAddress": "0x8e703a2842b0137ada096335176d2c28",
-    "CrossChainEventTypeTag": "0x8e703a2842b0137ada096335176d2c28::CrossChainManager::CrossChainEvent",
+    "CCMModule": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript",
+    "CCDModule": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript",
+    "CrossChainEventAddress": "0x6c3bc3a6c651e88f5af8a570e661c6af",
+    "CrossChainEventTypeTag": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainManager::CrossChainEvent",
     "PrivateKeys": [
       {
-        "0x8e703a2842b0137ada096335176d2c28": "${PRIVATE_KEY_8e703a2}"
+        "0x6c3bc3a6c651e88f5af8a570e661c6af": "${PRIVATE_KEY_6c3bc3a}"
       }
     ],
     "BlockConfirmations": 6,
@@ -24,11 +24,11 @@
     "MaxGasAmount": 40000000
   },
   "BoltDbPath": "./db-devnet",
-  "MySqlDSN": "${MYSQL_DSN}",
+  "MySqlDSN": "${MYSQL_DSN_DEVNET}",
   "RoutineNum": 64,
   "ProxyOrAssetContracts": [
     {
-      "0x8e703a2842b0137ada096335176d2c28::CrossChainManager": {
+      "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainManager": {
         "outbound": [
           1,
           2,
@@ -36,7 +36,7 @@
           318
         ]
       },
-      "0x8e703a2842b0137ada096335176d2c28::CrossChainScript": {
+      "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript": {
         "inbound": [
           2,
           218,

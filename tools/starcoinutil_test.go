@@ -42,7 +42,6 @@ func TestGetTransactionInfoByHash(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(strings.EqualFold("\"Executed\"", string(txInfo.Status)))
-	//{"MoveAbort":{"location":{"Module":{"address":"0x8e703a2842b0137ada096335176d2c28","name":"ZeroCopySource"}},"abort_code":"52481"}}
 	fmt.Println(txInfo.Status)
 	fmt.Println(isKnownStarcoinTxAbortStatus(txInfo.Status))
 }

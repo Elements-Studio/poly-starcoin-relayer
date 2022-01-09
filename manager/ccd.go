@@ -2,7 +2,6 @@ package manager
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -33,7 +32,7 @@ func NewCrossChainData(client *stcclient.StarcoinClient, module string) (*CrossC
 // public(script) fun getCurEpochStartHeight(): u64
 func (ccd *CrossChainData) getCurEpochStartHeight() (uint64, error) {
 	c := stcclient.ContractCall{
-		FunctionId: ccd.getFunctionId("getCurEpochStartHeight"),
+		FunctionId: ccd.getFunctionId("get_cur_epoch_start_height"),
 		TypeArgs:   []string{},
 		Args:       []string{},
 	}
@@ -49,7 +48,7 @@ func (ccd *CrossChainData) getCurEpochStartHeight() (uint64, error) {
 // public(script) fun getCurEpochConPubKeyBytes(): vector<u8>
 func (ccd *CrossChainData) getCurEpochConPubKeyBytes() ([]byte, error) {
 	c := stcclient.ContractCall{
-		FunctionId: ccd.getFunctionId("getCurEpochConPubKeyBytes"),
+		FunctionId: ccd.getFunctionId("get_cur_epoch_con_pubkey_bytes"),
 		TypeArgs:   []string{},
 		Args:       []string{},
 	}
@@ -60,24 +59,24 @@ func (ccd *CrossChainData) getCurEpochConPubKeyBytes() ([]byte, error) {
 	return toBytes(extractSingleResult(r))
 }
 
-// Check if from chain tx fromChainTx has been processed before.
-// Move code:
-// public(script) fun checkIfFromChainTxExist(from_chain_id: u64, from_chain_tx: vector<u8>): bool
-func (ccd *CrossChainData) checkIfFromChainTxExist(fromChainId uint64, fromChainTx []byte) (bool, error) {
-	c := stcclient.ContractCall{
-		FunctionId: ccd.getFunctionId("checkIfFromChainTxExist"),
-		TypeArgs:   []string{},
-		Args: []string{
-			strconv.FormatUint(fromChainId, 10) + "u64",
-			"x\"" + hex.EncodeToString(fromChainTx) + "x\"",
-		},
-	}
-	r, err := ccd.starcoinClient.CallContract(context.Background(), c)
-	if err != nil {
-		return false, err
-	}
-	return toBool(extractSingleResult(r))
-}
+// // Check if from chain tx fromChainTx has been processed before.
+// // Move code:
+// // public(script) fun checkIfFromChainTxExist(from_chain_id: u64, from_chain_tx: vector<u8>): bool
+// func (ccd *CrossChainData) checkIfFromChainTxExist(fromChainId uint64, fromChainTx []byte) (bool, error) {
+// 	c := stcclient.ContractCall{
+// 		FunctionId: ccd.getFunctionId("checkIfFromChainTxExist"),
+// 		TypeArgs:   []string{},
+// 		Args: []string{
+// 			strconv.FormatUint(fromChainId, 10) + "u64",
+// 			"x\"" + hex.EncodeToString(fromChainTx) + "x\"",
+// 		},
+// 	}
+// 	r, err := ccd.starcoinClient.CallContract(context.Background(), c)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	return toBool(extractSingleResult(r))
+// }
 
 // Get on-chain cross chain txn. SMT root hash.
 func (ccd *CrossChainData) getOnChainTxSparseMerkleTreeRootHash() ([]byte, error) {

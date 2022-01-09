@@ -24,7 +24,7 @@
     "MaxGasAmount": 40000000
   },
   "BoltDbPath": "./db-devnet",
-  "MySqlDSN": "${MYSQL_DSN}",
+  "MySqlDSN": "${MYSQL_DSN_TESTNET}",
   "RoutineNum": 64,
   "ProxyOrAssetContracts": [
     {
