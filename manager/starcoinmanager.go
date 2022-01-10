@@ -99,7 +99,7 @@ func NewStarcoinManager(servconfig *config.ServiceConfig, startheight uint64, st
 
 func (this *StarcoinManager) init() error {
 	// get latest height
-	latestHeight := this.findSyncedHeight()
+	latestHeight, _ := this.findSyncedHeight()
 	if latestHeight == 0 {
 		return fmt.Errorf("init - the genesis block has not synced!")
 	}
@@ -137,7 +137,7 @@ func (this *StarcoinManager) MonitorChain() {
 				// TODO: if len(this.header4sync) is too large, should not continue???
 				// ///////////////////////////////////////////////////////////////////////////
 				if len(this.header4sync) > this.config.StarcoinConfig.HeadersPerBatch*3 {
-					log.Error("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d. Reset!", this.currentHeight)
+					log.Errorf("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d. Reset!", this.currentHeight)
 					time.Sleep(time.Second * 10)
 					// ////////////////////////////////////////////////////////////////////
 					// reset???
@@ -518,7 +518,7 @@ func (this *StarcoinManager) MonitorDeposit() {
 				log.Infof("MonitorDeposit - cannot get starcoin node height, err: %s", err.Error())
 				continue
 			}
-			snycheight := this.findSyncedHeight()
+			snycheight, _ := this.findSyncedHeight()
 			log.Log.Info("MonitorDeposit from starcoin - snyced starcoin height", snycheight, "starcoin height", height, "diff", height-snycheight)
 			this.handleLockDepositEvents(snycheight)
 		case <-this.exitChan:
@@ -717,7 +717,7 @@ func (this *StarcoinManager) checkLockDepositEvents() error {
 }
 
 // Find starcoin synced height from poly storage. Return 0 if error.
-func (this *StarcoinManager) findSyncedHeight() uint64 {
+func (this *StarcoinManager) findSyncedHeight() (uint64, error) {
 	// try to get key
 	var sideChainIdBytes [8]byte
 	binary.LittleEndian.PutUint64(sideChainIdBytes[:], this.config.StarcoinConfig.SideChainId)
@@ -726,12 +726,12 @@ func (this *StarcoinManager) findSyncedHeight() uint64 {
 	// try to get storage
 	result, err := this.polySdk.GetStorage(contractAddress.ToHexString(), key)
 	if err != nil {
-		return 0
+		return 0, err
 	}
 	if result == nil || len(result) == 0 {
-		return 0
+		return 0, nil
 	} else {
-		return binary.LittleEndian.Uint64(result)
+		return binary.LittleEndian.Uint64(result), nil
 	}
 }
 

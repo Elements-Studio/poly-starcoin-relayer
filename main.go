@@ -159,7 +159,7 @@ func waitToExit() {
 func initStarcoinServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolySdk, stcclient *stcclient.StarcoinClient, db db.DB) {
 	mgr, err := manager.NewStarcoinManager(servConfig, StartHeight, StartForceHeight, polysdk, stcclient, db)
 	if err != nil {
-		log.Error("initStarcoinServer - starcoin service start err: %s", err.Error())
+		log.Errorf("initStarcoinServer - starcoin service start err: %s", err.Error())
 		return
 	}
 	go mgr.MonitorChain()
@@ -170,7 +170,7 @@ func initStarcoinServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolyS
 func initPolyServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolySdk, stcclient *stcclient.StarcoinClient, db db.DB) {
 	mgr, err := manager.NewPolyManager(servConfig, uint32(PolyStartHeight), polysdk, stcclient, db)
 	if err != nil {
-		log.Error("initPolyServer - PolyServer service start failed: %v", err)
+		log.Errorf("initPolyServer - PolyServer service start failed: %v", err)
 		return
 	}
 	go mgr.MonitorChain()

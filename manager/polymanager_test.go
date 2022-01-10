@@ -13,7 +13,8 @@ import (
 func TestInitGenersis(t *testing.T) {
 	// Poly devnet:
 	// http://138.91.6.226:40336
-	polyManager := getDevNetPolyManager(t)
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	err := polyManager.InitGenesis(nil)
 	// var height uint32 = 1319999
@@ -38,8 +39,6 @@ func TestHandleDepositEvents(t *testing.T) {
 }
 
 func TestGetPolyHeightByTxHash(t *testing.T) {
-	//commitProof - send transaction to poly chain: ( poly_txhash: 61341c16ec50ec4b2c364ee3dfc3ccdb5af540eba38c89160de75afd3322052d,
-	//starcoin_txhash: 0x9cfb0f1a47fa8a3c7cf1a60b652434adc78adf147205fea34b3e74fa6fff9bff, height: 219972 )
 	polyTxHash := "61341c16ec50ec4b2c364ee3dfc3ccdb5af540eba38c89160de75afd3322052d"
 	polyManager := getDevNetPolyManager(t)
 	h, err := polyManager.polySdk.GetBlockHeightByTxHash(polyTxHash)
@@ -96,6 +95,15 @@ func TestGetPolyLastConfigBlockNumAtHeight(t *testing.T) {
 
 func getDevNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-devnet.json")
+	return getPolyManager(config, t)
+}
+
+func getTestNetPolyManager(t *testing.T) *PolyManager {
+	config := config.NewServiceConfig("../config-testnet.json")
+	return getPolyManager(config, t)
+}
+
+func getPolyManager(config *config.ServiceConfig, t *testing.T) *PolyManager {
 	fmt.Println(config)
 	polySdk := polysdk.NewPolySdk()
 	setUpPoly(polySdk, config.PolyConfig.RestURL)

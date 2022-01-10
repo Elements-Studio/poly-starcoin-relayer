@@ -25,7 +25,7 @@ import (
 func TestFindSyncedHeight(t *testing.T) {
 	starcoinManager := getDevNetStarcoinManager(t)
 	fmt.Println(starcoinManager)
-	h := starcoinManager.findSyncedHeight()
+	h, _ := starcoinManager.findSyncedHeight()
 	fmt.Println("------------------- findSyncedHeight ------------------")
 	fmt.Println(h) // 66856
 }
@@ -407,8 +407,8 @@ func TestGetBlockHeaders(t *testing.T) {
 func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
 	//starcoinManager := getTestStarcoinManager(t)
 	//var height uint64 = 291946
-	//starcoinClient := getDevNetStarcoinClient()
-	starcoinClient := getTestNetStarcoinClient()
+	//starcoinClient := getDevNetStarcoinClient() // Poly DevNet / Starcoin Halley
+	starcoinClient := getTestNetStarcoinClient() // Poly TestNet / Starcoin Barnard
 	height := getStarcoinHeight(t, &starcoinClient)
 	h, err := starcoinClient.GetBlockHeaderAndBlockInfoByNumber(context.Background(), height)
 	if err != nil {
@@ -423,7 +423,8 @@ func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
 	fmt.Println(string(j))
 	//fmt.Println(hex.EncodeToString(j))
 	// /////////////////////////////////////////////////////
-	//note: poly may use this hex to init genesis...
+	// Save the data to hex txt file
+	// note: poly may use this hex to init genesis...
 	filePath := fmt.Sprintf("blockHeaderAndBlockInfoHex-%d.txt", height)
 	writeTextFile(filePath, hex.EncodeToString(j), t)
 	fmt.Println(filePath + " exported.")

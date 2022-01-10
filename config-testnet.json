@@ -1,6 +1,6 @@
 {
   "PolyConfig": {
-    "RestURL": "http://40.115.136.96:40336",
+    "RestURL": "http://beta1.poly.network:20336",
     "EntranceContractAddress": "0300000000000000000000000000000000000000",
     "WalletFile": "${POLY_WALLET_FILE}",
     "WalletPwd": "${POLY_WALLET_PASSWORD}"
@@ -23,7 +23,7 @@
     "MonitorInterval": 1,
     "MaxGasAmount": 40000000
   },
-  "BoltDbPath": "./db-devnet",
+  "BoltDbPath": "./db-testnet",
   "MySqlDSN": "${MYSQL_DSN_TESTNET}",
   "RoutineNum": 64,
   "ProxyOrAssetContracts": [
