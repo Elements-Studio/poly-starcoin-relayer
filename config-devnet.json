@@ -9,6 +9,7 @@
     "SideChainId": 318,
     "RestURL": "https://halley-seed.starcoin.org",
     "ChainId": 253,
+    "CCScriptModule": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript",
     "CCMModule": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript",
     "CCDModule": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript",
     "CrossChainEventAddress": "0x6c3bc3a6c651e88f5af8a570e661c6af",

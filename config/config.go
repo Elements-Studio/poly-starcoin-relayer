@@ -59,6 +59,7 @@ type StarcoinConfig struct {
 	SideChainId            uint64
 	ChainId                int // starcoin chain Id.
 	RestURL                string
+	CCScriptModule         string
 	CCMModule              string //Cross Chain Data Module Id.
 	CCDModule              string //Cross Chain Manager Module Id.
 	CrossChainEventAddress string //Cross Chain Event Address

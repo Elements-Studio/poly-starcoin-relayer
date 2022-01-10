@@ -321,3 +321,13 @@ func encode_vecbytes_argument(arg diemtypes.VecBytes) []byte {
 
 	panic("Unable to serialize argument of type vecbytes")
 }
+
+func encode_u64_argument(arg uint64) []byte {
+
+	s := bcs.NewSerializer()
+	if err := s.SerializeU64(arg); err == nil {
+		return s.GetBytes()
+	}
+
+	panic("Unable to serialize argument of type u64")
+}

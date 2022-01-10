@@ -3,9 +3,12 @@ package manager
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
+	"github.com/elements-studio/poly-starcoin-relayer/tools"
+	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
@@ -24,6 +27,30 @@ func TestInitGenersis(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println("Init poly genesis ok.")
+}
+
+func TestLockAsset(t *testing.T) {
+	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	fmt.Println(polyManager)
+
+	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC")
+	var to_chain_id uint64 = 218 //318
+	to_address, _ := tools.HexToBytes("0x2d81a0427d64ff61b11ede9085efa5ad")
+	amount := serde.Uint128{
+		High: 0,
+		Low:  10000000,
+	}
+
+	txHash, err := polyManager.LockAsset(from_asset_hash, to_chain_id, to_address, amount)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("LockAsset return hash: " + txHash)
+
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
+	fmt.Println(ok, err)
 }
 
 func TestHandleDepositEvents(t *testing.T) {

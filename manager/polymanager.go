@@ -16,6 +16,7 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
+	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ontio/ontology-crypto/keypair"
@@ -415,6 +416,38 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 		return err
 	}
 	return nil
+}
+
+func (this *PolyManager) LockAsset(from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128) (string, error) {
+	senderAndPK := this.config.StarcoinConfig.PrivateKeys[0]
+	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(senderAndPK)
+	if err != nil {
+		log.Errorf("LockAsset - Convert string to AccountAddress error:%s", err.Error())
+		return "", err
+	}
+	seqNum, err := this.starcoinClient.GetAccountSequenceNumber(context.Background(), tools.EncodeToHex(senderAddress[:]))
+	if err != nil {
+		log.Errorf("LockAsset - GetAccountSequenceNumber error:%s", err.Error())
+		return "", err
+	}
+	gasPrice, err := this.starcoinClient.GetGasUnitPrice(context.Background())
+	if err != nil {
+		log.Errorf("LockAsset - GetAccountSequenceNumber error:%s", err.Error())
+		return "", err
+	}
+	txPayload := stcpoly.EncodeLockAssetTxPayload(this.config.StarcoinConfig.CCScriptModule, from_asset_hash, to_chain_id, to_address, amount)
+
+	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT*4, seqNum)
+	if err != nil {
+		log.Errorf("LockAsset - BuildRawUserTransaction error:%s", err.Error())
+		return "", err
+	}
+	txHash, err := this.starcoinClient.SubmitTransaction(context.Background(), senderPrivateKey, userTx)
+	if err != nil {
+		log.Errorf("LockAsset - SubmitTransaction error:%s", err.Error())
+		return "", err
+	}
+	return txHash, nil
 }
 
 func (this *PolyManager) getPolyLastConfigBlockNum() (uint32, error) {

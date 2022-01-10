@@ -3,6 +3,7 @@ package poly
 import (
 	"strings"
 
+	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	diemtypes "github.com/starcoinorg/starcoin-go/types"
 )
 
@@ -50,7 +51,7 @@ func EncodeCCMVerifyHeaderAndExecuteTxPayload(module string, proof []byte, raw_h
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
 			Module:   *ParseModuleId(module), //diemtypes.ModuleId{Address: [16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61}, Name: "CrossChainScript"},
-			Function: "verifyHeaderAndExecuteTx",
+			Function: "verify_header_and_execute_tx",
 			TyArgs:   []diemtypes.TypeTag{},
 			Args:     [][]byte{encode_u8vector_argument(proof), encode_u8vector_argument(raw_header), encode_u8vector_argument(header_proof), encode_u8vector_argument(cur_raw_header), encode_u8vector_argument(header_sig), encode_u8vector_argument(merkle_proof_root), encode_u8vector_argument(merkle_proof_leaf), encode_u8vector_argument(merkle_proof_siblings)},
 		},
@@ -64,6 +65,22 @@ func EncodeInitGenesisTxPayload(module string, raw_header []byte, pub_key_list [
 			Function: "init_genesis",
 			TyArgs:   []diemtypes.TypeTag{},
 			Args:     [][]byte{encode_u8vector_argument(raw_header), encode_u8vector_argument(pub_key_list)},
+		},
+	}
+}
+
+func EncodeLockAssetTxPayload(module string, from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128) diemtypes.TransactionPayload {
+	// public(script) fun lock(signer: signer,
+	// 	from_asset_hash: vector<u8>,
+	// 	to_chain_id: u64,
+	// 	to_address: vector<u8>,
+	// 	amount: u128) {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: "lock",
+			TyArgs:   []diemtypes.TypeTag{},
+			Args:     [][]byte{encode_u8vector_argument(from_asset_hash), encode_u64_argument(to_chain_id), encode_u8vector_argument(to_address), encode_u128_argument(amount)},
 		},
 	}
 }
