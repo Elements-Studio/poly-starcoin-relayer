@@ -84,3 +84,32 @@ func EncodeLockAssetTxPayload(module string, from_asset_hash []byte, to_chain_id
 		},
 	}
 }
+
+func EncodeBindProxyHashTxPayload(module string, chain_id uint64, proxy_hash []byte) diemtypes.TransactionPayload {
+	// public(script) fun bind_proxy_hash(signer: signer,
+	// 	to_chain_id: u64,
+	// 	target_proxy_hash: vector<u8>) {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: "bind_proxy_hash",
+			TyArgs:   []diemtypes.TypeTag{},
+			Args:     [][]byte{encode_u64_argument(chain_id), encode_u8vector_argument(proxy_hash)},
+		},
+	}
+}
+
+func EncodeBindAssetHashTxPayload(module string, from_asset_hash []byte, to_chain_id uint64, to_asset_hash []byte) diemtypes.TransactionPayload {
+	// public(script) fun bind_asset_hash(signer: signer,
+	// 	from_asset_hash: vector<u8>,
+	// 	to_chain_id: u64,
+	// 	to_asset_hash: vector<u8>) {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: "bind_asset_hash",
+			TyArgs:   []diemtypes.TypeTag{},
+			Args:     [][]byte{encode_u8vector_argument(from_asset_hash), encode_u64_argument(to_chain_id), encode_u8vector_argument(to_asset_hash)},
+		},
+	}
+}

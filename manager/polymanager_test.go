@@ -7,6 +7,7 @@ import (
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
+	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	polysdk "github.com/polynetwork/poly-go-sdk"
@@ -30,12 +31,13 @@ func TestInitGenersis(t *testing.T) {
 }
 
 func TestLockAsset(t *testing.T) {
-	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 
-	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC")
-	var to_chain_id uint64 = 218 //318
+	//from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC")
+	from_asset_hash := []byte("0x1::STC::STC") // should update to 0x00000000000000000000000000000001
+	var to_chain_id uint64 = 218               //318
 	to_address, _ := tools.HexToBytes("0x2d81a0427d64ff61b11ede9085efa5ad")
 	amount := serde.Uint128{
 		High: 0,
@@ -48,8 +50,50 @@ func TestLockAsset(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println("LockAsset return hash: " + txHash)
-
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(ok, err)
+}
+
+func TestBindProxyHash(t *testing.T) {
+	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	fmt.Println(polyManager)
+	chainId := uint64(218) //318
+	proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript")
+	txPayload := stcpoly.EncodeBindProxyHashTxPayload(polyManager.config.StarcoinConfig.CCScriptModule, chainId, proxyHash)
+	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], &txPayload)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
+	if err != nil {
+		fmt.Print(err)
+		t.FailNow()
+	}
+	fmt.Println(ok, err)
+}
+
+func TestBindAssetHash(t *testing.T) {
+	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	fmt.Println(polyManager)
+	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")
+	toChainId := uint64(218) //318
+	toAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")
+	txPayload := stcpoly.EncodeBindAssetHashTxPayload(polyManager.config.StarcoinConfig.CCScriptModule, fromAssetHash, toChainId, toAssetHash)
+	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], &txPayload)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
+	if err != nil {
+		fmt.Print(err)
+		t.FailNow()
+	}
 	fmt.Println(ok, err)
 }
 

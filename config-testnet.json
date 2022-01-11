@@ -29,15 +29,13 @@
   "RoutineNum": 64,
   "ProxyOrAssetContracts": [
     {
-      "0x2d81a0427d64ff61b11ede9085efa5ad::CrossChainManager": {
+      "0x2d81a0427d64ff61b11ede9085efa5ad::CrossChainScript": {
         "outbound": [
           1,
           2,
           218,
           318
-        ]
-      },
-      "0x2d81a0427d64ff61b11ede9085efa5ad::CrossChainScript": {
+        ],
         "inbound": [
           2,
           218,
