@@ -97,6 +97,25 @@ func TestBindAssetHash(t *testing.T) {
 	fmt.Println(ok, err)
 }
 
+func TestSetChainId(t *testing.T) {
+	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	fmt.Println(polyManager)
+	chainType, _ := tools.ParseStructTypeTag("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainGlobal::STARCOIN_CHAIN")
+	chainId := uint64(318)
+	txPayload := stcpoly.EncodeSetChainIdTxPayload(polyManager.config.StarcoinConfig.CCScriptModule, chainType, chainId)
+	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], &txPayload)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
+	if err != nil {
+		fmt.Print(err)
+		t.FailNow()
+	}
+	fmt.Println(ok, err)
+}
+
 func TestHandleDepositEvents(t *testing.T) {
 	polyManager := getDevNetPolyManager(t)
 	fmt.Println(polyManager)

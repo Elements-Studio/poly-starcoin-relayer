@@ -113,3 +113,15 @@ func EncodeBindAssetHashTxPayload(module string, from_asset_hash []byte, to_chai
 		},
 	}
 }
+
+func EncodeSetChainIdTxPayload(module string, chainType diemtypes.TypeTag, chain_id uint64) diemtypes.TransactionPayload {
+	//public(script) fun set_chain_id<ChainType: store>(signer: signer, chain_id: u64) {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: "set_chain_id",
+			TyArgs:   []diemtypes.TypeTag{chainType},
+			Args:     [][]byte{encode_u64_argument(chain_id)},
+		},
+	}
+}

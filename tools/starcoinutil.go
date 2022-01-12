@@ -79,7 +79,7 @@ func GetTransactionProof(url string, restClient *RestClient, blockHash string, t
 	params := []interface{}{blockHash, txGlobalIndex, eventIndex}
 	req := &starcoinJsonRpcReq{
 		JsonRpc: "2.0",
-		Method:  "chain.get_transaction_proof", // starcoin chain info
+		Method:  "chain.get_transaction_proof",
 		Params:  params,
 		Id:      1,
 	}
@@ -173,4 +173,21 @@ func isKnownStarcoinTxAbortStatus(status []byte) bool {
 	}
 	//fmt.Println(jsonObj)
 	return false
+}
+
+func ParseStructTypeTag(s string) (types.TypeTag, error) {
+	ss := strings.Split(s, "::")
+	if len(ss) < 3 {
+		panic("Struct TypeTag string format error")
+	}
+	addr, err := types.ToAccountAddress(ss[0])
+	if err != nil {
+		return nil, err
+	}
+	st := types.StructTag{
+		Address: *addr,
+		Module:  types.Identifier(ss[1]),
+		Name:    types.Identifier(ss[2]),
+	}
+	return &types.TypeTag__Struct{Value: st}, nil
 }
