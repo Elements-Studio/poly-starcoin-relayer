@@ -60,6 +60,7 @@ func TestLockAsset(t *testing.T) {
 
 func TestBindProxyHash(t *testing.T) {
 	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	chainId := uint64(218) //318
 	proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript")
@@ -79,6 +80,7 @@ func TestBindProxyHash(t *testing.T) {
 
 func TestBindAssetHash(t *testing.T) {
 	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")
 	toChainId := uint64(218) //318
@@ -99,6 +101,7 @@ func TestBindAssetHash(t *testing.T) {
 
 func TestSetChainId(t *testing.T) {
 	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	chainType, _ := tools.ParseStructTypeTag("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainGlobal::STARCOIN_CHAIN")
 	chainId := uint64(318)
@@ -116,8 +119,28 @@ func TestSetChainId(t *testing.T) {
 	fmt.Println(ok, err)
 }
 
+func TestXEthInit(t *testing.T) {
+	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	fmt.Println(polyManager)
+	module := "0x6c3bc3a6c651e88f5af8a570e661c6af::XETHScripts"
+	txPayload := stcpoly.EncodeEmptyArgsTxPaylaod(module, "init")
+	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], &txPayload)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
+	if err != nil {
+		fmt.Print(err)
+		t.FailNow()
+	}
+	fmt.Println(ok, err)
+}
+
 func TestHandleDepositEvents(t *testing.T) {
 	polyManager := getDevNetPolyManager(t)
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	var height uint32 = 6003
 	ok := polyManager.handleDepositEvents(height)
@@ -129,8 +152,10 @@ func TestHandleDepositEvents(t *testing.T) {
 }
 
 func TestGetPolyHeightByTxHash(t *testing.T) {
-	polyTxHash := "61341c16ec50ec4b2c364ee3dfc3ccdb5af540eba38c89160de75afd3322052d"
 	polyManager := getDevNetPolyManager(t)
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+
+	polyTxHash := "61341c16ec50ec4b2c364ee3dfc3ccdb5af540eba38c89160de75afd3322052d"
 	h, err := polyManager.polySdk.GetBlockHeightByTxHash(polyTxHash)
 	if err != nil {
 		t.FailNow()
@@ -148,6 +173,8 @@ func TestGetPolyHeightByTxHash(t *testing.T) {
 
 func TestSendPolyTxToStarcoin(t *testing.T) {
 	polyManager := getDevNetPolyManager(t)
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+
 	//fmt.Println(polyManager)
 	polyTxHash := "0a2a6502415f878d8866ae3b7d646327ce28fe3c592f7f08091c6ed6db4e55ac"
 	fromChainId := uint64(218)
@@ -172,6 +199,8 @@ func TestSendPolyTxToStarcoin(t *testing.T) {
 
 func TestGetPolyCurrentBlockHeight(t *testing.T) {
 	polyManager := getDevNetPolyManager(t)
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+
 	fmt.Println(polyManager)
 	h, err := polyManager.polySdk.GetCurrentBlockHeight()
 	fmt.Println(h, err)
@@ -179,6 +208,8 @@ func TestGetPolyCurrentBlockHeight(t *testing.T) {
 
 func TestGetPolyLastConfigBlockNumAtHeight(t *testing.T) {
 	polyManager := getDevNetPolyManager(t)
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+
 	fmt.Println(polyManager)
 	polyManager.getPolyLastConfigBlockNumAtHeight(1319999)
 }

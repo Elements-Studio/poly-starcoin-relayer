@@ -12,7 +12,6 @@ import (
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
-	"github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	stcpolyevts "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	polysdk "github.com/polynetwork/poly-go-sdk"
@@ -27,7 +26,7 @@ func TestFindSyncedHeight(t *testing.T) {
 	fmt.Println(starcoinManager)
 	h, _ := starcoinManager.findSyncedHeight()
 	fmt.Println("------------------- findSyncedHeight ------------------")
-	fmt.Println(h) // 66856
+	fmt.Println(h)
 }
 
 func TestCommitHeader(t *testing.T) {
@@ -48,6 +47,7 @@ func TestCommitHeader(t *testing.T) {
 
 func TestFetchLockDepositEvents(t *testing.T) {
 	starcoinManager := getDevNetStarcoinManager(t)
+	// starcoinManager := getTestNetStarcoinManager(t)
 	fmt.Println("---------- fetchLockDepositEvents -----------")
 	ok, err := starcoinManager.fetchLockDepositEvents(3434)
 	fmt.Println(ok)
@@ -87,7 +87,9 @@ func TestCommitProof(t *testing.T) {
 }
 
 func TestGetPolySmartContractEvent(t *testing.T) {
-	starcoinManager := getDevNetStarcoinManager(t)
+	starcoinManager := getDevNetStarcoinManager(t) // Poly DevNet / Starcoin Halley
+	//starcoinManager := getTestNetStarcoinManager(t) // Poly TestNet / Starcoin Barnard
+
 	//fmt.Println(starcoinManager)
 	k := "0a2a6502415f878d8866ae3b7d646327ce28fe3c592f7f08091c6ed6db4e55ac"
 	e, err := starcoinManager.polySdk.GetSmartContractEvent(k)
@@ -239,7 +241,7 @@ func TestDeserializeCrossChainEvent(t *testing.T) {
 	default:
 		t.FailNow()
 	}
-	evtData, err := events.BcsDeserializeCrossChainEvent(ev0.EventData)
+	evtData, err := stcpolyevts.BcsDeserializeCrossChainEvent(ev0.EventData)
 	if err != nil {
 		t.FailNow()
 	}
@@ -459,7 +461,17 @@ func writeTextFile(filePath string, content string, t *testing.T) {
 
 func getDevNetStarcoinManager(t *testing.T) *StarcoinManager {
 	config := config.NewServiceConfig("../config-devnet.json")
-	fmt.Println(config)
+	//fmt.Println(config)
+	return getStarcoinManager(config, t)
+}
+
+func getTestNetStarcoinManager(t *testing.T) *StarcoinManager {
+	config := config.NewServiceConfig("../config-testnet.json")
+	//fmt.Println(config)
+	return getStarcoinManager(config, t)
+}
+
+func getStarcoinManager(config *config.ServiceConfig, t *testing.T) *StarcoinManager {
 	polySdk := polysdk.NewPolySdk()
 	setUpPoly(polySdk, config.PolyConfig.RestURL)
 	db, err := db.NewMySqlDB(config.MySqlDSN)

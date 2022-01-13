@@ -125,3 +125,14 @@ func EncodeSetChainIdTxPayload(module string, chainType diemtypes.TypeTag, chain
 		},
 	}
 }
+
+func EncodeEmptyArgsTxPaylaod(module string, function string) diemtypes.TransactionPayload {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: diemtypes.Identifier(function),
+			TyArgs:   []diemtypes.TypeTag{},
+			Args:     [][]byte{},
+		},
+	}
+}
