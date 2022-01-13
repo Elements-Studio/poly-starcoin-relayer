@@ -42,6 +42,7 @@ const (
 type ServiceConfig struct {
 	PolyConfig            *PolyConfig
 	StarcoinConfig        *StarcoinConfig
+	BridgeURLs            []string
 	BoltDbPath            string
 	MySqlDSN              string
 	RoutineNum            int64

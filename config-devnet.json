@@ -24,6 +24,9 @@
     "MonitorInterval": 1,
     "MaxGasAmount": 40000000
   },
+  "BridgeURLs": [
+    "https://bridge.poly.network/testnet/v1"
+  ],
   "BoltDbPath": "./db-devnet",
   "MySqlDSN": "${MYSQL_DSN_DEVNET}",
   "RoutineNum": 64,

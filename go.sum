@@ -525,6 +525,7 @@ github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czP
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.0/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
+github.com/mattn/go-colorable v0.1.7 h1:bQGKb3vps/j0E9GfJQ03JyhRuxsvdAanXlT9BTw3mdw=
 github.com/mattn/go-colorable v0.1.7/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-ieproxy v0.0.0-20190610004146-91bb50d98149/go.mod h1:31jz6HNzdxOmlERGGEc4v/dMssOfmp2p5bT/okiKFFc=
 github.com/mattn/go-ieproxy v0.0.0-20190702010315-6dee0af9227d/go.mod h1:31jz6HNzdxOmlERGGEc4v/dMssOfmp2p5bT/okiKFFc=
@@ -532,6 +533,7 @@ github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNx
 github.com/mattn/go-isatty v0.0.4/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
 github.com/mattn/go-isatty v0.0.5-0.20180830101745-3fb116b82035/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
 github.com/mattn/go-isatty v0.0.10/go.mod h1:qgIWMr58cqv1PHHyhnkY9lrL7etaEgOFcMEpPG5Rm84=
+github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHXY=
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mattn/go-runewidth v0.0.2/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/mattn/go-runewidth v0.0.3/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
@@ -649,6 +651,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/polynetwork/bridge-common v0.0.20 h1:dIkOIgbvBY1x3T4rvJUOH1yQTA7o97TEpGeLMnt18mc=
 github.com/polynetwork/bridge-common v0.0.20/go.mod h1:R3upIgVox9GcDDXNkibupOeAPkuQq66gykdyiimLjco=
+github.com/polynetwork/bridge-common v0.0.24-beta h1:6EwjdFJLzRQG0ltdw42J+los75iW6yO9ZOZHgXm5fmc=
+github.com/polynetwork/bridge-common v0.0.24-beta/go.mod h1:R3upIgVox9GcDDXNkibupOeAPkuQq66gykdyiimLjco=
 github.com/polynetwork/btc-vendor-tools v0.0.0-20200813091748-3b19a5fd7666/go.mod h1:U8rR9X6vemlkBAJWfvzwSoalcJjX8B2aQjB0kPRhBUA=
 github.com/polynetwork/cosmos-poly-module v0.0.0-20200810030259-95d586518759/go.mod h1:VMBJZ8GSZeoWBntd/rWx2Rr5roRKofO7siP1qd6A6pY=
 github.com/polynetwork/eth-contracts v0.0.0-20200814062128-70f58e22b014/go.mod h1:TeePrYZfWJAwuksPlie7RPequ51Ujp5l/JY6TcutsFc=

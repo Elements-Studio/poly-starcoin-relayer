@@ -22,6 +22,7 @@ import (
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology-crypto/signature"
 
+	"github.com/polynetwork/bridge-common/chains/bridge"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/common"
 	vconfig "github.com/polynetwork/poly/consensus/vbft/config"
@@ -44,6 +45,7 @@ type PolyManager struct {
 	starcoinClient *stcclient.StarcoinClient
 	senders        []*StarcoinSender
 	db             db.DB
+	bridgeSdk      *bridge.SDK
 }
 
 func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, polySdk *polysdk.PolySdk, stcclient *stcclient.StarcoinClient, db db.DB) (*PolyManager, error) {
@@ -95,7 +97,12 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 		v.db = db
 		senders[i] = v
 	}
-
+	//if h.config.CheckFee {
+	bridgeSdk, err := bridge.WithOptions(0, servCfg.BridgeURLs, time.Minute, 10)
+	if err != nil {
+		log.Errorf("NewPolyManager - new bridge SDK error: %s\n", err.Error())
+		//ignore?
+	}
 	mgr := &PolyManager{
 		exitChan:      make(chan int),
 		config:        servCfg,
@@ -105,6 +112,7 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 		db:             db,
 		starcoinClient: stcclient,
 		senders:        senders,
+		bridgeSdk:      bridgeSdk,
 	}
 
 	ok := mgr.init()

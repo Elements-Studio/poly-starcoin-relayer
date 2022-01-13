@@ -38,7 +38,7 @@ func TestLockAsset(t *testing.T) {
 	//from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC")
 	from_asset_hash := []byte("0x1::STC::STC") // should update to 0x00000000000000000000000000000001
 	var to_chain_id uint64 = 218               //318
-	to_address, _ := tools.HexToBytes("0x2d81a0427d64ff61b11ede9085efa5ad")
+	to_address, _ := tools.HexToBytes("0x18351d311d32201149a4df2a9fc2db8a")
 	amount := serde.Uint128{
 		High: 0,
 		Low:  10000000,
