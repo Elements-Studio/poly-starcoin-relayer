@@ -25,9 +25,24 @@ type StarcoinTxRetry struct {
 	StarcoinEvent         string `gorm:"size:10000"`         // Starcoin Event
 }
 
-//
-// alter table `poly_tx` convert to charset latin1;
-//
+type PolyTxProof struct {
+	Proof        string //`gorm:"size:5000"` // 	bytes memory proof,
+	Header       string //`gorm:"size:5000"` // 	bytes memory rawHeader,
+	HeaderProof  string //`gorm:"size:5000"` // 	bytes memory headerProof,
+	AnchorHeader string //`gorm:"size:5000"` // 	bytes memory curRawHeader,
+	HeaderSig    string //`gorm:"size:5000"` // 	bytes memory headerSig
+}
+
+// type BridgeTransaction struct {
+// 	header       *polytypes.Header
+// 	param        *common2.ToMerkleValue
+// 	headerProof  string
+// 	anchorHeader *polytypes.Header
+// 	polyTxHash   string
+// 	rawAuditPath []byte
+// 	hasPay       uint8
+// 	fee          string
+// }
 
 // Poly transaction(to Starcoin)
 type PolyTx struct {
@@ -68,6 +83,10 @@ type PolyTx struct {
 	RetryCount int   `gorm:"default:0;NOT NULL"`
 	Version    int64 `gorm:"column:version;default:0;NOT NULL"`
 }
+
+//
+// note: alter table `poly_tx` convert to charset latin1;
+//
 
 func (o *PolyTx) GetVersion() int64 {
 	return o.Version
@@ -164,14 +183,6 @@ func (p *PolyTx) GetPolyTxProof() (*PolyTxProof, error) {
 		return nil, err
 	}
 	return proof, nil
-}
-
-type PolyTxProof struct {
-	Proof        string //`gorm:"size:5000"` // 	bytes memory proof,
-	Header       string //`gorm:"size:5000"` // 	bytes memory rawHeader,
-	HeaderProof  string //`gorm:"size:5000"` // 	bytes memory headerProof,
-	AnchorHeader string //`gorm:"size:5000"` // 	bytes memory curRawHeader,
-	HeaderSig    string //`gorm:"size:5000"` // 	bytes memory headerSig
 }
 
 type SmtNode struct {

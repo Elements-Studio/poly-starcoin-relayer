@@ -24,6 +24,15 @@ func TestCheckFee(t *testing.T) {
 	}
 	j, _ := json.Marshal(r)
 	fmt.Println(string(j))
+
+	fmt.Println("-------------- CheckFee result status --------------")
+	fmt.Println(`
+	SKIP     CheckFeeStatus = -2 // Skip since not our tx
+	NOT_PAID CheckFeeStatus = -1 // Not paid or paid too low
+	MISSING  CheckFeeStatus = 0  // Tx not received yet
+	PAID     CheckFeeStatus = 1  // Paid and enough pass
+	`)
+	fmt.Printf("Current status: %d\n", r.Status)
 }
 
 func getMainNetBridgeSdkForTest(t *testing.T) *bridge.SDK {
