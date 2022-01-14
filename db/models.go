@@ -78,7 +78,7 @@ type PolyTx struct {
 	Status string `gorm:"size:20;index"`
 
 	StarcoinTxHash string `gorm:"size:66"`
-	EventTxHash    string `gorm:"size:66"`
+	PolyTxHash     string `gorm:"size:66"`
 
 	RetryCount int   `gorm:"default:0;NOT NULL"`
 	Version    int64 `gorm:"column:version;default:0;NOT NULL"`
@@ -140,7 +140,7 @@ func (p *PolyTx) GetSmtProofSiblingData() ([]byte, error) {
 	return nil, nil
 }
 
-func NewPolyTx(txHash []byte, fromChainID uint64, proof []byte, header []byte, headerProof []byte, anchorHeader []byte, sigs []byte, eventTxHash string) (*PolyTx, error) {
+func NewPolyTx(txHash []byte, fromChainID uint64, proof []byte, header []byte, headerProof []byte, anchorHeader []byte, sigs []byte, polyTxHash string) (*PolyTx, error) {
 	p := &PolyTxProof{
 		Proof:        hex.EncodeToString(proof),
 		Header:       hex.EncodeToString(header),
@@ -157,7 +157,7 @@ func NewPolyTx(txHash []byte, fromChainID uint64, proof []byte, header []byte, h
 		FromChainID: fromChainID,
 		SmtTxPath:   Hash256Hex(concatFromChainIDAndTxHash(fromChainID, txHash)),
 		PolyTxProof: string(j),
-		EventTxHash: eventTxHash,
+		PolyTxHash:  polyTxHash,
 	}, nil
 }
 

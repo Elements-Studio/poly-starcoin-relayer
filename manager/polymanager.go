@@ -554,7 +554,7 @@ type StarcoinSender struct {
 // }
 
 // return two bool value, first indicate if Starcoin transaction has been sent, second indicate if trasaction has been saved in DB
-func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, eventTxHash string, rawAuditPath []byte) (bool, bool) {
+func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) (bool, bool) {
 	var (
 		sigs       []byte
 		headerData []byte
@@ -617,7 +617,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
 	// 	sigs)
 
-	polyTx, err := db.NewPolyTx(param.TxHash, param.FromChainID, rawAuditPath, headerData, rawProof, rawAnchor, sigs, eventTxHash)
+	polyTx, err := db.NewPolyTx(param.TxHash, param.FromChainID, rawAuditPath, headerData, rawProof, rawAnchor, sigs, polyTxHash)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - db.NewPolyTx error: %s", err.Error())
 		return false, false
