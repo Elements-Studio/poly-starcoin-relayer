@@ -56,6 +56,22 @@ func TestLockAsset(t *testing.T) {
 	fmt.Println(ok, err)
 }
 
+// Before cross from/to ethereum, bind the LockProxy hash first.
+func TestBindEthereumProxyHash(t *testing.T) {
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	fmt.Println(polyManager)
+	starcoinClient := polyManager.starcoinClient
+	chainId := uint64(2)                                                             // 2 is ethereum ropsten chain id on poly TestNet
+	proxyHash, err := tools.HexToBytes("0xD8aE73e06552E270340b63A8bcAbf9277a1aac99") // LockProxy Contract Address
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	testBindProxyHash(starcoinClient, polyManager.config, chainId, proxyHash, t)
+}
+
+// Test bind or update starcoin LockProxy hash(contract ID).
 func TestBindStarcoinProxyHash(t *testing.T) {
 	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
@@ -63,20 +79,6 @@ func TestBindStarcoinProxyHash(t *testing.T) {
 	starcoinClient := polyManager.starcoinClient
 	chainId := uint64(318) //318
 	proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript")
-	testBindProxyHash(starcoinClient, polyManager.config, chainId, proxyHash, t)
-}
-
-func TestBindEthereumProxyHash(t *testing.T) {
-	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
-	fmt.Println(polyManager)
-	starcoinClient := polyManager.starcoinClient
-	chainId := uint64(2)
-	proxyHash, err := tools.HexToBytes("0xD8aE73e06552E270340b63A8bcAbf9277a1aac99")
-	if err != nil {
-		fmt.Println(err)
-		t.FailNow()
-	}
 	testBindProxyHash(starcoinClient, polyManager.config, chainId, proxyHash, t)
 }
 
@@ -95,6 +97,7 @@ func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, config *config.
 	fmt.Println(ok, err)
 }
 
+// Test bind or update asset hash(asset ID).
 func TestBindAssetHash(t *testing.T) {
 	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
@@ -116,6 +119,7 @@ func TestBindAssetHash(t *testing.T) {
 	fmt.Println(ok, err)
 }
 
+// Test set or update ChainID on poly network.
 func TestSetChainId(t *testing.T) {
 	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
