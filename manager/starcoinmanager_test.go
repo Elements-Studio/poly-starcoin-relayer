@@ -119,7 +119,8 @@ func TestDeserializeCrossChainEventData(t *testing.T) {
 }
 
 func TestGetToMerkleValueFromProof(t *testing.T) {
-	p, err := tools.HexToBytes("0xfd0f01206c56099ef34fb6634febf736bf00a6b21dcd63d53cd06bc12629e7579852a6033e01000000000000100000000000000000000000000000000020ac5eeed639bffcac6900ba1779ec7f1184e8fc34f7fa397f67ba0b994c1103bb1018351d311d32201149a4df2a9fc2db8a3e0100000000000034307831383335316433313164333232303131343961346466326139666332646238613a3a43726f7373436861696e53637269707406756e6c6f636b5e2c307830303030303030303030303030303030303030303030303030303030303030313a3a5354433a3a5354431018351d311d32201149a4df2a9fc2db8a8096980000000000000000000000000000000000000000000000000000000000")
+	p, err := tools.HexToBytes("fd330120f8f2e4500319fcffb3fdb2b9645703e21c8ee87f7c6df0300804a5749c0d8bca3e010000000000001000000000000000000000000000000001208bdbb8eb8c9fc735deaa87b5cef8be95535950a480f28388a8b40adc03a99c0d34307831383335316433313164333232303131343961346466326139666332646238613a3a43726f7373436861696e5363726970743e0100000000000034307831383335316433313164333232303131343961346466326139666332646238613a3a43726f7373436861696e53637269707406756e6c6f636b5e2c307830303030303030303030303030303030303030303030303030303030303030313a3a5354433a3a5354431018351d311d32201149a4df2a9fc2db8a8096980000000000000000000000000000000000000000000000000000000000")
+	//p, err := tools.HexToBytes("0xfd2501205458ccfc4dbec34fb53c88060e5210e96fc511e2a9403c1f2f47be76afea1bb10200000000000000200000000000000000000000000000000000000000000000000000000000002d44205d1296ba988bf9bca70281b21042310d608bdc541c690b71df43a6fac1430f9314d8ae73e06552e270340b63a8bcabf9277a1aac993e0100000000000034307831383335316433313164333232303131343961346466326139666332646238613a3a43726f7373436861696e53637269707406756e6c6f636b602e307831383335316433313164333232303131343961346466326139666332646238613a3a584554483a3a584554481018351d311d32201149a4df2a9fc2db8a807d04b78cf20300000000000000000000000000000000000000000000000000")
 	if err != nil {
 		t.FailNow()
 	}
@@ -137,15 +138,45 @@ func TestGetToMerkleValueFromProof(t *testing.T) {
 	fmt.Println(param)
 	fmt.Println("-------------- ToMerkleValue.TxHash --------------")
 	fmt.Println(hex.EncodeToString(param.TxHash))
+	fmt.Println("-------------- ToMerkleValue.FromChainID --------------")
+	fmt.Println(param.FromChainID)
 	fmt.Println("-------------- ToMerkleValue.MakeTxParam.TxHash --------------")
 	fmt.Println(hex.EncodeToString(param.MakeTxParam.TxHash))
-	fmt.Println("------------------- to contract address -------------------")
-	fmt.Println(string(param.MakeTxParam.ToContractAddress))
-	fmt.Println("------------------- from contract address -------------------")
-	fmt.Println(hex.EncodeToString(param.MakeTxParam.FromContractAddress))
 	fmt.Println("------------------- ToMerkleValue.MakeTxParam.CrossChainID -------------------")
-	fmt.Println(param.MakeTxParam.CrossChainID)
-
+	fmt.Println(hex.EncodeToString(param.MakeTxParam.CrossChainID))
+	fmt.Println("------------------- ToMerkleValue.MakeTxParam. from contract address(proxy hash) -------------------")
+	fmt.Println(hex.EncodeToString(param.MakeTxParam.FromContractAddress))
+	fmt.Println("------------------- ToMerkleValue.MakeTxParam.ToChainID -------------------")
+	fmt.Println(param.MakeTxParam.ToChainID)
+	fmt.Println("------------------- ToMerkleValue.MakeTxParam. to contract address(proxy hash) -------------------")
+	fmt.Println(string(param.MakeTxParam.ToContractAddress))
+	fmt.Println("------------------- ToMerkleValue.MakeTxParam.Method -------------------")
+	fmt.Println(param.MakeTxParam.Method)
+	fmt.Println("------------------- ToMerkleValue.MakeTxParam.Args -------------------")
+	fmt.Println(param.MakeTxParam.Args)
+	// TxHash              []byte
+	// CrossChainID        []byte
+	// FromContractAddress []byte
+	// ToChainID           uint64
+	// ToContractAddress   []byte
+	// Method              string
+	// Args                []byte
+	// ////////////////////////////////////
+	fmt.Println("-------- ToMerkleValue.MakeTxParam.Args(decoded) --------")
+	s2 := pcommon.NewZeroCopySource(param.MakeTxParam.Args)
+	toAssetHash, b := s2.NextVarBytes()
+	fmt.Println("To asset hash:")
+	fmt.Println(string(toAssetHash))
+	toAddress, b := s2.NextVarBytes()
+	fmt.Println("To address:")
+	fmt.Println(hex.EncodeToString(toAddress))
+	fmt.Println("Amount:")
+	amount_1, b := s2.NextUint64()
+	amount_2, b := s2.NextUint64()
+	amount_3, b := s2.NextUint64()
+	amount_4, b := s2.NextUint64()
+	fmt.Println(amount_1, ",", amount_2, ",", amount_3, ",", amount_4)
+	_ = b //fmt.Println(b)
 }
 
 func TestDeserializeCrossChainEventRawData2(t *testing.T) {
@@ -191,25 +222,25 @@ func TestDeserializeCrossChainEventRawData(t *testing.T) {
 	}
 	s := pcommon.NewZeroCopySource(v)
 	paramTxHash, b := s.NextVarBytes()
-	fmt.Println("-------- paramTxHash: --------")
+	fmt.Println("-------- paramTxHash(on-chain TxIdx): --------")
 	fmt.Println(paramTxHash)
 	hash, b := s.NextVarBytes()
-	fmt.Println("-------- sha256(abi.encodePacked(address(this), paramTxHash)): --------")
+	fmt.Println("-------- crossChainId / sha256(abi.encodePacked(address(this), paramTxHash)): --------")
 	fmt.Println(hex.EncodeToString(hash))
 	sender, b := s.NextVarBytes()
-	fmt.Println("-------- msg.sender: --------")
+	fmt.Println("-------- fromProxyHash(FromContractAddress / msg.sender): --------")
 	fmt.Println(hex.EncodeToString(sender))
 	toChainId, b := s.NextUint64()
 	fmt.Println("-------- toChainId: --------")
 	fmt.Println(toChainId)
 	toContract, b := s.NextVarBytes()
-	fmt.Println("-------- toContract: --------")
+	fmt.Println("-------- toProxyHash(ToContractAddress): --------")
 	fmt.Println(string(toContract))
 	method, b := s.NextVarBytes()
 	fmt.Println("-------- method: --------")
 	fmt.Println(string(method))
 	txData, b := s.NextVarBytes()
-	fmt.Println("-------- txData: --------")
+	fmt.Println("-------- txData(args): --------")
 	fmt.Println(hex.EncodeToString(txData))
 	fmt.Println("-------- EOF --------")
 	fmt.Println(b)
