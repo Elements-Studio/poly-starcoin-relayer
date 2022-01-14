@@ -43,5 +43,5 @@ func TestGetTransactionInfoByHash(t *testing.T) {
 	}
 	fmt.Println(strings.EqualFold("\"Executed\"", string(txInfo.Status)))
 	fmt.Println(txInfo.Status)
-	fmt.Println(isKnownStarcoinTxAbortStatus(txInfo.Status))
+	fmt.Println(isKnownStarcoinTxFailureStatus(txInfo.Status))
 }

@@ -147,8 +147,8 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 			//log.Debug("Transaction status: " + tx.Status)
 			if strings.EqualFold("\"Executed\"", string(tx.Status)) {
 				return true, nil
-			} else if isKnownStarcoinTxAbortStatus(tx.Status) {
-				return false, fmt.Errorf("isKnownStarcoinTxAbortStatus: %s", string(tx.Status))
+			} else if isKnownStarcoinTxFailureStatus(tx.Status) {
+				return false, fmt.Errorf("isKnownStarcoinTxFailureStatus: %s", string(tx.Status))
 			} else {
 				continue // TODO: return false on some statuses???
 			}
@@ -158,7 +158,7 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 	}
 }
 
-func isKnownStarcoinTxAbortStatus(status []byte) bool {
+func isKnownStarcoinTxFailureStatus(status []byte) bool {
 	jsonObj := make(map[string]interface{})
 	//fmt.Println(string(status))
 	err := json.Unmarshal(status, &jsonObj)
@@ -168,6 +168,9 @@ func isKnownStarcoinTxAbortStatus(status []byte) bool {
 	for k := range jsonObj {
 		//fmt.Println(k)
 		if strings.EqualFold("MoveAbort", k) {
+			return true
+		} else if strings.EqualFold("ExecutionFailure", k) {
+			//{"ExecutionFailure":{"function":10,"code_offset":38,"location":{"Module":{"address":"0x18351d311d32201149a4df2a9fc2db8a","name":"LockProxy"}}}}
 			return true
 		}
 	}

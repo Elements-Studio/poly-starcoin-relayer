@@ -391,19 +391,13 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 		log.Errorf("InitGenesis - GetAccountSequenceNumber error:%s", err.Error())
 		return err
 	}
-	// fmt.Println("---------------------- hdr ----------------------")
-	// rawHdr := hdr.GetMessage()
-	// //fmt.Println(len(rawHdr))
-	// //fmt.Println(rawHdr)
+	rawHdr := hdr.GetMessage()
+	// fmt.Println("---------------------- raw_header ----------------------")
 	// fmt.Println(hex.EncodeToString(rawHdr))
-	// fmt.Println("------------------ publickeys -------------------")
-	// //fmt.Println(len(publickeys))
-	// fmt.Println(publickeys)
+	// fmt.Println("------------------ public_keys -------------------")
 	// fmt.Println(hex.EncodeToString(publickeys))
-	// fmt.Println("---------------- header.SigData ------------------")
-	// fmt.Println(hex.EncodeToString(encodeHeaderSigData(hdr)))
 	// fmt.Println("--------------------------------------------------")
-	txPayload := stcpoly.EncodeInitGenesisTxPayload(this.config.StarcoinConfig.CCMModule, hdr.GetMessage(), publickeys)
+	txPayload := stcpoly.EncodeInitGenesisTxPayload(this.config.StarcoinConfig.CCMModule, rawHdr, publickeys)
 
 	userTx, err := this.starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT*4, seqNum)
 	if err != nil {
@@ -415,12 +409,19 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 		log.Errorf("InitGenesis - SubmitTransaction error:%s", err.Error())
 		return err
 	}
-	_ = txHash
-	// fmt.Println("--------------- starcoin tx hash ----------------")
-	// fmt.Println(txHash)
+	log.Debugf("InitGenesis - SubmitTransaction, get hash: %s", txHash)
+	// wait transaction confirmed?
+	ok, err := tools.WaitTransactionConfirm(*this.starcoinClient, txHash, time.Minute)
+	if err != nil {
+		log.Errorf("InitGenesis - WaitTransactionConfirm error: %s", err.Error())
+		return err
+	} else if !ok {
+		log.Errorf("InitGenesis - WaitTransactionConfirm failed.")
+		return fmt.Errorf("WaitTransactionConfirm failed. error: %v", err)
+	}
 	err = this.db.UpdatePolyHeight(cfgBlockNum)
 	if err != nil {
-		log.Errorf("InitGenesis - UpdatePolyHeight error:%s", err.Error())
+		log.Errorf("InitGenesis - UpdatePolyHeight error: %s", err.Error())
 		return err
 	}
 	return nil
