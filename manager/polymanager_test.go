@@ -34,8 +34,6 @@ func TestLockAsset(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-
-	//from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC")
 	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
 	var to_chain_id uint64 = 318                                              // 318
 	to_address, _ := tools.HexToBytes("0x18351d311d32201149a4df2a9fc2db8a")
