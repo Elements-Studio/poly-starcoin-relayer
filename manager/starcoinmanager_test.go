@@ -119,7 +119,7 @@ func TestDeserializeCrossChainEventData(t *testing.T) {
 }
 
 func TestGetToMerkleValueFromProof(t *testing.T) {
-	p, err := hex.DecodeString("f0202d052233fd5ae70d16898ca3eb40f55adbccc3dfe34e362c4bec50ec161c3461da000000000000001000000000000000000000000000000000209b6092ccf4b2dfde71914755713ff1a550a71f1d6ef0d82c00958504c5f7d6591057aa381a5d7c0141da3965393eed9958da0000000000000034307835376161333831613564376330313431646133393635333933656564393935383a3a43726f7373436861696e53637269707406756e6c6f636b3f0d3078313a3a5354433a3a53544310e498d62f5d1f469d2f72eb3e9dc8f23087d6120000000000000000000000000000000000000000000000000000000000")
+	p, err := tools.HexToBytes("0xfd0f01206c56099ef34fb6634febf736bf00a6b21dcd63d53cd06bc12629e7579852a6033e01000000000000100000000000000000000000000000000020ac5eeed639bffcac6900ba1779ec7f1184e8fc34f7fa397f67ba0b994c1103bb1018351d311d32201149a4df2a9fc2db8a3e0100000000000034307831383335316433313164333232303131343961346466326139666332646238613a3a43726f7373436861696e53637269707406756e6c6f636b5e2c307830303030303030303030303030303030303030303030303030303030303030313a3a5354433a3a5354431018351d311d32201149a4df2a9fc2db8a8096980000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
 		t.FailNow()
 	}
@@ -139,6 +139,13 @@ func TestGetToMerkleValueFromProof(t *testing.T) {
 	fmt.Println(hex.EncodeToString(param.TxHash))
 	fmt.Println("-------------- ToMerkleValue.MakeTxParam.TxHash --------------")
 	fmt.Println(hex.EncodeToString(param.MakeTxParam.TxHash))
+	fmt.Println("------------------- to contract address -------------------")
+	fmt.Println(string(param.MakeTxParam.ToContractAddress))
+	fmt.Println("------------------- from contract address -------------------")
+	fmt.Println(hex.EncodeToString(param.MakeTxParam.FromContractAddress))
+	fmt.Println("------------------- ToMerkleValue.MakeTxParam.CrossChainID -------------------")
+	fmt.Println(param.MakeTxParam.CrossChainID)
+
 }
 
 func TestDeserializeCrossChainEventRawData2(t *testing.T) {

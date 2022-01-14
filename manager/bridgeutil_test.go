@@ -10,12 +10,12 @@ import (
 )
 
 func TestCheckFee(t *testing.T) {
-	// polyManager := getTestNetPolyManager(t)
-	// bridgeSdk := polyManager.bridgeSdk
-	bridgeSdk := getMainNetBridgeSdkForTest(t)
-	chainId := uint64(6) // MainNet BSC
-	txId := "2244fe33767fa38717a0dba2ca413d411db0e613abd1d4ffd181c6f12eea2ab1"
-	polyHash := "38ecd4268a68961acd622c7efe635edb50976582febe8a31bc3b55436def0256"
+	polyManager := getTestNetPolyManager(t)
+	bridgeSdk := polyManager.bridgeSdk
+	//bridgeSdk := getMainNetBridgeSdkForTest(t)
+	chainId := uint64(400)
+	txId := "21c3e476cd9389b65bd462a61d4cca430976cf528ec403019fc73512926e29e0"
+	polyHash := "dc01826756160442da9470cd137c789a28f6a98050cef7a612462342d5e9e140"
 
 	r, err := CheckFee(bridgeSdk, chainId, txId, polyHash)
 	if err != nil {

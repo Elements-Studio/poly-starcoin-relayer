@@ -86,7 +86,7 @@ func (w *MySqlDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
 		return err
 	}
 	tx := StarcoinTxRetry{
-		CroosTransferDataHash: hex.EncodeToString(hash[:]),
+		CrossTransferDataHash: hex.EncodeToString(hash[:]),
 		CrossTransferData:     hex.EncodeToString(k),
 		StarcoinEvent:         string(j),
 	}
@@ -96,7 +96,7 @@ func (w *MySqlDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
 func (w *MySqlDB) DeleteStarcoinTxRetry(k []byte) error {
 	hash := sha3.Sum256(k)
 	tx := StarcoinTxRetry{
-		CroosTransferDataHash: hex.EncodeToString(hash[:]),
+		CrossTransferDataHash: hex.EncodeToString(hash[:]),
 	}
 	return w.db.Delete(tx).Error
 }

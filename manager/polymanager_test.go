@@ -36,8 +36,8 @@ func TestLockAsset(t *testing.T) {
 	fmt.Println(polyManager)
 
 	//from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC")
-	from_asset_hash := []byte("0x1::STC::STC") // should update to 0x00000000000000000000000000000001
-	var to_chain_id uint64 = 218               //318
+	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
+	var to_chain_id uint64 = 318                                              // 318
 	to_address, _ := tools.HexToBytes("0x18351d311d32201149a4df2a9fc2db8a")
 	amount := serde.Uint128{
 		High: 0,
@@ -62,7 +62,7 @@ func TestBindProxyHash(t *testing.T) {
 	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	chainId := uint64(218) //318
+	chainId := uint64(318) //318
 	proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript")
 	txPayload := stcpoly.EncodeBindProxyHashTxPayload(polyManager.config.StarcoinConfig.CCScriptModule, chainId, proxyHash)
 	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], &txPayload)

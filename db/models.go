@@ -20,7 +20,7 @@ type StarcoinTxCheck struct {
 }
 
 type StarcoinTxRetry struct {
-	CroosTransferDataHash string `gorm:"primaryKey;size:66"` // CrossTransfer data hash, as primary key
+	CrossTransferDataHash string `gorm:"primaryKey;size:66"` // CrossTransferData hash, as primary key
 	CrossTransferData     string `gorm:"size:5000"`          // CrossTransfer serialized data
 	StarcoinEvent         string `gorm:"size:10000"`         // Starcoin Event
 }

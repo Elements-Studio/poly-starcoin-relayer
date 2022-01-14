@@ -11,6 +11,10 @@ func CheckFee(sdk *bridge.SDK, chainId uint64, txId string, polyHash string) (re
 		TxId:     txId,
 		PolyHash: polyHash,
 	}
+	err = sdk.Node().CheckFee(state)
+	if err != nil {
+		return
+	}
 	if state[polyHash] == nil {
 		state[polyHash] = new(bridge.CheckFeeRequest)
 	}
