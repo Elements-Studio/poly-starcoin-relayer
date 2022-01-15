@@ -30,7 +30,7 @@ func TestInitGenersis(t *testing.T) {
 	fmt.Println("Init poly genesis ok.")
 }
 
-func TestLockAsset(t *testing.T) {
+func TestLockSTC(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)

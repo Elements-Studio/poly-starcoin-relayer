@@ -14,6 +14,7 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/db"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
+	"github.com/elements-studio/poly-starcoin-relayer/poly/msg"
 	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
@@ -22,8 +23,11 @@ import (
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology-crypto/signature"
 
+	"github.com/polynetwork/bridge-common/base"
 	"github.com/polynetwork/bridge-common/chains/bridge"
+	"github.com/polynetwork/bridge-common/util"
 	polysdk "github.com/polynetwork/poly-go-sdk"
+	pcommon "github.com/polynetwork/poly-go-sdk/common"
 	"github.com/polynetwork/poly/common"
 	vconfig "github.com/polynetwork/poly/consensus/vbft/config"
 	polytypes "github.com/polynetwork/poly/core/types"
@@ -292,6 +296,17 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 				sender := this.selectSender()
 				log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )",
 					tools.EncodeToHex(sender.acc.Address[:]), event.TxHash, height)
+
+				polyMsgTx, err := newPolyMsgTx(height, event, notify)
+				if err != nil {
+					log.Errorf("handleDepositEvents - failed to newPolyMsgTx, height: %d, poly hash(event.TxHash): %s", height, event.TxHash)
+					return false
+				}
+				//log.Debugf("handleDepositEvents - newPolyMsgTx, height: %d, poly hash(event.TxHash): %s", height, event.TxHash)
+				//todo: check fee...
+				_ = polyMsgTx
+
+				// //////////////////////////
 				// temporarily ignore the error for tx
 				//if !sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath) {
 				//	return false
@@ -314,6 +329,40 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 	}
 
 	return true
+}
+
+func newPolyMsgTx(height uint32, event *pcommon.SmartContactEvent, notify *pcommon.NotifyEventInfo) (*msg.Tx, error) {
+	// if notify.ContractAddress == this.config.PolyConfig.EntranceContractAddress {
+	// 	return nil, fmt.Errorf("notify.ContractAddress == this.config.PolyConfig.EntranceContractAddress")
+	// }
+	states := notify.States.([]interface{})
+	if len(states) < 6 {
+		return nil, fmt.Errorf("len(states) < 6")
+	}
+	method, _ := states[0].(string)
+	if method != "makeProof" {
+		return nil, fmt.Errorf("method != \"makeProof\"")
+	}
+
+	dstChain := uint64(states[2].(float64))
+	if dstChain == 0 {
+		return nil, fmt.Errorf("Invalid dst chain id in poly tx, hash: %s", event.TxHash)
+	}
+
+	tx := new(msg.Tx)
+	tx.DstChainId = dstChain
+	tx.PolyKey = states[5].(string)
+	tx.PolyHeight = uint32(height)
+	tx.PolyHash = event.TxHash
+	tx.TxType = msg.POLY
+	tx.TxId = states[3].(string)
+	tx.SrcChainId = uint64(states[1].(float64))
+	switch tx.SrcChainId {
+	case base.NEO, base.NEO3, base.ONT:
+		tx.TxId = util.ReverseHex(tx.TxId)
+	}
+
+	return tx, nil
 }
 
 func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
