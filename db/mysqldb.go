@@ -169,6 +169,14 @@ func (w *MySqlDB) GetPolyHeight() (uint32, error) {
 	return ch.Height, nil
 }
 
+func (w *MySqlDB) PutPolyTxRetry(tx *PolyTxRetry) error {
+	err := w.db.Create(tx).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (w *MySqlDB) GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error) {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{

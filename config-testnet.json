@@ -30,6 +30,7 @@
   "BoltDbPath": "./db-testnet",
   "MySqlDSN": "${MYSQL_DSN_TESTNET}",
   "RoutineNum": 64,
+  "CheckFee": false,
   "ProxyOrAssetContracts": [
     {
       "0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript": {

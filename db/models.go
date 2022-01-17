@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/celestiaorg/smt"
+	"github.com/elements-studio/poly-starcoin-relayer/poly/msg"
 	pcommon "github.com/polynetwork/poly/common"
 )
 
@@ -25,6 +26,44 @@ type StarcoinTxRetry struct {
 	StarcoinEvent         string `gorm:"size:10000"`         // Starcoin Event
 }
 
+type PolyTxRetry struct {
+	FromChainID       uint64 `gorm:"size:66;primaryKey"`
+	TxHash            string `gorm:"size:66;primaryKey"` // TxHash //TxData   string `gorm:"size:5000"`
+	BridgeTransaction string `gorm:"size:36000"`
+	PolyEvent         string `gorm:"size:5000"`
+	PolyTxHash        string `gorm:"size:66"`
+
+	FeeStatus string `gorm:"size:20;index"`
+	UpdatedAt int64  `gorm:"autoUpdateTime:milli;index"`
+
+	RetryCount int   `gorm:"default:0;NOT NULL"`
+	Version    int64 `gorm:"column:version;default:0;NOT NULL"`
+}
+
+func NewPolyTxRetry(txHash []byte, fromChainID uint64, bridgeTransaction []byte, polyEvent *msg.Tx) (*PolyTxRetry, error) {
+	ej, err := json.Marshal(polyEvent)
+	if err != nil {
+		return nil, err
+	}
+	return &PolyTxRetry{
+		TxHash:            hex.EncodeToString(txHash),
+		FromChainID:       fromChainID,
+		BridgeTransaction: hex.EncodeToString(bridgeTransaction),
+		PolyEvent:         string(ej),
+		PolyTxHash:        polyEvent.PolyHash,
+		//FeeStatus: ...,
+	}, nil
+}
+
+func (r *PolyTxRetry) GetPolyEvent() (*msg.Tx, error) {
+	e := &msg.Tx{}
+	err := json.Unmarshal([]byte(r.PolyEvent), e)
+	if err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
 type PolyTxProof struct {
 	Proof        string //`gorm:"size:5000"` // 	bytes memory proof,
 	Header       string //`gorm:"size:5000"` // 	bytes memory rawHeader,
@@ -33,22 +72,11 @@ type PolyTxProof struct {
 	HeaderSig    string //`gorm:"size:5000"` // 	bytes memory headerSig
 }
 
-// type BridgeTransaction struct {
-// 	header       *polytypes.Header
-// 	param        *common2.ToMerkleValue
-// 	headerProof  string
-// 	anchorHeader *polytypes.Header
-// 	polyTxHash   string
-// 	rawAuditPath []byte
-// 	hasPay       uint8
-// 	fee          string
-// }
-
 // Poly transaction(to Starcoin)
 type PolyTx struct {
 	TxIndex     uint64 `gorm:"primaryKey;autoIncrement:false"`
 	FromChainID uint64 `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"`
-	TxHash      string `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"` // Poly Tx. hash //TxData   string `gorm:"size:5000"`
+	TxHash      string `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"` // TxHash //TxData   string `gorm:"size:5000"`
 	PolyTxProof string `gorm:"size:36000"`
 	//------------------- for Non-Membership proof -------------------
 	SmtTxPath                string `gorm:"size:66;uniqueIndex"`

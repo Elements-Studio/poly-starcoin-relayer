@@ -31,6 +31,8 @@ type DB interface {
 
 	GetPolyHeight() (uint32, error)
 
+	PutPolyTxRetry(tx *PolyTxRetry) error
+
 	GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error)
 
 	PutPolyTx(tx *PolyTx) (uint64, error)

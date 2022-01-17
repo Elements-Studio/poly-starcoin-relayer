@@ -101,12 +101,17 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 		v.db = db
 		senders[i] = v
 	}
-	//if h.config.CheckFee {
-	bridgeSdk, err := bridge.WithOptions(0, servCfg.BridgeURLs, time.Minute, 10)
-	if err != nil {
-		log.Errorf("NewPolyManager - new bridge SDK error: %s\n", err.Error())
-		//ignore?
+
+	var bridgeSdk *bridge.SDK
+	if servCfg.CheckFee {
+		var err error
+		bridgeSdk, err = bridge.WithOptions(0, servCfg.BridgeURLs, time.Minute, 10)
+		if err != nil {
+			log.Errorf("NewPolyManager - new bridge SDK error: %s\n", err.Error())
+			return nil, err
+		}
 	}
+
 	mgr := &PolyManager{
 		exitChan:      make(chan int),
 		config:        servCfg,
@@ -293,25 +298,45 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					}
 				}
 				cnt++
+
+				if this.config.CheckFee {
+					polyMsgTx, err := newPolyMsgTx(height, event, notify)
+					if err != nil {
+						log.Errorf("handleDepositEvents - failed to newPolyMsgTx, height: %d, poly hash(event.TxHash): %s", height, event.TxHash)
+						return false
+					}
+					//log.Debugf("handleDepositEvents - newPolyMsgTx, height: %d, poly hash(event.TxHash): %s", height, event.TxHash)
+					bridgeTransaction := &BridgeTransaction{
+						header:       hdr,
+						param:        param,
+						headerProof:  hp,
+						anchorHeader: anchor,
+						//polyTxHash:   event.TxHash,
+						rawAuditPath: auditpath,
+						//hasPay:       ...,
+						//fee:          "0",
+					}
+					sink := common.NewZeroCopySink(nil)
+					bridgeTransaction.Serialization(sink)
+					txRetry, err := db.NewPolyTxRetry(param.TxHash, param.FromChainID, sink.Bytes(), polyMsgTx)
+					if err != nil {
+						log.Errorf("handleDepositEvents - failed to NewPolyTxRetry, not saved. Poly tx hash: %s", event.TxHash)
+						return false
+					}
+					err = this.db.PutPolyTxRetry(txRetry)
+					if err != nil {
+						log.Errorf("handleDepositEvents - failed to PutPolyTxRetry, not saved. Poly tx hash: %s", event.TxHash)
+						return false
+					}
+					// ////////////////////////////
+					//todo: check fee...
+					// ////////////////////////////
+				} //else {
 				sender := this.selectSender()
 				log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )",
 					tools.EncodeToHex(sender.acc.Address[:]), event.TxHash, height)
-
-				polyMsgTx, err := newPolyMsgTx(height, event, notify)
-				if err != nil {
-					log.Errorf("handleDepositEvents - failed to newPolyMsgTx, height: %d, poly hash(event.TxHash): %s", height, event.TxHash)
-					return false
-				}
-				//log.Debugf("handleDepositEvents - newPolyMsgTx, height: %d, poly hash(event.TxHash): %s", height, event.TxHash)
-				//todo: check fee...
-				_ = polyMsgTx
-
 				// //////////////////////////
-				// temporarily ignore the error for tx
-				//if !sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath) {
-				//	return false
-				//}
-				// //////////////////////////
+				// temporarily ignore the error for tx?
 				sent, saved := sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
 				if !sent {
 					log.Errorf("handleDepositEvents - failed to commitDepositEventsWithHeader, not sent. Poly tx hash: %s", event.TxHash)
@@ -320,6 +345,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					log.Errorf("handleDepositEvents - failed to commitDepositEventsWithHeader, not saved. Poly tx hash: %s", event.TxHash)
 					return false
 				}
+				//} end if check fee
 			}
 		}
 	}
@@ -400,7 +426,7 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 	return true, publickeys, nil
 }
 
-func (this *PolyManager) InitGenesis(height *uint32) error {
+func (this *PolyManager) InitStarcoinGenesis(height *uint32) error {
 	var (
 		cfgBlockNum uint32
 		err         error
@@ -476,7 +502,7 @@ func (this *PolyManager) InitGenesis(height *uint32) error {
 	return nil
 }
 
-func (this *PolyManager) LockAsset(from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128) (string, error) {
+func (this *PolyManager) LockStarcoinAsset(from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128) (string, error) {
 	senderAndPK := this.config.StarcoinConfig.PrivateKeys[0]
 	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(senderAndPK)
 	if err != nil {
@@ -604,6 +630,65 @@ type StarcoinSender struct {
 
 // return two bool value, first indicate if Starcoin transaction has been sent, second indicate if trasaction has been saved in DB
 func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) (bool, bool) {
+	headerData, rawProof, rawAnchor, sigs, err := getRawHeaderAndHeaderProofAndSig(header, param, headerProof, anchorHeader)
+	polyTx, err := db.NewPolyTx(param.TxHash, param.FromChainID, rawAuditPath, headerData, rawProof, rawAnchor, sigs, polyTxHash)
+	if err != nil {
+		log.Errorf("commitDepositEventsWithHeader - db.NewPolyTx error: %s", err.Error())
+		return false, false
+	}
+	return this.putPolyTxThenSend(polyTx)
+}
+
+func (this *StarcoinSender) putPolyTxThenSend(polyTx *db.PolyTx) (bool, bool) {
+	_, err := this.db.PutPolyTx(polyTx)
+	if err != nil {
+		log.Errorf("putPolyTxThenSend - db.PutPolyTx error: %s", err.Error())
+		duplicate, err := db.IsDuplicatePolyTxError(this.db, polyTx, err)
+		if err != nil {
+			return false, false
+		}
+		if duplicate {
+			log.Warnf("putPolyTxThenSend - duplicate poly tx. hash: %s", polyTx.TxHash)
+			return false, true
+		}
+		return false, false
+	}
+
+	return this.sendPolyTxToStarcoin(polyTx), true
+}
+
+func polyTxRetryToPolyTx(r *db.PolyTxRetry) (*db.PolyTx, error) {
+	bs, err := hex.DecodeString(r.BridgeTransaction)
+	if err != nil {
+		log.Errorf("polyTxRetryToPolyTx - hex.DecodeString(r.BridgeTransaction) error: %s", err.Error())
+		return nil, err
+	}
+	bridgeTransaction := new(BridgeTransaction)
+	err = bridgeTransaction.Deserialization(common.NewZeroCopySource(bs))
+	if err != nil {
+		log.Errorf("polyTxRetryToPolyTx - bridgeTransaction.Deserialization error: %s", err.Error())
+		return nil, err
+	}
+	txHash, err := hex.DecodeString(r.TxHash)
+	if err != nil {
+		log.Errorf("polyTxRetryToPolyTx - hex.DecodeString(r.TxHash) error: %s", err.Error())
+		return nil, err
+	}
+	e, err := r.GetPolyEvent()
+	if err != nil {
+		log.Errorf("polyTxRetryToPolyTx - GetPolyEvent error: %s", err.Error())
+		return nil, err
+	}
+	headerData, rawProof, rawAnchor, sigs, err := getRawHeaderAndHeaderProofAndSig(bridgeTransaction.header, bridgeTransaction.param, bridgeTransaction.headerProof, bridgeTransaction.anchorHeader)
+	polyTx, err := db.NewPolyTx(txHash, r.FromChainID, bridgeTransaction.rawAuditPath, headerData, rawProof, rawAnchor, sigs, e.PolyHash)
+	if err != nil {
+		log.Errorf("polyTxRetryToPolyTx - db.NewPolyTx error: %s", err.Error())
+		return nil, err
+	}
+	return polyTx, nil
+}
+
+func getRawHeaderAndHeaderProofAndSig(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header) ([]byte, []byte, []byte, []byte, error) {
 	var (
 		sigs       []byte
 		headerData []byte
@@ -666,27 +751,7 @@ func (this *StarcoinSender) commitDepositEventsWithHeader(header *polytypes.Head
 	// 	rawAnchor,    // Any header in current epoch consensus of Poly chain
 	// 	sigs)
 
-	polyTx, err := db.NewPolyTx(param.TxHash, param.FromChainID, rawAuditPath, headerData, rawProof, rawAnchor, sigs, polyTxHash)
-	if err != nil {
-		log.Errorf("commitDepositEventsWithHeader - db.NewPolyTx error: %s", err.Error())
-		return false, false
-	}
-
-	_, err = this.db.PutPolyTx(polyTx)
-	if err != nil {
-		log.Errorf("commitDepositEventsWithHeader - db.PutPolyTx error: %s", err.Error())
-		duplicate, err := db.IsDuplicatePolyTxError(this.db, polyTx, err)
-		if err != nil {
-			return false, false
-		}
-		if duplicate {
-			log.Warnf("commitDepositEventsWithHeader - duplicate poly tx. hash: %s", polyTx.TxHash)
-			return false, true
-		}
-		return false, false
-	}
-
-	return this.sendPolyTxToStarcoin(polyTx), true
+	return headerData, rawProof, rawAnchor, sigs, nil
 }
 
 func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
@@ -1013,3 +1078,78 @@ func encodeHeaderSigData(header *polytypes.Header) []byte {
 // 		}
 // 	}
 // }
+
+// ///////////////// BridgeTransaction //////////////////
+
+type BridgeTransaction struct {
+	header       *polytypes.Header
+	param        *common2.ToMerkleValue
+	headerProof  string
+	anchorHeader *polytypes.Header
+	//polyTxHash   string
+	rawAuditPath []byte
+	//hasPay       uint8
+	//fee          string
+}
+
+// func (this *BridgeTransaction) PolyHash() string {
+// 	return this.polyTxHash
+// }
+
+func (this *BridgeTransaction) Serialization(sink *common.ZeroCopySink) {
+	this.header.Serialization(sink)
+	this.param.Serialization(sink)
+	if this.headerProof != "" && this.anchorHeader != nil {
+		sink.WriteUint8(1)
+		sink.WriteString(this.headerProof)
+		this.anchorHeader.Serialization(sink)
+	} else {
+		sink.WriteUint8(0)
+	}
+	//sink.WriteString(this.polyTxHash)
+	sink.WriteVarBytes(this.rawAuditPath)
+	//sink.WriteUint8(this.hasPay)
+	//sink.WriteString(this.fee)
+}
+
+func (this *BridgeTransaction) Deserialization(source *common.ZeroCopySource) error {
+	this.header = new(polytypes.Header)
+	err := this.header.Deserialization(source)
+	if err != nil {
+		return err
+	}
+	this.param = new(common2.ToMerkleValue)
+	err = this.param.Deserialization(source)
+	if err != nil {
+		return err
+	}
+	anchor, eof := source.NextUint8()
+	if eof {
+		return fmt.Errorf("Waiting deserialize anchor error")
+	}
+	if anchor == 1 {
+		this.headerProof, eof = source.NextString()
+		if eof {
+			return fmt.Errorf("Waiting deserialize header proof error")
+		}
+		this.anchorHeader = new(polytypes.Header)
+		this.anchorHeader.Deserialization(source)
+	}
+	// this.polyTxHash, eof = source.NextString()
+	// if eof {
+	// 	return fmt.Errorf("Waiting deserialize poly tx hash error")
+	// }
+	this.rawAuditPath, eof = source.NextVarBytes()
+	if eof {
+		return fmt.Errorf("Waiting deserialize poly tx hash error")
+	}
+	// this.hasPay, eof = source.NextUint8()
+	// if eof {
+	// 	return fmt.Errorf("Waiting deserialize has pay error")
+	// }
+	// this.fee, eof = source.NextString()
+	// if eof {
+	// 	return fmt.Errorf("Waiting deserialize fee error")
+	// }
+	return nil
+}

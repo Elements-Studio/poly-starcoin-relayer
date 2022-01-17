@@ -46,6 +46,7 @@ type ServiceConfig struct {
 	BoltDbPath            string
 	MySqlDSN              string
 	RoutineNum            int64
+	CheckFee              bool
 	ProxyOrAssetContracts []map[string]map[string][]uint64
 }
 
