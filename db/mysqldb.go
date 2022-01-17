@@ -51,7 +51,7 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 	}
 	// Migrate the schema
 	db.AutoMigrate(&ChainHeight{})
-	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{}, &StarcoinTxRetry{}, &StarcoinTxCheck{})
+	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{}, &StarcoinTxRetry{}, &StarcoinTxCheck{}, &PolyTxRetry{})
 
 	w := new(MySqlDB)
 	w.db = db
@@ -167,6 +167,22 @@ func (w *MySqlDB) GetPolyHeight() (uint32, error) {
 		}
 	}
 	return ch.Height, nil
+}
+
+func (w *MySqlDB) GetPolyTxRetry(txHash string, fromChainID uint64) (*PolyTxRetry, error) {
+	r := PolyTxRetry{}
+	if err := w.db.Where(&PolyTxRetry{
+		TxHash:      txHash,
+		FromChainID: fromChainID,
+	}).First(&r).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			//fmt.Println("errors.Is(err, gorm.ErrRecordNotFound)")
+			return nil, nil
+		}
+	}
+	return &r, nil
 }
 
 func (w *MySqlDB) PutPolyTxRetry(tx *PolyTxRetry) error {
@@ -362,6 +378,23 @@ func IsDuplicatePolyTxError(db DB, tx *PolyTx, err error) (bool, error) {
 			return false, getErr
 		}
 		if bytes.Equal([]byte(tx.PolyTxProof), []byte(oldData.PolyTxProof)) {
+			return true, nil
+		} else {
+			return false, err
+		}
+	} else {
+		return false, err
+	}
+}
+
+func IsDuplicatePolyTxRetryError(db DB, r *PolyTxRetry, err error) (bool, error) {
+	var mysqlErr *gomysql.MySQLError
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 { // Duplicate entry error
+		oldData, getErr := db.GetPolyTxRetry(r.TxHash, r.FromChainID)
+		if getErr != nil {
+			return false, getErr
+		}
+		if bytes.Equal([]byte(r.BridgeTransaction), []byte(oldData.BridgeTransaction)) {
 			return true, nil
 		} else {
 			return false, err

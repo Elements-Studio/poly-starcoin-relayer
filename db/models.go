@@ -40,6 +40,21 @@ type PolyTxRetry struct {
 	Version    int64 `gorm:"column:version;default:0;NOT NULL"`
 }
 
+// type CheckFeeStatus int
+// const (
+// 	SKIP     CheckFeeStatus = -2 // Skip since not our tx
+// 	NOT_PAID CheckFeeStatus = -1 // Not paid or paid too low
+// 	MISSING  CheckFeeStatus = 0  // Tx not received yet
+// 	PAID     CheckFeeStatus = 1  // Paid and enough pass
+// )
+
+const (
+	FEE_STATUS_SKIP     string = "-2" // Skip since not our tx
+	FEE_STATUS_NOT_PAID string = "-1" // Not paid or paid too low
+	FEE_STATUS_MISSING  string = "0"  // Tx not received yet
+	FEE_STATUS_PAID     string = "1"  // Paid and enough pass
+)
+
 func NewPolyTxRetry(txHash []byte, fromChainID uint64, bridgeTransaction []byte, polyEvent *msg.Tx) (*PolyTxRetry, error) {
 	ej, err := json.Marshal(polyEvent)
 	if err != nil {
@@ -51,7 +66,7 @@ func NewPolyTxRetry(txHash []byte, fromChainID uint64, bridgeTransaction []byte,
 		BridgeTransaction: hex.EncodeToString(bridgeTransaction),
 		PolyEvent:         string(ej),
 		PolyTxHash:        polyEvent.PolyHash,
-		//FeeStatus: ...,
+		FeeStatus:         FEE_STATUS_NOT_PAID, //Is this ok?
 	}, nil
 }
 

@@ -215,6 +215,20 @@ func (this *PolyManager) MonitorFailedPolyTx() {
 	}
 }
 
+func (this *PolyManager) MonitorDeposit() {
+	monitorTicker := time.NewTicker(config.POLY_MONITOR_INTERVAL)
+	for {
+		select {
+		case <-monitorTicker.C:
+			//this.handleLockDepositEvents()
+			//TODO: check fee and handle poly tx.
+			time.Sleep(time.Second)
+		case <-this.exitChan:
+			return
+		}
+	}
+}
+
 func (this *PolyManager) handleDepositEvents(height uint32) bool {
 	lastEpoch := this.findCurEpochStartHeight()
 	hdr, err := this.polySdk.GetHeaderByHeight(height + 1)
@@ -325,11 +339,20 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					}
 					err = this.db.PutPolyTxRetry(txRetry)
 					if err != nil {
-						log.Errorf("handleDepositEvents - failed to PutPolyTxRetry, not saved. Poly tx hash: %s", event.TxHash)
-						return false
+						duplicate, derr := db.IsDuplicatePolyTxRetryError(this.db, txRetry, err)
+						if derr != nil {
+							log.Errorf("handleDepositEvents - call db.IsDuplicatePolyTxError() error: %s", derr.Error())
+						}
+						if duplicate {
+							log.Warnf("handleDepositEvents - duplicate PolyTxRetry. Poly tx hash: %s", event.TxHash)
+							// ignore
+						} else {
+							log.Errorf("handleDepositEvents - failed to PutPolyTxRetry, not saved. Poly tx hash: %s", event.TxHash)
+							return false
+						}
 					}
 					// ////////////////////////////
-					//todo: check fee...
+					// then check fee...
 					// ////////////////////////////
 				} //else {
 				sender := this.selectSender()

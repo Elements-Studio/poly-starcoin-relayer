@@ -245,6 +245,10 @@ func (w *BoltDB) GetPolyHeight() (uint32, error) {
 	return h, nil
 }
 
+func (w *BoltDB) GetPolyTxRetry(txHash string, fromChainID uint64) (*PolyTxRetry, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) PutPolyTxRetry(tx *PolyTxRetry) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
