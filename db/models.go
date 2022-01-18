@@ -26,20 +26,6 @@ type StarcoinTxRetry struct {
 	StarcoinEvent         string `gorm:"size:10000"`         // Starcoin Event
 }
 
-type PolyTxRetry struct {
-	FromChainID       uint64 `gorm:"size:66;primaryKey"`
-	TxHash            string `gorm:"size:66;primaryKey"` // TxHash //TxData   string `gorm:"size:5000"`
-	BridgeTransaction string `gorm:"size:36000"`
-	PolyEvent         string `gorm:"size:5000"`
-	PolyTxHash        string `gorm:"size:66"`
-
-	FeeStatus string `gorm:"size:20;index"`
-	UpdatedAt int64  `gorm:"autoUpdateTime:milli;index"`
-
-	RetryCount int   `gorm:"default:0;NOT NULL"`
-	Version    int64 `gorm:"column:version;default:0;NOT NULL"`
-}
-
 // type CheckFeeStatus int
 // const (
 // 	SKIP     CheckFeeStatus = -2 // Skip since not our tx
@@ -54,6 +40,28 @@ const (
 	FEE_STATUS_MISSING  string = "0"  // Tx not received yet
 	FEE_STATUS_PAID     string = "1"  // Paid and enough pass
 )
+
+type PolyTxRetry struct {
+	FromChainID       uint64 `gorm:"size:66;primaryKey"`
+	TxHash            string `gorm:"size:66;primaryKey"` // TxHash //TxData   string `gorm:"size:5000"`
+	BridgeTransaction string `gorm:"size:36000"`
+	PolyEvent         string `gorm:"size:5000"`
+	PolyTxHash        string `gorm:"size:66"` // only use this hash for memo
+
+	FeeStatus string `gorm:"size:20;index"`
+	UpdatedAt int64  `gorm:"autoUpdateTime:milli;index"`
+
+	CheckFeeCount int   `gorm:"default:0;NOT NULL"`
+	Version       int64 `gorm:"column:version;default:0;NOT NULL"`
+}
+
+func (o *PolyTxRetry) GetVersion() int64 {
+	return o.Version
+}
+
+func (o *PolyTxRetry) SetVersion(version int64) {
+	o.Version = version
+}
 
 func NewPolyTxRetry(txHash []byte, fromChainID uint64, bridgeTransaction []byte, polyEvent *msg.Tx) (*PolyTxRetry, error) {
 	ej, err := json.Marshal(polyEvent)

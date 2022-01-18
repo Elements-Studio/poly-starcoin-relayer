@@ -185,12 +185,65 @@ func (w *MySqlDB) GetPolyTxRetry(txHash string, fromChainID uint64) (*PolyTxRetr
 	return &r, nil
 }
 
+func (w *MySqlDB) GetAllPolyTxRetryNotPaid() ([]*PolyTxRetry, error) {
+	var list []*PolyTxRetry
+	if err := w.db.Where(&PolyTxRetry{
+		FeeStatus: FEE_STATUS_NOT_PAID,
+	}).Find(&list).Error; err != nil {
+		return nil, err
+	}
+	m := make([]*PolyTxRetry, 0, len(list))
+	for _, v := range list {
+		m = append(m, v)
+	}
+	return m, nil
+}
+
+func (w *MySqlDB) DeletePolyTxRetry(txHash string, fromChainID uint64) error {
+	tx := &PolyTxRetry{
+		TxHash:      txHash,
+		FromChainID: fromChainID,
+	}
+	return w.db.Delete(tx).Error
+}
+
 func (w *MySqlDB) PutPolyTxRetry(tx *PolyTxRetry) error {
 	err := w.db.Create(tx).Error
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (w *MySqlDB) IncreasePolyTxRetryCheckFeeCount(txHash string, fromChainID uint64, oldCount int) error {
+	px := PolyTxRetry{}
+	if err := w.db.Where(&PolyTxRetry{
+		TxHash:        txHash,
+		FromChainID:   fromChainID,
+		CheckFeeCount: oldCount,
+	}).First(&px).Error; err != nil {
+		return err
+	}
+	px.CheckFeeCount = px.CheckFeeCount + 1
+	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic need this!
+	//return w.db.Save(px).Error
+	// use optimistic lock here
+	return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
+		return model
+	}, 1, 1)
+}
+
+func (w *MySqlDB) SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, status string) error {
+	px := PolyTxRetry{}
+	if err := w.db.Where(&PolyTxRetry{
+		TxHash:      txHash,
+		FromChainID: fromChainID,
+	}).First(&px).Error; err != nil {
+		return err
+	}
+	px.FeeStatus = status
+	//px.UpdatedAt = currentTimeMillis()
+	return w.db.Save(px).Error
 }
 
 func (w *MySqlDB) GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error) {

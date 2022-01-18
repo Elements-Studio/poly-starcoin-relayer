@@ -249,7 +249,23 @@ func (w *BoltDB) GetPolyTxRetry(txHash string, fromChainID uint64) (*PolyTxRetry
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) GetAllPolyTxRetryNotPaid() ([]*PolyTxRetry, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) DeletePolyTxRetry(txHash string, fromChainID uint64) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) PutPolyTxRetry(tx *PolyTxRetry) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) IncreasePolyTxRetryCheckFeeCount(txHash string, fromChainID uint64, oldCount int) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, status string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 

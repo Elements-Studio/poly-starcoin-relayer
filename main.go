@@ -174,6 +174,7 @@ func initPolyServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolySdk, 
 		return
 	}
 	go mgr.MonitorChain()
+	go mgr.MonitorDeposit()
 	go mgr.MonitorFailedPolyTx()
 }
 

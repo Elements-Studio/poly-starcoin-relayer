@@ -64,12 +64,12 @@ func TestLockXETH(t *testing.T) {
 }
 
 func testLockStarcoinAsset(from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128, polyManager *PolyManager, t *testing.T) {
-	txHash, err := polyManager.LockStarcoinAsset(from_asset_hash, to_chain_id, to_address, amount)
+	txHash, err := LockStarcoinAsset(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], polyManager.config.StarcoinConfig.CCScriptModule, from_asset_hash, to_chain_id, to_address, amount)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println("LockAsset return hash: " + txHash)
+	fmt.Println("LockStarcoinAsset return hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
 	if err != nil {
 		fmt.Println(err)

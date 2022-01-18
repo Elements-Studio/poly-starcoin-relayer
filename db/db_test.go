@@ -46,6 +46,37 @@ func TestGetMethods(t *testing.T) {
 
 }
 
+func TestGetAllPolyTxRetryNotPaid(t *testing.T) {
+	db := testNetDB()
+
+	// // insert a PolyTxRetry
+	// uuid, _ := uuid.NewUUID()
+	// v, _ := uuid.MarshalBinary()
+	// r, err := NewPolyTxRetry(v, getTestFromChainId(), []byte{}, new(msg.Tx))
+	// if err != nil {
+	// 	t.FailNow()
+	// }
+	// err = db.PutPolyTxRetry(r)
+	// if err != nil {
+	// 	t.FailNow()
+	// }
+
+	list, err := db.GetAllPolyTxRetryNotPaid()
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(list)
+
+	for _, m := range list {
+		err := db.DeletePolyTxRetry(m.TxHash, m.FromChainID)
+		if err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+	}
+}
+
 func TestPutStarcoinTxCheck(t *testing.T) {
 	uuid, _ := uuid.NewUUID()
 	k := strings.Replace(uuid.String(), "-", "", -1)
@@ -291,6 +322,17 @@ func TestConcatFromChainIdAndTxHash(t *testing.T) {
 
 func devNetDB() DB {
 	config := config.NewServiceConfig("../config-devnet.json")
+	fmt.Println(config)
+	db, err := NewMySqlDB(config.MySqlDSN)
+	if err != nil {
+		fmt.Println(err)
+		panic(1)
+	}
+	return db
+}
+
+func testNetDB() DB {
+	config := config.NewServiceConfig("../config-testnet.json")
 	fmt.Println(config)
 	db, err := NewMySqlDB(config.MySqlDSN)
 	if err != nil {

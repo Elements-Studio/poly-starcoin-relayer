@@ -5,6 +5,16 @@ import (
 )
 
 func CheckFee(sdk *bridge.SDK, chainId uint64, txId string, polyHash string) (res *bridge.CheckFeeRequest, err error) {
+	// ///////////////////////////////////
+	//TODO: this return IS JUST for test
+	return &bridge.CheckFeeRequest{
+		ChainId:  chainId,
+		TxId:     txId,
+		PolyHash: polyHash,
+		Status:   bridge.PAID,
+	}, nil
+	// ///////////////////////////////////
+
 	state := map[string]*bridge.CheckFeeRequest{}
 	state[polyHash] = &bridge.CheckFeeRequest{
 		ChainId:  chainId,

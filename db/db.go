@@ -33,7 +33,15 @@ type DB interface {
 
 	GetPolyTxRetry(txHash string, fromChainID uint64) (*PolyTxRetry, error)
 
+	GetAllPolyTxRetryNotPaid() ([]*PolyTxRetry, error)
+
+	DeletePolyTxRetry(txHash string, fromChainID uint64) error
+
 	PutPolyTxRetry(tx *PolyTxRetry) error
+
+	IncreasePolyTxRetryCheckFeeCount(txHash string, fromChainID uint64, oldCount int) error
+	
+	SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, status string) error
 
 	GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error)
 
