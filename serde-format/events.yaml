@@ -20,3 +20,20 @@ CrossChainEvent:
     - toChainId: U64
     - toContract: BYTES
     - rawData: BYTES
+
+LockEvent:
+  STRUCT:
+    - fromAssetHash: 
+        TYPENAME: TokenCode
+    - fromAddress: BYTES
+    - toChainId: U64
+    - toAssetHash: BYTES
+    - toAddress: BYTES
+    - amount: U128
+
+UnlockEvent:
+  STRUCT:
+    - toAssetHash: BYTES
+    - toAddress: BYTES
+    - amount: U128
+
