@@ -2,14 +2,27 @@ package manager
 
 import (
 	"context"
+	"encoding/hex"
+	"math/big"
 
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
+	stcpolyevts "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 	"github.com/starcoinorg/starcoin-go/types"
 )
+
+func GetTokenCodeString(tc *stcpolyevts.TokenCode) string {
+	return "0x" + hex.EncodeToString(tc.Address[:]) + "::" + tc.Module + "::" + tc.Name
+}
+
+func Uint128ToBigInt(u *serde.Uint128) *big.Int {
+	h := new(big.Int).SetUint64(u.High)
+	l := new(big.Int).SetUint64(u.Low)
+	return new(big.Int).SetBytes(append(h.Bytes(), l.Bytes()...))
+}
 
 // type CrossChainManager struct {
 // 	starcoinClient *stcclient.StarcoinClient
