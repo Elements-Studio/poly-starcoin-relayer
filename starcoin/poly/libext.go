@@ -136,3 +136,14 @@ func EncodeEmptyArgsTxPaylaod(module string, function string) diemtypes.Transact
 		},
 	}
 }
+
+func EncodeU64AndU8TxPaylaod(module string, function string, u1 uint64, u2 uint8) diemtypes.TransactionPayload {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: diemtypes.Identifier(function),
+			TyArgs:   []diemtypes.TypeTag{},
+			Args:     [][]byte{encode_u64_argument(u1), encode_u8_argument(u2)},
+		},
+	}
+}

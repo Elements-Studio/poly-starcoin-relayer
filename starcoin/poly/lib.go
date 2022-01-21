@@ -331,3 +331,13 @@ func encode_u64_argument(arg uint64) []byte {
 
 	panic("Unable to serialize argument of type u64")
 }
+
+func encode_u8_argument(arg uint8) []byte {
+
+	s := bcs.NewSerializer()
+	if err := s.SerializeU8(arg); err == nil {
+		return s.GetBytes()
+	}
+
+	panic("Unable to serialize argument of type u64")
+}

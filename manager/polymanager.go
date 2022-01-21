@@ -568,8 +568,8 @@ func (this *PolyManager) InitStarcoinGenesis(height *uint32) error {
 		log.Errorf("InitGenesis - WaitTransactionConfirm error: %s", err.Error())
 		return err
 	} else if !ok {
-		log.Errorf("InitGenesis - WaitTransactionConfirm failed.")
-		return fmt.Errorf("WaitTransactionConfirm failed. error: %v", err)
+		log.Errorf("InitGenesis - WaitTransactionConfirm failed(unknown error).")
+		return fmt.Errorf("WaitTransactionConfirm failed(unknown error)")
 	}
 	err = this.db.UpdatePolyHeight(cfgBlockNum)
 	if err != nil {
@@ -977,13 +977,13 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 
 	hdrhash := header.Hash()
 	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
-	// TODO: handle error???
 	if isSuccess {
 		log.Infof("successful to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 	} else {
-		log.Errorf("failed to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
-			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
+		// TODO: handle error???
+		log.Errorf("failed to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s), error: %v",
+			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash, err)
 	}
 	return true
 }
@@ -1025,14 +1025,14 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 
 	//isSuccess := this.waitTransactionConfirm(txInfo.polyTxHash, hash)
 	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
-	// TODO: hanlde error???
 	if isSuccess {
 		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 		this.db.SetPolyTxStatusProcessed(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 	} else {
-		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
-			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
+		// TODO: hanlde error???
+		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s), error: %v",
+			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash, err)
 		err := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 		if err != nil {
 			log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)

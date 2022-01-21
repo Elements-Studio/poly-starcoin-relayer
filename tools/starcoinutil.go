@@ -124,6 +124,7 @@ type StarcoinAccount struct {
 	//URL     URL            `json:"url"`     // Optional resource locator within a backend
 }
 
+// return `false, nil` for unknown error.
 func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeout time.Duration) (bool, error) {
 	monitorTicker := time.NewTicker(time.Second)
 	exitTicker := time.NewTicker(timeout)
@@ -153,7 +154,7 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 				continue // TODO: return false on some statuses???
 			}
 		case <-exitTicker.C:
-			return false, fmt.Errorf("WaitTransactionConfirm exceed timeout %v", timeout)
+			return false, nil //fmt.Errorf("WaitTransactionConfirm exceed timeout %v", timeout)
 		}
 	}
 }
