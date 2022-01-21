@@ -13,8 +13,9 @@ import (
 
 func TestFetchLockEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-	// tx, _ := starcoinClient.GetTransactionByHash(context.Background(), "0xe2ad6bfeed3f5c96236c348556cde88d31f2336cd505be8b5d6ed1293ed7cf90")
-	// fmt.Println(tx.BlockNumber)
+	// tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0xe2ad6bfeed3f5c96236c348556cde88d31f2336cd505be8b5d6ed1293ed7cf90")
+	// fmt.Println(tx.GasUsed)
+	// return
 	address := "0x18351d311d32201149a4df2a9fc2db8a"
 	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::LockProxy::LockEvent"
 	height := uint64(2977050)
@@ -64,8 +65,9 @@ func TestFetchLockEvent(t *testing.T) {
 
 func TestFetchUnlockEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-	// tx, _ := starcoinClient.GetTransactionByHash(context.Background(), "0x08bc1d3e076c75519f1d2bdea08b980e5e2c7ec62b56136f038012e4333f541a")
-	// fmt.Println(tx.BlockNumber)
+	// tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0x08bc1d3e076c75519f1d2bdea08b980e5e2c7ec62b56136f038012e4333f541a")
+	// fmt.Println(tx.GasUsed)
+	// return
 	address := "0x18351d311d32201149a4df2a9fc2db8a"
 	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::LockProxy::UnlockEvent"
 	height := uint64(2977211)

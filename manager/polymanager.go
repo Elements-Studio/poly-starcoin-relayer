@@ -981,7 +981,9 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 		log.Infof("successful to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 	} else {
-		// TODO: handle error???
+		if err != nil {
+			log.Infof("failed to relay poly header to starcoin, error: %s", err.Error())
+		}
 		log.Errorf("failed to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s), error: %v",
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash, err)
 	}
@@ -1030,7 +1032,9 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 		this.db.SetPolyTxStatusProcessed(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 	} else {
-		// TODO: hanlde error???
+		if err != nil {
+			log.Infof("failed to relay tx to starcoin, error: %s", err.Error())
+		}
 		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s), error: %v",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash, err)
 		err := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
