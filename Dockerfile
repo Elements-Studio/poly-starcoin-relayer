@@ -12,7 +12,7 @@ ENV BIN_NAME="poly-starcoin-relayer_${goos}_${goArch}"
 
 WORKDIR /poly-starcoin-relayer
 COPY ./ .
-RUN go install
+RUN go install -tags testnet
 RUN GOOS=$goos GOARCH=$goArch go build -tags testnet -ldflags "-X main.GitCommit=${GIT_COMMIT}${GIT_DIRTY}" -o $BIN_NAME
 # TODO: just use testnet for TEST now!!! 
 RUN ls -la /poly-starcoin-relayer
