@@ -284,16 +284,21 @@ func (this *StarcoinManager) rollBackToCommAncestor() {
 			continue // TODO: is this ok??
 		}
 		if bytes.Equal(hdrhash, raw) {
-			// // ---------------- debug code... -------------------
+			// // ---------------- debug code start... -------------------
 			// hdrInPoly, err := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 			// 	append(append([]byte(scom.HEADER_INDEX), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), raw...))
-			// log.Warnf("rollBackToCommAncestor - header in poly: %s", hex.EncodeToString(hdrInPoly))
-			// fmt.Println(err)
-			// // ---------------- debug code... -------------------
+			// if err != nil {
+			// 	log.Debugf("rollBackToCommAncestor - GetStorage error: %s", err.Error())
+			// }
+			// log.Debugf("rollBackToCommAncestor - header in poly: %s", hex.EncodeToString(hdrInPoly))
+			// // ---------------- debug code end -------------------
 			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(block hash) %s(header hash) (number: %d)", hdr.BlockHash, hex.EncodeToString(hdrhash), this.currentHeight)
 			break
-			//} else {
-			//log.Warnf("rollBackToCommAncestor - hdr hash: %s, raw hash from poly: %s", hex.EncodeToString(hdrhash), hex.EncodeToString(raw))
+		} else {
+			// // ---------------- debug code start... -------------------
+			// log.Debug("!bytes.Equal(hdrhash, raw)")
+			// log.Debugf("rollBackToCommAncestor - hdr hash: %s, raw hash from poly: %s, current height: %d", hex.EncodeToString(hdrhash), hex.EncodeToString(raw), this.currentHeight)
+			// // ---------------- debug code end -------------------
 		}
 	}
 	this.header4sync = make([][]byte, 0)
