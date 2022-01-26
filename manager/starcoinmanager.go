@@ -295,8 +295,10 @@ func (this *StarcoinManager) rollBackToCommAncestor() {
 			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(block hash) %s(header hash) (number: %d)", hdr.BlockHash, hex.EncodeToString(hdrhash), this.currentHeight)
 			break
 		} else {
+			if this.currentHeight%10 == 0 {
+				log.Infof("rollBackToCommAncestor - rolling back..., current height: %d", this.currentHeight)
+			}
 			// // ---------------- debug code start... -------------------
-			// log.Debug("!bytes.Equal(hdrhash, raw)")
 			// log.Debugf("rollBackToCommAncestor - hdr hash: %s, raw hash from poly: %s, current height: %d", hex.EncodeToString(hdrhash), hex.EncodeToString(raw), this.currentHeight)
 			// // ---------------- debug code end -------------------
 		}
