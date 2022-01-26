@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poly-starcoin-relayer-deployment-testnet
+  labels:
+    app: poly-starcoin-relayer-testnet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: poly-starcoin-relayer-testnet
+  template:
+    metadata:
+      labels:
+        app: poly-starcoin-relayer-testnet
+    spec:
+      containers:
+      - name: poly-starcoin-relayer-testnet
+        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-4109a51
+        ports:
+        - containerPort: 8600
+        env:
+        - name: MYSQL_DSN_TESTNET
+          valueFrom:
+            secretKeyRef:
+              name: poly-starcoin-relayer-testnet-sercets
+              key: MYSQL_DSN_TESTNET
+        - name: PRIVATE_KEY_18351d3
+          valueFrom:
+            secretKeyRef:
+              name: poly-starcoin-relayer-testnet-sercets
+              key: PRIVATE_KEY_18351d3
+        - name: POLY_WALLET_PASSWORD
+          value: "123456"
+        - name: POLY_WALLET_FILE
+          value: "/etc/polynetwork/poly/wallet.dat"
+        volumeMounts:
+        - name: poly-wallet-file
+          mountPath: "/etc/polynetwork"
+          readOnly: true
+
+      volumes:
+      - name: poly-wallet-file
+        secret:
+          secretName: poly-starcoin-relayer-testnet-sercets
+          items:
+          - key: POLY_WALLET_JSON
+            path: "poly/wallet.dat"
