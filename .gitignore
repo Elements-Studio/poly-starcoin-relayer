@@ -5,3 +5,4 @@ db/test-boltdb
 starcoin_test*.json
 AWW_ARM_fight_test.go
 test.png
+.vscode
