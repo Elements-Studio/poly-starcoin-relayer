@@ -156,6 +156,193 @@ func BcsDeserializeCrossChainEvent(input []byte) (CrossChainEvent, error) {
 	return obj, err
 }
 
+type CrossChainFeeLockEvent struct {
+	FromAssetHash TokenCode
+	Sender        AccountAddress
+	ToChainId     uint64
+	ToAddress     []byte
+	Net           serde.Uint128
+	Fee           serde.Uint128
+	Id            serde.Uint128
+}
+
+func (obj *CrossChainFeeLockEvent) Serialize(serializer serde.Serializer) error {
+	if err := serializer.IncreaseContainerDepth(); err != nil {
+		return err
+	}
+	if err := obj.FromAssetHash.Serialize(serializer); err != nil {
+		return err
+	}
+	if err := obj.Sender.Serialize(serializer); err != nil {
+		return err
+	}
+	if err := serializer.SerializeU64(obj.ToChainId); err != nil {
+		return err
+	}
+	if err := serializer.SerializeBytes(obj.ToAddress); err != nil {
+		return err
+	}
+	if err := serializer.SerializeU128(obj.Net); err != nil {
+		return err
+	}
+	if err := serializer.SerializeU128(obj.Fee); err != nil {
+		return err
+	}
+	if err := serializer.SerializeU128(obj.Id); err != nil {
+		return err
+	}
+	serializer.DecreaseContainerDepth()
+	return nil
+}
+
+func (obj *CrossChainFeeLockEvent) BcsSerialize() ([]byte, error) {
+	if obj == nil {
+		return nil, fmt.Errorf("Cannot serialize null object")
+	}
+	serializer := bcs.NewSerializer()
+	if err := obj.Serialize(serializer); err != nil {
+		return nil, err
+	}
+	return serializer.GetBytes(), nil
+}
+
+func DeserializeCrossChainFeeLockEvent(deserializer serde.Deserializer) (CrossChainFeeLockEvent, error) {
+	var obj CrossChainFeeLockEvent
+	if err := deserializer.IncreaseContainerDepth(); err != nil {
+		return obj, err
+	}
+	if val, err := DeserializeTokenCode(deserializer); err == nil {
+		obj.FromAssetHash = val
+	} else {
+		return obj, err
+	}
+	if val, err := DeserializeAccountAddress(deserializer); err == nil {
+		obj.Sender = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeU64(); err == nil {
+		obj.ToChainId = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeBytes(); err == nil {
+		obj.ToAddress = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeU128(); err == nil {
+		obj.Net = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeU128(); err == nil {
+		obj.Fee = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeU128(); err == nil {
+		obj.Id = val
+	} else {
+		return obj, err
+	}
+	deserializer.DecreaseContainerDepth()
+	return obj, nil
+}
+
+func BcsDeserializeCrossChainFeeLockEvent(input []byte) (CrossChainFeeLockEvent, error) {
+	if input == nil {
+		var obj CrossChainFeeLockEvent
+		return obj, fmt.Errorf("Cannot deserialize null array")
+	}
+	deserializer := bcs.NewDeserializer(input)
+	obj, err := DeserializeCrossChainFeeLockEvent(deserializer)
+	if err == nil && deserializer.GetBufferOffset() < uint64(len(input)) {
+		return obj, fmt.Errorf("Some input bytes were not read")
+	}
+	return obj, err
+}
+
+type CrossChainFeeSpeedUpEvent struct {
+	FromAssetHash TokenCode
+	Sender        AccountAddress
+	TxHash        []byte
+	Efee          serde.Uint128
+}
+
+func (obj *CrossChainFeeSpeedUpEvent) Serialize(serializer serde.Serializer) error {
+	if err := serializer.IncreaseContainerDepth(); err != nil {
+		return err
+	}
+	if err := obj.FromAssetHash.Serialize(serializer); err != nil {
+		return err
+	}
+	if err := obj.Sender.Serialize(serializer); err != nil {
+		return err
+	}
+	if err := serializer.SerializeBytes(obj.TxHash); err != nil {
+		return err
+	}
+	if err := serializer.SerializeU128(obj.Efee); err != nil {
+		return err
+	}
+	serializer.DecreaseContainerDepth()
+	return nil
+}
+
+func (obj *CrossChainFeeSpeedUpEvent) BcsSerialize() ([]byte, error) {
+	if obj == nil {
+		return nil, fmt.Errorf("Cannot serialize null object")
+	}
+	serializer := bcs.NewSerializer()
+	if err := obj.Serialize(serializer); err != nil {
+		return nil, err
+	}
+	return serializer.GetBytes(), nil
+}
+
+func DeserializeCrossChainFeeSpeedUpEvent(deserializer serde.Deserializer) (CrossChainFeeSpeedUpEvent, error) {
+	var obj CrossChainFeeSpeedUpEvent
+	if err := deserializer.IncreaseContainerDepth(); err != nil {
+		return obj, err
+	}
+	if val, err := DeserializeTokenCode(deserializer); err == nil {
+		obj.FromAssetHash = val
+	} else {
+		return obj, err
+	}
+	if val, err := DeserializeAccountAddress(deserializer); err == nil {
+		obj.Sender = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeBytes(); err == nil {
+		obj.TxHash = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeU128(); err == nil {
+		obj.Efee = val
+	} else {
+		return obj, err
+	}
+	deserializer.DecreaseContainerDepth()
+	return obj, nil
+}
+
+func BcsDeserializeCrossChainFeeSpeedUpEvent(input []byte) (CrossChainFeeSpeedUpEvent, error) {
+	if input == nil {
+		var obj CrossChainFeeSpeedUpEvent
+		return obj, fmt.Errorf("Cannot deserialize null array")
+	}
+	deserializer := bcs.NewDeserializer(input)
+	obj, err := DeserializeCrossChainFeeSpeedUpEvent(deserializer)
+	if err == nil && deserializer.GetBufferOffset() < uint64(len(input)) {
+		return obj, fmt.Errorf("Some input bytes were not read")
+	}
+	return obj, err
+}
+
 type LockEvent struct {
 	FromAssetHash TokenCode
 	FromAddress   []byte

@@ -23,7 +23,7 @@ CrossChainEvent:
 
 LockEvent:
   STRUCT:
-    - fromAssetHash: 
+    - fromAssetHash:
         TYPENAME: TokenCode
     - fromAddress: BYTES
     - toChainId: U64
@@ -37,3 +37,23 @@ UnlockEvent:
     - toAddress: BYTES
     - amount: U128
 
+CrossChainFeeLockEvent:
+  STRUCT:
+    - from_asset_hash:
+        TYPENAME: TokenCode
+    - sender:
+        TYPENAME: AccountAddress
+    - to_chain_id: U64
+    - to_address: BYTES
+    - net: U128
+    - fee: U128
+    - id: U128
+
+CrossChainFeeSpeedUpEvent:
+  STRUCT:
+    - from_asset_hash:
+        TYPENAME: TokenCode
+    - sender:
+        TYPENAME: AccountAddress
+    - tx_hash: BYTES
+    - efee: U128

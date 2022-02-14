@@ -108,3 +108,57 @@ func TestFetchUnlockEvent(t *testing.T) {
 		fmt.Println(Uint128ToBigInt(&unlockEvent.Amount))
 	}
 }
+
+func TestFetchCrossChainFeeLockEvents(t *testing.T) {
+	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
+	// tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0xe2ad6bfeed3f5c96236c348556cde88d31f2336cd505be8b5d6ed1293ed7cf90")
+	// fmt.Println(tx.GasUsed)
+	// return
+	address := "0x18351d311d32201149a4df2a9fc2db8a"
+	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::LockProxy::CrossChainFeeLockEvent"
+	height := uint64(9999999999999999999) //todo: no CrossChainFeeLockEvent on barnard yet!
+	eventFilter := &stcclient.EventFilter{
+		Address:   []string{address},
+		TypeTags:  []string{typeTag},
+		FromBlock: height,
+		ToBlock:   &height,
+	}
+
+	events, err := starcoinClient.GetEvents(context.Background(), eventFilter)
+	if err != nil {
+		fmt.Printf("FetchCrossChainFeeLockEvents - GetEvents error :%s", err.Error())
+		t.FailNow()
+	}
+	if events == nil {
+		fmt.Printf("FetchCrossChainFeeLockEvents - no events found.")
+		t.FailNow()
+	}
+
+	for _, evt := range events {
+		//evt := events.Event
+		//fmt.Println(evt)
+		evtData, err := tools.HexToBytes(evt.Data)
+		if err != nil {
+			fmt.Printf("FetchCrossChainFeeLockEvents - hex.DecodeString error :%s", err.Error())
+			t.FailNow()
+		}
+		feeEvent, err := stcpolyevts.BcsDeserializeCrossChainFeeLockEvent(evtData)
+		// j, _ := json.Marshal(lockEvent)
+		// fmt.Println(string(j))
+		fmt.Println("/////////////// CrossChainFeeLockEvent info. ///////////////")
+		fmt.Println("--------------- FromAssetHash ----------------")
+		fmt.Println(GetTokenCodeString(&feeEvent.FromAssetHash))
+		fmt.Println("--------------- Sender ---------------")
+		fmt.Println(hex.EncodeToString(feeEvent.Sender[:]))
+		fmt.Println("--------------- ToChainId ----------------")
+		fmt.Println(feeEvent.ToChainId)
+		fmt.Println("--------------- ToAddress ----------------")
+		fmt.Println(hex.EncodeToString(feeEvent.ToAddress))
+		fmt.Println("--------------- Net ----------------")
+		fmt.Println(Uint128ToBigInt(&feeEvent.Net))
+		fmt.Println("--------------- Fee ----------------")
+		fmt.Println(Uint128ToBigInt(&feeEvent.Fee))
+		fmt.Println("--------------- Id ----------------")
+		fmt.Println(Uint128ToBigInt(&feeEvent.Id))
+	}
+}
