@@ -116,7 +116,7 @@ func TestFetchCrossChainFeeLockEvents(t *testing.T) {
 	// return
 	address := "0x18351d311d32201149a4df2a9fc2db8a"
 	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::LockProxy::CrossChainFeeLockEvent"
-	height := uint64(9999999999999999999) //todo: no CrossChainFeeLockEvent on barnard yet!
+	height := uint64(3414132) //CrossChainFeeLockEvent on barnard
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
 		TypeTags:  []string{typeTag},

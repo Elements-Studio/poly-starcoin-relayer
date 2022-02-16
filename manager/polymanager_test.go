@@ -30,6 +30,23 @@ func TestInitGenersis(t *testing.T) {
 	fmt.Println("Init poly genesis ok.")
 }
 
+func TestInitFeeEventStore(t *testing.T) {
+	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	fmt.Println(polyManager)
+	txPayload := stcpoly.EncodeEmptyArgsTxPaylaod(polyManager.config.StarcoinConfig.CCScriptModule, "init_fee_event_store")
+	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], &txPayload)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
+	if err != nil {
+		fmt.Print(err)
+		t.FailNow()
+	}
+	fmt.Println(ok, err)
+}
+
 func TestLockSTC(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
@@ -42,6 +59,28 @@ func TestLockSTC(t *testing.T) {
 		Low:  10000000,
 	}
 	testLockStarcoinAsset(from_asset_hash, to_chain_id, to_address, amount, polyManager, t)
+}
+
+func TestLockSTCWithFee(t *testing.T) {
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	fmt.Println(polyManager)
+	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
+	var to_chain_id uint64 = 318                                              // 318
+	to_address, _ := tools.HexToBytes("0x18351d311d32201149a4df2a9fc2db8a")
+	amount := serde.Uint128{
+		High: 0,
+		Low:  10000000,
+	}
+	fee := serde.Uint128{
+		High: 0,
+		Low:  5000000,
+	}
+	id := serde.Uint128{
+		High: 0,
+		Low:  1,
+	}
+	testLockStarcoinAssetWithFee(from_asset_hash, to_chain_id, to_address, amount, fee, id, polyManager, t)
 }
 
 func TestLockXETH(t *testing.T) {
@@ -70,6 +109,21 @@ func testLockStarcoinAsset(from_asset_hash []byte, to_chain_id uint64, to_addres
 		t.FailNow()
 	}
 	fmt.Println("LockStarcoinAsset return hash: " + txHash)
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(ok, err)
+}
+
+func testLockStarcoinAssetWithFee(from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128, fee serde.Uint128, id serde.Uint128, polyManager *PolyManager, t *testing.T) {
+	txHash, err := LockStarcoinAssetWithFee(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], polyManager.config.StarcoinConfig.CCScriptModule, from_asset_hash, to_chain_id, to_address, amount, fee, id)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("LockStarcoinAssetWithFee return hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
 	if err != nil {
 		fmt.Println(err)
