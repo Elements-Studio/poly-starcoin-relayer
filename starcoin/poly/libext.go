@@ -85,11 +85,11 @@ func EncodeLockAssetTxPayload(module string, from_asset_hash []byte, to_chain_id
 	}
 }
 
-func EncodeLockAssetWithFeeTxPayload(module string, from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128, fee serde.Uint128, id serde.Uint128) diemtypes.TransactionPayload {
+func EncodeLockAssetWithStcFeeTxPayload(module string, from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128, fee serde.Uint128, id serde.Uint128) diemtypes.TransactionPayload {
 	return &diemtypes.TransactionPayload__ScriptFunction{
 		diemtypes.ScriptFunction{
 			Module:   *ParseModuleId(module),
-			Function: "lock_with_fee",
+			Function: "lock_with_stc_fee",
 			TyArgs:   []diemtypes.TypeTag{},
 			Args:     [][]byte{encode_u8vector_argument(from_asset_hash), encode_u64_argument(to_chain_id), encode_u8vector_argument(to_address), encode_u128_argument(amount), encode_u128_argument(fee), encode_u128_argument(id)},
 		},

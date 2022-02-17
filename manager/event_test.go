@@ -18,7 +18,7 @@ func TestFetchLockEvent(t *testing.T) {
 	// return
 	address := "0x18351d311d32201149a4df2a9fc2db8a"
 	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::LockProxy::LockEvent"
-	height := uint64(2977050)
+	height := uint64(3422033) //3421831) //2977050)
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
 		TypeTags:  []string{typeTag},
@@ -56,6 +56,7 @@ func TestFetchLockEvent(t *testing.T) {
 		fmt.Println(lockEvent.ToChainId)
 		fmt.Println("--------------- ToAssetHash ----------------")
 		fmt.Println(string(lockEvent.ToAssetHash)) // if it is Token on Starcoin, asset hash is like: "0x00000000000000000000000000000001::STC::STC"
+		fmt.Println(hex.EncodeToString(lockEvent.ToAssetHash))
 		fmt.Println("--------------- ToAddress ----------------")
 		fmt.Println(hex.EncodeToString(lockEvent.ToAddress))
 		fmt.Println("--------------- Amount ----------------")
@@ -116,7 +117,7 @@ func TestFetchCrossChainFeeLockEvents(t *testing.T) {
 	// return
 	address := "0x18351d311d32201149a4df2a9fc2db8a"
 	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::LockProxy::CrossChainFeeLockEvent"
-	height := uint64(3414132) //CrossChainFeeLockEvent on barnard
+	height := uint64(3422033) //3421831) //3421382) //3421326) //3414132) //CrossChainFeeLockEvent on barnard
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
 		TypeTags:  []string{typeTag},

@@ -67,7 +67,7 @@ func LockStarcoinAsset(starcoinClient *stcclient.StarcoinClient, privateKeyConfi
 	return txHash, nil
 }
 
-func LockStarcoinAssetWithFee(starcoinClient *stcclient.StarcoinClient, privateKeyConfig map[string]string, ccScriptModule string, from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128, fee serde.Uint128, id serde.Uint128) (string, error) {
+func LockStarcoinAssetWithStcFee(starcoinClient *stcclient.StarcoinClient, privateKeyConfig map[string]string, ccScriptModule string, from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128, fee serde.Uint128, id serde.Uint128) (string, error) {
 	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(privateKeyConfig)
 	if err != nil {
 		log.Errorf("LockStarcoinAssetWithFee - Convert string to AccountAddress error:%s", err.Error())
@@ -83,7 +83,7 @@ func LockStarcoinAssetWithFee(starcoinClient *stcclient.StarcoinClient, privateK
 		log.Errorf("LockStarcoinAssetWithFee - GetAccountSequenceNumber error:%s", err.Error())
 		return "", err
 	}
-	txPayload := stcpoly.EncodeLockAssetWithFeeTxPayload(ccScriptModule, from_asset_hash, to_chain_id, to_address, amount, fee, id)
+	txPayload := stcpoly.EncodeLockAssetWithStcFeeTxPayload(ccScriptModule, from_asset_hash, to_chain_id, to_address, amount, fee, id)
 
 	userTx, err := starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT*4, seqNum)
 	if err != nil {
