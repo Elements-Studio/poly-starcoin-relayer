@@ -8,7 +8,7 @@
   "StarcoinConfig": {
     "SideChainId": 318,
     "RestURL": "https://barnard-seed.starcoin.org",
-    "ChainId": 254,
+    "ChainId": 251,
     "CCScriptModule": "0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript",
     "CCMModule": "0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript",
     "CCDModule": "0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript",
