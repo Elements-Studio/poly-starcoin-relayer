@@ -49,7 +49,7 @@ func TestInitFeeEventStore(t *testing.T) {
 
 func TestLockSTC(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
 	var to_chain_id uint64 = 318                                              // 318
@@ -63,7 +63,7 @@ func TestLockSTC(t *testing.T) {
 
 func TestLockSTCWithSTCFee(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
 	var to_chain_id uint64 = 318                                              // 318
@@ -85,11 +85,13 @@ func TestLockSTCWithSTCFee(t *testing.T) {
 
 func TestLockXETHWithSTCFee(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	from_asset_hash := []byte("0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH")     // XETH asset hash(asset ID.) on Starcoin
-	var to_chain_id uint64 = 2                                                      // to an ethereum network
-	to_address, _ := tools.HexToBytes("0x208D1Ae5bb7FD323ce6386C443473eD660825D46") // to an ethereum address
+	var from_asset_hash []byte
+	from_asset_hash = []byte("0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH") // XETH asset hash(asset ID.) on Starcoin
+	var to_chain_id uint64 = 2                                                 // to an ethereum network
+	var to_address []byte
+	to_address, _ = tools.HexToBytes("0x208D1Ae5bb7FD323ce6386C443473eD660825D46") // to an ethereum address
 	amount := serde.Uint128{
 		High: 0,
 		Low:  115555000000,
@@ -112,7 +114,7 @@ func TestLockXETH(t *testing.T) {
 	// //////////////////////////////////////////////////
 
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	from_asset_hash := []byte("0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH")     // XETH asset hash(asset ID.) on Starcoin
 	var to_chain_id uint64 = 2                                                      // to an ethereum network
@@ -197,7 +199,7 @@ func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, config *config.
 
 func TestBindXETHAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	fromAssetHash := []byte("0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH")          // asset hash on Starcoin
 	toChainId := uint64(2)                                                             // ethereum network
@@ -211,7 +213,7 @@ func TestBindXETHAssetHash(t *testing.T) {
 
 func TestBindSTCAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC") // asset hash on Starcoin
 	toChainId := uint64(318)                                                // a starcoin network
@@ -374,28 +376,42 @@ func TestGetPolyLastConfigBlockNumAtHeight(t *testing.T) {
 
 func getDevNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-devnet.json")
-	return getPolyManager(config, t)
+	p, err := getPolyManager(config)
+	if err != nil {
+		t.FailNow()
+	}
+	return p
 }
 
 func getTestNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-testnet.json")
-	return getPolyManager(config, t)
+	p, err := getPolyManager(config)
+	if err != nil {
+		t.FailNow()
+	}
+	return p
 }
 
-func getPolyManager(config *config.ServiceConfig, t *testing.T) *PolyManager {
+func getTestNetPolyManagerIgnoreError() *PolyManager {
+	config := config.NewServiceConfig("../config-testnet.json")
+	p, _ := getPolyManager(config)
+	return p
+}
+
+func getPolyManager(config *config.ServiceConfig) (*PolyManager, error) {
 	fmt.Println(config)
+	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
 	polySdk := polysdk.NewPolySdk()
-	setUpPoly(polySdk, config.PolyConfig.RestURL)
+	_ = setUpPoly(polySdk, config.PolyConfig.RestURL) // ignore error?
 	db, err := db.NewMySqlDB(config.MySqlDSN)
 	if err != nil {
-		t.FailNow()
+		return nil, err //t.FailNow()
 	}
-	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
 	polyManager, err := NewPolyManager(config, 0, polySdk, &starcoinClient, db)
 	if err != nil {
-		t.FailNow()
+		return nil, err //t.FailNow()
 	}
-	return polyManager
+	return polyManager, nil
 }
 
 func setUpPoly(poly *polysdk.PolySdk, RpcAddr string) error {
