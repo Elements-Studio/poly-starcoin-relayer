@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/antihax/optional v1.0.0 // indirect
+	github.com/blocktree/go-owcrypt v1.1.10 // indirect
 	github.com/boltdb/bolt v1.3.1
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/celestiaorg/smt v0.2.1-0.20210927133715-225e28d5599a // indirect

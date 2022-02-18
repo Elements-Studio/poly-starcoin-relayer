@@ -9,6 +9,7 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/db"
 	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
+	"github.com/joho/godotenv"
 	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
@@ -86,6 +87,7 @@ func TestLockSTCWithSTCFee(t *testing.T) {
 func TestLockXETHWithSTCFee(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	fmt.Println("================== polyManager ================")
 	fmt.Println(polyManager)
 	var from_asset_hash []byte
 	from_asset_hash = []byte("0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH") // XETH asset hash(asset ID.) on Starcoin
@@ -376,7 +378,7 @@ func TestGetPolyLastConfigBlockNumAtHeight(t *testing.T) {
 
 func getDevNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-devnet.json")
-	p, err := getPolyManager(config)
+	p, err := getPolyManager(config, false)
 	if err != nil {
 		t.FailNow()
 	}
@@ -385,7 +387,7 @@ func getDevNetPolyManager(t *testing.T) *PolyManager {
 
 func getTestNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-testnet.json")
-	p, err := getPolyManager(config)
+	p, err := getPolyManager(config, false)
 	if err != nil {
 		t.FailNow()
 	}
@@ -393,23 +395,38 @@ func getTestNetPolyManager(t *testing.T) *PolyManager {
 }
 
 func getTestNetPolyManagerIgnoreError() *PolyManager {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		fmt.Println("Load .env file failed...")
+	}
 	config := config.NewServiceConfig("../config-testnet.json")
-	p, _ := getPolyManager(config)
+	//fmt.Println(config.StarcoinConfig.PrivateKeys)
+	p, _ := getPolyManager(config, true)
+	println("============= Ignored above errors ===============")
 	return p
 }
 
-func getPolyManager(config *config.ServiceConfig) (*PolyManager, error) {
+func getPolyManager(config *config.ServiceConfig, ignoreErr bool) (*PolyManager, error) {
 	fmt.Println(config)
 	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
 	polySdk := polysdk.NewPolySdk()
-	_ = setUpPoly(polySdk, config.PolyConfig.RestURL) // ignore error?
+	err := setUpPoly(polySdk, config.PolyConfig.RestURL)
+	if err != nil && !ignoreErr {
+		return nil, err //t.FailNow()
+	}
 	db, err := db.NewMySqlDB(config.MySqlDSN)
-	if err != nil {
+	if err != nil && !ignoreErr {
 		return nil, err //t.FailNow()
 	}
 	polyManager, err := NewPolyManager(config, 0, polySdk, &starcoinClient, db)
-	if err != nil {
+	if err != nil && !ignoreErr {
 		return nil, err //t.FailNow()
+	}
+	if ignoreErr && polyManager == nil {
+		polyManager = new(PolyManager)
+		polyManager.config = config
+		polyManager.starcoinClient = &starcoinClient
+		polyManager.polySdk = polySdk
 	}
 	return polyManager, nil
 }

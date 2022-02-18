@@ -3,8 +3,11 @@ package manager
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"math/big"
 
+	"github.com/blocktree/go-owcrypt"
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
 	stcpolyevts "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
@@ -87,21 +90,23 @@ func LockStarcoinAssetWithStcFee(starcoinClient *stcclient.StarcoinClient, priva
 		return "", err
 	}
 	txPayload := stcpoly.EncodeLockAssetWithStcFeeTxPayload(ccScriptModule, from_asset_hash, to_chain_id, to_address, amount, fee, id)
-	// bs, _ := txPayload.BcsSerialize()
-	// println(hex.EncodeToString(bs))
-	// println("------------------------")
+	bs, _ := txPayload.BcsSerialize()
+	fmt.Println("------------ Txn payload ------------")
+	fmt.Println(hex.EncodeToString(bs))
+	fmt.Println("------------------------")
 	// return "", errors.New("Testing... todo: remove some lines...")
 	userTx, err := starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT*4, seqNum)
 	if err != nil {
 		log.Errorf("LockStarcoinAssetWithFee - BuildRawUserTransaction error:%s", err.Error())
 		return "", err
 	}
-	// publicKey, _ := owcrypt.GenPubkey(senderPrivateKey, owcrypt.ECC_CURVE_ED25519_NORMAL)
-	// dry_run_result, err := starcoinClient.DryRunRaw(context.Background(), *userTx, publicKey)
-	// //println(dry_run_result)
-	// dry_run_resutl_bs, _ := json.Marshal(dry_run_result)
-	// println("starcoinClient.DryRunRaw result:")
-	// println(string(dry_run_resutl_bs))
+	publicKey, _ := owcrypt.GenPubkey(senderPrivateKey, owcrypt.ECC_CURVE_ED25519_NORMAL)
+	dry_run_result, err := starcoinClient.DryRunRaw(context.Background(), *userTx, publicKey)
+	//fmt.Println(dry_run_result)
+	dry_run_resutl_bs, _ := json.Marshal(dry_run_result)
+	fmt.Println("------------ starcoinClient.DryRunRaw result ----------------")
+	log.Info(string(dry_run_resutl_bs))
+	fmt.Println("------------------------")
 	// return "", errors.New("Testing... todo: remove some lines...")
 	txHash, err := starcoinClient.SubmitTransaction(context.Background(), senderPrivateKey, userTx)
 	if err != nil {
