@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/celestiaorg/smt"
 	csmt "github.com/celestiaorg/smt"
 	optimistic "github.com/crossoverJie/gorm-optimistic"
 	gomysql "github.com/go-sql-driver/mysql"
@@ -465,12 +464,12 @@ func (w *MySqlDB) calculatePloyTxInclusionRootHash(tx *PolyTx) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	smt := csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), nonMemberRootHash)
+	smTree := csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), nonMemberRootHash)
 	k, err := tx.GetSmtTxKey()
 	if err != nil {
 		return nil, err
 	}
-	newRootHash, err := smt.Update(k, PolyTxExistsValue)
+	newRootHash, err := smTree.Update(k, PolyTxExistsValue)
 	if err != nil {
 		return nil, err
 	}
@@ -497,30 +496,30 @@ func (w *MySqlDB) UpdatePolyTxNonMembershipProofByIndex(idx uint64) error {
 func (w *MySqlDB) setPolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
 	nodeStore := NewSmtNodeMapStore(w)
 	valueStore := NewPolyTxMapStore(w, tx)
-	var smt *csmt.SparseMerkleTree
+	var smTree *csmt.SparseMerkleTree
 	if preTx == nil {
-		smt = csmt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
+		smTree = csmt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
 	} else {
 		preRootHash, err := hex.DecodeString(preTx.SmtNonMembershipRootHash)
 		if err != nil {
 			return err
 		}
-		smt = csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), preRootHash)
+		smTree = csmt.ImportSparseMerkleTree(nodeStore, valueStore, New256Hasher(), preRootHash)
 		preTxKey, err := preTx.GetSmtTxKey()
 		if err != nil {
 			return err
 		}
-		_, err = smt.Update(preTxKey, PolyTxExistsValue)
+		_, err = smTree.Update(preTxKey, PolyTxExistsValue)
 		if err != nil {
 			return err
 		}
 	}
-	tx.SmtNonMembershipRootHash = hex.EncodeToString(smt.Root()) //string `gorm:"size:66"`
+	tx.SmtNonMembershipRootHash = hex.EncodeToString(smTree.Root()) //string `gorm:"size:66"`
 	k, err := tx.GetSmtTxKey()
 	if err != nil {
 		return err
 	}
-	proof, err := smt.ProveUpdatable(k)
+	proof, err := smTree.ProveUpdatable(k)
 	if err != nil {
 		return err
 	}
@@ -622,7 +621,7 @@ func (m *PolyTxMapStore) Get(key []byte) ([]byte, error) { // Get gets the value
 	if polyTx != nil {
 		return PolyTxExistsValue, nil
 	}
-	return nil, &smt.InvalidKeyError{Key: key}
+	return nil, &csmt.InvalidKeyError{Key: key}
 }
 
 func (m *PolyTxMapStore) Set(key []byte, value []byte) error { // Set updates the value for a key.
@@ -661,7 +660,7 @@ func (m *SmtNodeMapStore) Get(key []byte) ([]byte, error) { // Get gets the valu
 			return nil, err
 		} else {
 			//fmt.Println("errors.Is(err, gorm.ErrRecordNotFound)")
-			return nil, &smt.InvalidKeyError{Key: key}
+			return nil, &csmt.InvalidKeyError{Key: key}
 		}
 	}
 	d, err := hex.DecodeString(n.Data)
