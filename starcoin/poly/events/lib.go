@@ -582,6 +582,86 @@ func BcsDeserializeUnlockEvent(input []byte) (UnlockEvent, error) {
 	}
 	return obj, err
 }
+
+type VerifyHeaderAndExecuteTxEvent struct {
+	FromChainId      uint64
+	ToContract       []byte
+	CrossChainTxHash []byte
+	FromChainTxHash  []byte
+}
+
+func (obj *VerifyHeaderAndExecuteTxEvent) Serialize(serializer serde.Serializer) error {
+	if err := serializer.IncreaseContainerDepth(); err != nil {
+		return err
+	}
+	if err := serializer.SerializeU64(obj.FromChainId); err != nil {
+		return err
+	}
+	if err := serializer.SerializeBytes(obj.ToContract); err != nil {
+		return err
+	}
+	if err := serializer.SerializeBytes(obj.CrossChainTxHash); err != nil {
+		return err
+	}
+	if err := serializer.SerializeBytes(obj.FromChainTxHash); err != nil {
+		return err
+	}
+	serializer.DecreaseContainerDepth()
+	return nil
+}
+
+func (obj *VerifyHeaderAndExecuteTxEvent) BcsSerialize() ([]byte, error) {
+	if obj == nil {
+		return nil, fmt.Errorf("Cannot serialize null object")
+	}
+	serializer := bcs.NewSerializer()
+	if err := obj.Serialize(serializer); err != nil {
+		return nil, err
+	}
+	return serializer.GetBytes(), nil
+}
+
+func DeserializeVerifyHeaderAndExecuteTxEvent(deserializer serde.Deserializer) (VerifyHeaderAndExecuteTxEvent, error) {
+	var obj VerifyHeaderAndExecuteTxEvent
+	if err := deserializer.IncreaseContainerDepth(); err != nil {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeU64(); err == nil {
+		obj.FromChainId = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeBytes(); err == nil {
+		obj.ToContract = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeBytes(); err == nil {
+		obj.CrossChainTxHash = val
+	} else {
+		return obj, err
+	}
+	if val, err := deserializer.DeserializeBytes(); err == nil {
+		obj.FromChainTxHash = val
+	} else {
+		return obj, err
+	}
+	deserializer.DecreaseContainerDepth()
+	return obj, nil
+}
+
+func BcsDeserializeVerifyHeaderAndExecuteTxEvent(input []byte) (VerifyHeaderAndExecuteTxEvent, error) {
+	if input == nil {
+		var obj VerifyHeaderAndExecuteTxEvent
+		return obj, fmt.Errorf("Cannot deserialize null array")
+	}
+	deserializer := bcs.NewDeserializer(input)
+	obj, err := DeserializeVerifyHeaderAndExecuteTxEvent(deserializer)
+	if err == nil && deserializer.GetBufferOffset() < uint64(len(input)) {
+		return obj, fmt.Errorf("Some input bytes were not read")
+	}
+	return obj, err
+}
 func serialize_array16_u8_array(value [16]uint8, serializer serde.Serializer) error {
 	for _, item := range value {
 		if err := serializer.SerializeU8(item); err != nil {

@@ -212,3 +212,53 @@ func TestFetchCrossChainFeeLockEvents(t *testing.T) {
 		fmt.Println(Uint128ToBigInt(&feeEvent.Id))
 	}
 }
+
+func TestFetchVerifyHeaderAndExecuteTxEvent(t *testing.T) {
+	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
+	// tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0xe2ad6bfeed3f5c96236c348556cde88d31f2336cd505be8b5d6ed1293ed7cf90")
+	// fmt.Println(tx.GasUsed)
+	// return
+	address := "0x18351d311d32201149a4df2a9fc2db8a"
+	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::CrossChainManager::VerifyHeaderAndExecuteTxEvent"
+	height := uint64(2977211)
+	eventFilter := &stcclient.EventFilter{
+		Address:   []string{address},
+		TypeTags:  []string{typeTag},
+		FromBlock: height,
+		ToBlock:   &height,
+	}
+
+	events, err := starcoinClient.GetEvents(context.Background(), eventFilter)
+	if err != nil {
+		fmt.Printf("FetchCrossChainFeeLockEvents - GetEvents error :%s", err.Error())
+		t.FailNow()
+	}
+	if events == nil {
+		fmt.Printf("FetchCrossChainFeeLockEvents - no events found.")
+		t.FailNow()
+	}
+
+	for _, evt := range events {
+		//evt := events.Event
+		//fmt.Println(evt)
+		evtData, err := tools.HexToBytes(evt.Data)
+		if err != nil {
+			fmt.Printf("FetchCrossChainFeeLockEvents - hex.DecodeString error :%s", err.Error())
+			t.FailNow()
+		}
+		veEvent, err := stcpolyevts.BcsDeserializeVerifyHeaderAndExecuteTxEvent(evtData)
+		// j, _ := json.Marshal(lockEvent)
+		// fmt.Println(string(j))
+		fmt.Println("/////////////// VerifyHeaderAndExecuteTxEvent info. ///////////////")
+		fmt.Println("--------------- CrossChainTxHash ----------------")
+		fmt.Println(hex.EncodeToString(veEvent.CrossChainTxHash))
+		fmt.Println("--------------- FromChainId ---------------")
+		fmt.Println(veEvent.FromChainId)
+		fmt.Println("--------------- FromChainTxHash ----------------")
+		fmt.Println(hex.EncodeToString(veEvent.FromChainTxHash))
+		fmt.Println("--------------- ToContract ----------------")
+		fmt.Println(hex.EncodeToString(veEvent.ToContract))
+		fmt.Println("--------------- ToContract(as string) ----------------")
+		fmt.Println(string(veEvent.ToContract)) //to Starcoin, it is like this: 0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript
+	}
+}

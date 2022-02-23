@@ -57,3 +57,11 @@ CrossChainFeeSpeedUpEvent:
         TYPENAME: AccountAddress
     - tx_hash: BYTES
     - efee: U128
+
+
+VerifyHeaderAndExecuteTxEvent:
+  STRUCT:
+    - from_chain_id: U64
+    - to_contract: BYTES
+    - cross_chain_tx_hash: BYTES
+    - from_chain_tx_hash: BYTES
