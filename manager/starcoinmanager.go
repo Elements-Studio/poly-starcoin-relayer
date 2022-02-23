@@ -744,6 +744,7 @@ func (this *StarcoinManager) findSyncedHeight() (uint64, error) {
 
 type CrossTransfer struct {
 	txIndex string
+	// starcoin tx hash
 	txId    []byte
 	value   []byte
 	toChain uint32
