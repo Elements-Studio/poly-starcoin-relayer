@@ -11,6 +11,55 @@ import (
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
+func TestFetchCrossChainEvent(t *testing.T) {
+	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
+	address := "0x18351d311d32201149a4df2a9fc2db8a"
+	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::CrossChainManager::CrossChainEvent"
+	height := uint64(3422033) //3421831) //2977050)
+	eventFilter := &stcclient.EventFilter{
+		Address:   []string{address},
+		TypeTags:  []string{typeTag},
+		FromBlock: height,
+		ToBlock:   &height,
+	}
+
+	events, err := starcoinClient.GetEvents(context.Background(), eventFilter)
+	if err != nil {
+		fmt.Printf("FetchCrossChainEvent - GetEvents error :%s", err.Error())
+		t.FailNow()
+	}
+	if events == nil {
+		fmt.Printf("FetchCrossChainEvent - no events found.")
+		t.FailNow()
+	}
+
+	for _, evt := range events {
+		//evt := events.Event
+		//fmt.Println(evt)
+		evtData, err := tools.HexToBytes(evt.Data)
+		if err != nil {
+			fmt.Printf("FetchCrossChainEvent - hex.DecodeString error :%s", err.Error())
+			t.FailNow()
+		}
+		ccEvent, err := stcpolyevts.BcsDeserializeCrossChainEvent(evtData)
+		// j, _ := json.Marshal(lockEvent)
+		// fmt.Println(string(j))
+		fmt.Println("/////////////// CrossChainEvent info. ///////////////")
+		fmt.Println("--------------- TxId(TxIndex) ----------------")
+		fmt.Println(hex.EncodeToString(ccEvent.TxId))
+		fmt.Println("--------------- ProxyOrAssetContract ---------------")
+		fmt.Println(hex.EncodeToString(ccEvent.ProxyOrAssetContract))
+		fmt.Println("--------------- Sender ----------------")
+		fmt.Println(hex.EncodeToString(ccEvent.Sender))
+		fmt.Println("--------------- ToChainId ----------------")
+		fmt.Println(ccEvent.ToChainId)
+		fmt.Println("--------------- ToContract ----------------")
+		fmt.Println(hex.EncodeToString(ccEvent.ToContract))
+		fmt.Println("--------------- RawData ----------------")
+		fmt.Println(hex.EncodeToString(ccEvent.RawData))
+	}
+}
+
 func TestFetchLockEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
 	// tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0xe2ad6bfeed3f5c96236c348556cde88d31f2336cd505be8b5d6ed1293ed7cf90")
