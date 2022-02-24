@@ -8,6 +8,8 @@ import (
 
 	stcpolyevts "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
+	pcommon "github.com/polynetwork/poly/common"
+	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
@@ -15,7 +17,7 @@ func TestFetchCrossChainEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
 	address := "0x18351d311d32201149a4df2a9fc2db8a"
 	typeTag := "0x18351d311d32201149a4df2a9fc2db8a::CrossChainManager::CrossChainEvent"
-	height := uint64(3422033) //3421831) //2977050)
+	height := uint64(3421831) //3422033) //3421831) //2977050)
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
 		TypeTags:  []string{typeTag},
@@ -49,6 +51,7 @@ func TestFetchCrossChainEvent(t *testing.T) {
 		fmt.Println(hex.EncodeToString(ccEvent.TxId))
 		fmt.Println("--------------- ProxyOrAssetContract ---------------")
 		fmt.Println(hex.EncodeToString(ccEvent.ProxyOrAssetContract))
+		fmt.Println(string(ccEvent.ProxyOrAssetContract))
 		fmt.Println("--------------- Sender ----------------")
 		fmt.Println(hex.EncodeToString(ccEvent.Sender))
 		fmt.Println("--------------- ToChainId ----------------")
@@ -57,6 +60,29 @@ func TestFetchCrossChainEvent(t *testing.T) {
 		fmt.Println(hex.EncodeToString(ccEvent.ToContract))
 		fmt.Println("--------------- RawData ----------------")
 		fmt.Println(hex.EncodeToString(ccEvent.RawData))
+
+		src := pcommon.NewZeroCopySource(ccEvent.RawData)
+		txParam := new(common2.MakeTxParam)
+		if err := txParam.Deserialization(src); err != nil {
+			fmt.Println(err)
+			t.FailNow()
+		}
+		fmt.Println("/////////////// Decoded CrossChainEvent.RawData(MakeTxParam) ///////////////")
+		fmt.Println("---------- MakeTxParam.TxHash ----------")
+		fmt.Println(hex.EncodeToString(txParam.TxHash)) // []byte
+		fmt.Println("---------- MakeTxParam.CrossChainId ----------")
+		fmt.Println(hex.EncodeToString(txParam.CrossChainID)) // sha256(abi.encodePacked(address(this), paramTxHash))
+		fmt.Println("---------- MakeTxParam.FromContractAddress ----------")
+		fmt.Println(hex.EncodeToString(txParam.FromContractAddress)) // []byte
+		fmt.Println("---------- MakeTxParam.ToChainId ----------")
+		fmt.Println(txParam.ToChainID) // uint64
+		fmt.Println("---------- MakeTxParam.ToContractAddress ----------")
+		fmt.Println(hex.EncodeToString(txParam.ToContractAddress)) // []byte
+		fmt.Println(string(txParam.ToContractAddress))             // []byte
+		fmt.Println("---------- MakeTxParam.Method ----------")
+		fmt.Println(txParam.Method) // string
+		fmt.Println("---------- MakeTxParam.Args ----------")
+		fmt.Println(hex.EncodeToString(txParam.Args)) // []byte
 	}
 }
 
