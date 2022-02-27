@@ -13,11 +13,13 @@ import (
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
-// func TestGetTransactionGas(t *testing.T) {
-// 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-// 	tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0xe2ad6bfeed3f5c96236c348556cde88d31f2336cd505be8b5d6ed1293ed7cf90")
-// 	fmt.Println(tx.GasUsed)
-// }
+func TestGetTransactionGas(t *testing.T) {
+	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
+	//txHash := "0x08bc1d3e076c75519f1d2bdea08b980e5e2c7ec62b56136f038012e4333f541a" // GasUsed: 37982971
+	txHash := "0xe151e0e58895915b2c98c213cbe027587aba56c1d0bb27a2b11b5a5ce9f5bfe3" // GasUsed: 18271102
+	tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), txHash)
+	fmt.Println(tx.GasUsed)
+}
 
 func TestFetchCrossChainEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
@@ -168,6 +170,8 @@ func TestFetchUnlockEvent(t *testing.T) {
 	for _, evt := range events {
 		//evt := events.Event
 		//fmt.Println(evt)
+		fmt.Println("TransactionHash: " + evt.TransactionHash)
+		//return
 		evtData, err := tools.HexToBytes(evt.Data)
 		if err != nil {
 			fmt.Printf("FetchUnlockEvent - hex.DecodeString error :%s", err.Error())
@@ -284,4 +288,27 @@ func TestFetchVerifyHeaderAndExecuteTxEvent(t *testing.T) {
 		fmt.Println("--------------- ToContract(as string) ----------------")
 		fmt.Println(string(veEvent.ToContract)) //to Starcoin, it is like this: 0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript
 	}
+}
+
+func TestDeserializeCrossChainFeeLockEvent(t *testing.T) {
+	bs := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 83, 84, 67, 3, 83, 84, 67, 24, 53, 29, 49, 29, 50, 32, 17, 73, 164, 223, 42, 159, 194, 219, 138, 11, 0, 0, 0, 0, 0, 0, 0, 16, 24, 53, 29, 49, 29, 50, 32, 17, 73, 164, 223, 42, 159, 194, 219, 138, 111, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 222, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 77, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	feeEvent, err := stcpolyevts.BcsDeserializeCrossChainFeeLockEvent(bs)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println("/////////////// CrossChainFeeLockEvent info. ///////////////")
+	fmt.Println("--------------- FromAssetHash ----------------")
+	fmt.Println(GetTokenCodeString(&feeEvent.FromAssetHash))
+	fmt.Println("--------------- Sender ---------------")
+	fmt.Println(hex.EncodeToString(feeEvent.Sender[:]))
+	fmt.Println("--------------- ToChainId ----------------")
+	fmt.Println(feeEvent.ToChainId)
+	fmt.Println("--------------- ToAddress ----------------")
+	fmt.Println(hex.EncodeToString(feeEvent.ToAddress))
+	fmt.Println("--------------- Net ----------------")
+	fmt.Println(Uint128ToBigInt(&feeEvent.Net))
+	fmt.Println("--------------- Fee ----------------")
+	fmt.Println(Uint128ToBigInt(&feeEvent.Fee))
+	fmt.Println("--------------- Id ----------------")
+	fmt.Println(Uint128ToBigInt(&feeEvent.Id))
 }
