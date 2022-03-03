@@ -84,6 +84,28 @@ func TestLockSTCWithSTCFee(t *testing.T) {
 	testLockStarcoinAssetWithStcFee(from_asset_hash, to_chain_id, to_address, amount, fee, id, polyManager, t)
 }
 
+func TestLockSTC_to_eSTC_WithSTCFee(t *testing.T) {
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	fmt.Println(polyManager)
+	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC")       // STC
+	var to_chain_id uint64 = 2                                                      // 318
+	to_address, _ := tools.HexToBytes("0x71DFDD2BF49E8Af5226E0078efA31ecf258bC44E") // an ethereum address
+	amount := serde.Uint128{
+		High: 0,
+		Low:  110000000000,
+	}
+	fee := serde.Uint128{
+		High: 0,
+		Low:  2000000000,
+	}
+	id := serde.Uint128{
+		High: 0,
+		Low:  1,
+	}
+	testLockStarcoinAssetWithStcFee(from_asset_hash, to_chain_id, to_address, amount, fee, id, polyManager, t)
+}
+
 func TestLockXETHWithSTCFee(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
@@ -220,6 +242,16 @@ func TestBindSTCAssetHash(t *testing.T) {
 	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC") // asset hash on Starcoin
 	toChainId := uint64(318)                                                // a starcoin network
 	toAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")   //support cross-to-self transfer
+	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, t)
+}
+
+func TestBind_eSTC_AssetHash(t *testing.T) {
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	fmt.Println(polyManager)
+	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")          // asset hash on Starcoin
+	toChainId := uint64(2)                                                           // a ethereum network
+	toAssetHash, _ := tools.HexToBytes("0x6527BC0C4724B51c955E7A4654E2c15464C1851a") // ERC20 contract address on ethereum
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, t)
 }
 
@@ -401,8 +433,11 @@ func getTestNetPolyManagerIgnoreError() *PolyManager {
 	}
 	config := config.NewServiceConfig("../config-testnet.json")
 	//fmt.Println(config.StarcoinConfig.PrivateKeys)
-	p, _ := getPolyManager(config, true)
-	println("============= Ignored above errors ===============")
+	p, err := getPolyManager(config, true)
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("============= Ignored above errors ===============")
+	}
 	return p
 }
 

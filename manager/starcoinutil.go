@@ -54,8 +54,8 @@ func LockStarcoinAsset(starcoinClient *stcclient.StarcoinClient, privateKeyConfi
 	}
 	txPayload := stcpoly.EncodeLockAssetTxPayload(ccScriptModule, from_asset_hash, to_chain_id, to_address, amount)
 	// bs, _ := txPayload.BcsSerialize()
-	// println(hex.EncodeToString(bs))
-	// println("------------------------")
+	// fmt.Println(hex.EncodeToString(bs))
+	// fmt.Println("------------------------")
 	// return "", errors.New("Testing... todo: remove some lines...")
 	userTx, err := starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT*4, seqNum)
 	if err != nil {
