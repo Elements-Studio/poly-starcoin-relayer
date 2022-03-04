@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/hex"
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 	"time"
@@ -271,27 +270,42 @@ func TestUpdatePolyTransactionsToProcessedBeforeIndex(t *testing.T) {
 }
 
 func TestSetPolyTxStatusProcessing(t *testing.T) {
-	db := devNetDB()
-	px_TxHash := "5c2e8a588641472f74258e39ff19a88e4bd7104d05d72ae6ef65a30291823fa3"
-	px_StarcoinTxHash := "0x81cd5df1aff45149129cb21c93956c5e3308329cda1f23c74977d030d5e7d441"
+	db := testNetDB()
+	px_TxHash := "91139fd7194a2e7f95374bf797437faeda9d4bceef29dbfea296cc48d7929bf2"
+	var fromChainId uint64 = 318 //getTestFromChainId()
 
 	for i := 0; i < 2; i++ {
 		go func() {
-			time.Sleep(time.Second * time.Duration(rand.Intn(3)))
 			//db.GetFirstFailedPolyTx()
-			tx, _ := db.GetPolyTx(px_TxHash, getTestFromChainId())
-			if tx == nil || tx.Status == STATUS_CONFIRMED || tx.Status == STATUS_PROCESSED {
+			tx, err := db.GetPolyTx(px_TxHash, fromChainId)
+			if err != nil {
+				fmt.Println(err)
 				return
 			}
-			err := db.SetPolyTxStatusProcessing(px_TxHash, getTestFromChainId(), px_StarcoinTxHash)
+			if tx == nil || tx.Status == STATUS_CONFIRMED || tx.Status == STATUS_PROCESSED {
+				fmt.Println("STATUS_PROCESSED")
+				return
+			}
+			err = db.SetPolyTxStatusProcessing(px_TxHash, fromChainId)
 			if err != nil { //if errors.Is(err, optimistic.NewOptimisticError()) {
-				fmt.Println("------- optimistic SetPolyTxStatusProcessing error -------" + err.Error())
+				fmt.Println("------- SetPolyTxStatusProcessing error -------" + err.Error())
 			} else {
 				fmt.Println("--------------- SetPolyTxStatusProcessing ok -------------")
 			}
+
+			px_StarcoinTxHash := "0x81cd5df1aff45149129cb21c93956c5e3308329cda1f23c74977d030d5e7d441"
+			err = db.SetProcessingPolyTxStarcoinTxHash(px_TxHash, fromChainId, px_StarcoinTxHash)
+			if err != nil {
+				fmt.Println("------- SetProcessingPolyTxStarcoinTxHash error -------" + err.Error())
+			} else {
+				fmt.Println("--------------- SetProcessingPolyTxStarcoinTxHash ok -------------")
+			}
+
+			time.Sleep(time.Millisecond * 500)
+			// time.Sleep(time.Second * time.Duration(rand.Intn(5)))
 		}()
 	}
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 8)
 }
 
 func TestConcatFromChainIdAndTxHash(t *testing.T) {

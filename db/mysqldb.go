@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	csmt "github.com/celestiaorg/smt"
-	optimistic "github.com/crossoverJie/gorm-optimistic"
+	//optimistic "github.com/crossoverJie/gorm-optimistic"
 	gomysql "github.com/go-sql-driver/mysql"
 	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
@@ -217,11 +217,11 @@ func (w *MySqlDB) IncreasePolyTxRetryCheckFeeCount(txHash string, fromChainID ui
 	}
 	px.CheckFeeCount = px.CheckFeeCount + 1
 	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic need this!
-	//return w.db.Save(px).Error
-	// use optimistic lock here
-	return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
-		return model
-	}, 1, 1)
+	return w.db.Save(px).Error
+	// // use optimistic lock here
+	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
+	// 	return model
+	// }, 1, 1)
 }
 
 func (w *MySqlDB) SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, status string) error {
@@ -281,7 +281,7 @@ func (w *MySqlDB) SetPolyTxStatus(txHash string, fromChainID uint64, status stri
 	return w.db.Save(px).Error
 }
 
-func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64, starcoinTxHash string) error {
+func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
 		TxHash:      txHash,
@@ -294,23 +294,57 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64, s
 	}
 	if px.Status == STATUS_PROCESSING {
 		// when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
-		if starcoinTxHash == "" && px.StarcoinTxHash == "" {
+		if px.StarcoinTxHash == "" {
 			if !(px.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
 				return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s, FromChainID: %d", px.TxHash, px.FromChainID)
 			}
-		} // else if starcoinTxHash != "" && px.StarcoinTxHash != "" {
-		//	return fmt.Errorf("PolyTx.StarcoinTxHash is already set to %s, TxHash: %s, FromChainID: %d", px.StarcoinTxHash, px.TxHash, px.FromChainID)
-		//}
+		}
 	}
 	px.Status = STATUS_PROCESSING
-	px.StarcoinTxHash = starcoinTxHash
+	px.StarcoinTxHash = ""
+	//fmt.Println("px.StarcoinTxHash = " + px.StarcoinTxHash)
 	px.RetryCount = px.RetryCount + 1
 	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic need this!
-	//return w.db.Save(px).Error
-	// use optimistic lock here
-	return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
-		return model
-	}, 1, 1)
+	return w.db.Save(px).Error
+	// // use optimistic lock here
+	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
+	// 	return model
+	// }, 1, 1)
+}
+
+func (w *MySqlDB) SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID uint64, starcoinTxHash string) error {
+	px := PolyTx{}
+	if err := w.db.Where(&PolyTx{
+		TxHash:      txHash,
+		FromChainID: fromChainID,
+	}).First(&px).Error; err != nil {
+		return err
+	}
+	if starcoinTxHash == "" {
+		return fmt.Errorf("Try to set empty starcoinTxHash. PolyTx status is '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
+	}
+	if px.Status == STATUS_CONFIRMED || px.Status == STATUS_PROCESSED {
+		return fmt.Errorf("PolyTx status is already '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
+	}
+	// if px.Status != STATUS_PROCESSING {
+	// 	return fmt.Errorf("PolyTx status is not PROCESSING. Status: '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
+	// }
+	//if px.Status == STATUS_PROCESSING {
+
+	// // when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
+	// if px.StarcoinTxHash != "" {
+	// 	//if !(px.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
+	// 	return fmt.Errorf("PolyTx.StarcoinTxHash is already not empty, TxHash: %s, FromChainID: %d", px.TxHash, px.FromChainID)
+	// 	//}
+	// }
+	px.Status = STATUS_PROCESSING
+	px.StarcoinTxHash = starcoinTxHash
+	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic need this!
+	return w.db.Save(px).Error
+	// // use optimistic lock here
+	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
+	// 	return model
+	// }, 1, 1)
 }
 
 func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, starcoinTxHash string) error {

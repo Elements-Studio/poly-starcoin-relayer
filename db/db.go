@@ -58,7 +58,9 @@ type DB interface {
 
 	SetPolyTxStatus(txHash string, fromChainID uint64, status string) error
 
-	SetPolyTxStatusProcessing(txHash string, fromChainID uint64, starcoinTxHash string) error
+	SetPolyTxStatusProcessing(txHash string, fromChainID uint64) error
+
+	SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID uint64, starcoinTxHash string) error
 
 	SetPolyTxStatusProcessed(txHash string, fromChainID uint64, starcoinTxHash string) error
 

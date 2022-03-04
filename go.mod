@@ -8,7 +8,6 @@ require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/celestiaorg/smt v0.2.1-0.20210927133715-225e28d5599a // indirect
-	github.com/crossoverJie/gorm-optimistic v0.0.7 // indirect
 	github.com/ethereum/go-ethereum v1.10.7
 	github.com/gateio/gateapi-go/v6 v6.23.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect

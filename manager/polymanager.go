@@ -805,7 +805,7 @@ func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 	// ////////////////////////////////////////////////////////////
 	// Update PolyTx status to processing(sending to Starcoin),
 	// set transactio hash to empty first.
-	err := this.db.SetPolyTxStatusProcessing(polyTx.TxHash, polyTx.FromChainID, "")
+	err := this.db.SetPolyTxStatusProcessing(polyTx.TxHash, polyTx.FromChainID)
 	if err != nil {
 		log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, txIndex: %d", err, polyTx.TxIndex)
 		return false
@@ -1028,10 +1028,10 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	}
 	// TODO: cal txhash self???
 
-	// ///////////// update DB first ///////////////
-	dbErr := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
+	// ///////////// update Starcoin transaction hash in DB ///////////////
+	dbErr := this.db.SetProcessingPolyTxStarcoinTxHash(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 	if dbErr != nil {
-		log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)
+		log.Errorf("failed to SetProcessingPolyTxStarcoinTxHash. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)
 		return err
 	}
 	// /////////////////////////////////////////////

@@ -281,7 +281,11 @@ func (w *BoltDB) SetPolyTxStatus(txHash string, fromChainID uint64, status strin
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64, starcoinTxHash string) error {
+func (w *BoltDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID uint64, starcoinTxHash string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
