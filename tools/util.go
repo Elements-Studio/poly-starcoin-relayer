@@ -44,23 +44,25 @@ func HexToBytes(str string) ([]byte, error) {
 }
 
 const (
+	STARCOIN_CHAIN_ID_MAIN    int = 1
 	STARCOIN_CHAIN_ID_BARNARD int = 251
-	STARCOIN_CHAIN_ID_HALLEY  int = 253
 	STARCOIN_CHAIN_ID_PROXIMA int = 252
+	STARCOIN_CHAIN_ID_HALLEY  int = 253
 )
 
+// Get Starcoin explorer Txn. URL
 func GetExplorerUrl(chainId int) string {
 	switch chainId {
-	case 1:
+	case STARCOIN_CHAIN_ID_MAIN:
 		return "https://stcscan.io/main/transactions/detail/"
-	case STARCOIN_CHAIN_ID_HALLEY:
-		return "https://stcscan.io/halley/transactions/detail/"
 	case STARCOIN_CHAIN_ID_BARNARD:
 		return "https://stcscan.io/barnard/transactions/detail/"
 	case STARCOIN_CHAIN_ID_PROXIMA:
 		return "https://stcscan.io/proxima/transactions/detail/"
+	case STARCOIN_CHAIN_ID_HALLEY:
+		return "https://stcscan.io/halley/transactions/detail/"
 	default:
-		return "no url"
+		return "{NO-URL}/"
 	}
 }
 

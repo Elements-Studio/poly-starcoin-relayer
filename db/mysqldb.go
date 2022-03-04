@@ -18,14 +18,6 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-const (
-	STATUS_CREATED    = "N" //New
-	STATUS_PROCESSING = "P" //Processing
-	STATUS_FAILED     = "F" //Failed
-	STATUS_PROCESSED  = "D" //processeD
-	STATUS_CONFIRMED  = "C" //Confirmed
-)
-
 var (
 	PolyTxExistsValue                = []byte{1}
 	PolyTxExistsValueHashHex         = Hash256Hex(PolyTxExistsValue)
@@ -341,7 +333,8 @@ func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, st
 func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	var list []PolyTx
 	//err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
-	err := w.db.Where("retry_count < ?", PolyTxMaxRetryCount).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
+	notFailedStatuses := []string{STATUS_PROCESSED, STATUS_CONFIRMED, STATUS_TIMEDOUT}
+	err := w.db.Where("retry_count < ?", PolyTxMaxRetryCount).Not(map[string]interface{}{"status": notFailedStatuses}).Limit(1).Find(&list).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err

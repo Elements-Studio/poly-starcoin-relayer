@@ -37,7 +37,7 @@ import (
 
 const (
 	ChanLen                    = 64
-	WaitTransactionConfirmTime = time.Second * 60
+	WaitTransactionConfirmTime = time.Second * 90
 )
 
 type PolyManager struct {
@@ -213,6 +213,8 @@ func (this *PolyManager) MonitorFailedPolyTx() {
 		}
 	}
 }
+
+// TODO: handle timed-out transactions...
 
 func (this *PolyManager) MonitorDeposit() {
 	monitorTicker := time.NewTicker(config.POLY_MONITOR_INTERVAL)
@@ -800,8 +802,9 @@ func getRawHeaderAndHeaderProofAndSig(header *polytypes.Header, param *common2.T
 }
 
 func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
-	// //////////////////////////////////////////////////////
-	//update PolyTx status to processing(sending to Starcoin)
+	// ////////////////////////////////////////////////////////////
+	// Update PolyTx status to processing(sending to Starcoin),
+	// set transactio hash to empty first.
 	err := this.db.SetPolyTxStatusProcessing(polyTx.TxHash, polyTx.FromChainID, "")
 	if err != nil {
 		log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, txIndex: %d", err, polyTx.TxIndex)
@@ -981,8 +984,8 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 		log.Infof("successful to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 	} else {
-		if err != nil {
-			log.Infof("failed to relay poly header to starcoin, error: %s", err.Error())
+		if err == nil {
+			log.Infof("failed to relay poly header to starcoin, error is nil.  Maybe timed out.")
 		}
 		log.Errorf("failed to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s), error: %v",
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash, err)
@@ -1025,6 +1028,14 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	}
 	// TODO: cal txhash self???
 
+	// ///////////// update DB first ///////////////
+	dbErr := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
+	if dbErr != nil {
+		log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)
+		return err
+	}
+	// /////////////////////////////////////////////
+
 	//isSuccess := this.waitTransactionConfirm(txInfo.polyTxHash, hash)
 	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
 	if isSuccess {
@@ -1032,16 +1043,25 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 		this.db.SetPolyTxStatusProcessed(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 	} else {
-		if err != nil {
-			log.Infof("failed to relay tx to starcoin, error: %s", err.Error())
+		if err == nil {
+			log.Infof("failed to relay tx to starcoin, error is nil. Maybe timed out.")
+			dbErr := this.db.SetPolyTxStatus(txInfo.polyTxHash, txInfo.polyFromChainID, db.STATUS_TIMEDOUT) // set relay-to-starcoin status to TIMED-OUT!
+			if dbErr != nil {
+				log.Errorf("failed to SetPolyTxStatus to timed-out. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)
+				//return dbErr
+			}
+		} else {
+			dbErr := this.db.SetPolyTxStatus(txInfo.polyTxHash, txInfo.polyFromChainID, db.STATUS_FAILED) // set relay-to-starcoin status to FAILED.
+			if dbErr != nil {
+				log.Errorf("failed to SetPolyTxStatus to failed. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)
+				//return dbErr
+			}
 		}
 		log.Errorf("failed to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s), error: %v",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash, err)
-		err := this.db.SetPolyTxStatusProcessing(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
-		if err != nil {
-			log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)
-			return err
-		}
+
+		return err // this err maybe nil
+
 	}
 	return nil
 }

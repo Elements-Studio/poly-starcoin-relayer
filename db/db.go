@@ -11,6 +11,15 @@ import (
 
 const KEY_POLY_HEIGHT = "poly_height"
 
+const (
+	STATUS_CREATED    = "N" //New
+	STATUS_PROCESSING = "P" //Processing
+	STATUS_FAILED     = "F" //Failed
+	STATUS_PROCESSED  = "D" //processeD
+	STATUS_CONFIRMED  = "C" //Confirmed
+	STATUS_TIMEDOUT   = "T" //TimedOut
+)
+
 type DB interface {
 	// Put Starcoin cross-chain Tx.(to poly) Check
 	PutStarcoinTxCheck(txHash string, v []byte, e client.Event) error
@@ -40,7 +49,7 @@ type DB interface {
 	PutPolyTxRetry(tx *PolyTxRetry) error
 
 	IncreasePolyTxRetryCheckFeeCount(txHash string, fromChainID uint64, oldCount int) error
-	
+
 	SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, status string) error
 
 	GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error)
