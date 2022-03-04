@@ -322,3 +322,32 @@ func TestUpdateRoot_2(t *testing.T) {
 	}
 	fmt.Println(hex.EncodeToString(r)) //7a379f33e0def9fe3555bc83b4f67f0b8ac23927352829603bff53c03fc58992
 }
+
+func TestUpdateRoot_3(t *testing.T) {
+	// /////////////////////////////////////////////
+	// select tx_index, smt_tx_path, smt_non_membership_root_hash, status, retry_count, smt_proof_side_nodes, smt_proof_non_membership_leaf_data from poly_tx where tx_index = 17;
+	// /////////////////////////////////////////////
+	path, _ := hex.DecodeString("f9d7b13ae9d011a4b012e352beeed4233b398d52b917ebc1ef01221ff3cdcfe6") // Txn. path(SMT leaf hash)
+	value := PolyTxExistsValue
+	sideNodes, err := DecodeSmtProofSideNodes(`
+	["aea4db371d829dc5fa56a30eedba283c80f38f4417a7e0f0213b3051328da981","9cf2d9de2a06197afb781f44ff7ac9a63d5941e7fa69b3e11aed71aacd992a76","7b6a156cc468301e48256c262bb9a0f6dbbcd0bfbe0fc60686c4f4ad13224216"]
+	`)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	// smt_proof_non_membership_leaf_data
+	oldLeafData, _ := hex.DecodeString("00fc5211253bbe9d6e01ce802efe89a7f5521ef8a783d32d8a8affbeecefdfceac2767f15c8af2f2c7225d5273fdd683edc714110a987d1054697c348aed4e6cc7")
+
+	r, err := rsmt.UpdateRoot(path, value, sideNodes, oldLeafData)
+	if err != nil {
+		t.FailNow()
+	}
+	fmt.Println(hex.EncodeToString(r)) //e7f7d1b12f99f3275fee521aaebdf1b1cc07dc7f97f111e84cf91a649ed0c3d2
+}
+
+func TestEncodeToHexString(t *testing.T) {
+	bs := []byte{231, 247, 209, 177, 47, 153, 243, 39, 95, 238, 82, 26, 174, 189, 241, 177, 204, 7, 220, 127, 151, 241, 17, 232, 76, 249, 26, 100, 158, 208, 195, 210}
+	fmt.Println(hex.EncodeToString(bs))
+	// e7f7d1b12f99f3275fee521aaebdf1b1cc07dc7f97f111e84cf91a649ed0c3d2
+}

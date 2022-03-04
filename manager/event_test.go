@@ -52,8 +52,10 @@ func TestGetAssetLockedAmount(t *testing.T) {
 func TestGetTransactionGas(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
 	//txHash := "0x08bc1d3e076c75519f1d2bdea08b980e5e2c7ec62b56136f038012e4333f541a" // GasUsed: 37982971
-	txHash := "0xe151e0e58895915b2c98c213cbe027587aba56c1d0bb27a2b11b5a5ce9f5bfe3" // GasUsed: 18271102
+	//txHash := "0xe151e0e58895915b2c98c213cbe027587aba56c1d0bb27a2b11b5a5ce9f5bfe3" // GasUsed: 18271102
+	txHash := "0x2f6ef17220fb4cb23bd21220ba7e52a3ce7e88375daeabd4cad0f156f1888be2"
 	tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), txHash)
+	fmt.Println(string(tx.Status))
 	fmt.Println(tx.GasUsed)
 }
 
