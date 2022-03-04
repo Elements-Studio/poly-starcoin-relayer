@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	STARCOIN_MONITOR_INTERVAL = 15 * time.Second
-	POLY_MONITOR_INTERVAL     = 1 * time.Second
+	STARCOIN_MONITOR_INTERVAL = 2 * time.Second
+	POLY_MONITOR_INTERVAL     = 2 * time.Second
 
 	STARCOIN_USEFUL_BLOCK_NUM    = 3
 	STARCOIN_PROOF_USERFUL_BLOCK = 12

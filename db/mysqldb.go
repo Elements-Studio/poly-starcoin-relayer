@@ -395,7 +395,8 @@ func (w *MySqlDB) updatePolyTransactionsToProcessedBeforeIndex(index uint64) err
 		indexAfter = index - indexDiffLimit
 	}
 	limit := 10
-	err := w.db.Where("tx_index < ? and tx_index >= ? and status IN ?", index, indexAfter, []string{STATUS_PROCESSING}).Limit(limit).Find(&list).Error
+	toBeProcessedStatuses := []string{STATUS_PROCESSING, STATUS_FAILED, STATUS_TIMEDOUT}
+	err := w.db.Where("tx_index < ? and tx_index >= ? and status IN ?", index, indexAfter, toBeProcessedStatuses).Limit(limit).Find(&list).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
