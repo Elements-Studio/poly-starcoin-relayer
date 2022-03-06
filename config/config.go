@@ -66,6 +66,8 @@ type StarcoinConfig struct {
 	CCDModule              string //Cross Chain Manager Module Id.
 	CrossChainEventAddress string //Cross Chain Event Address
 	CrossChainEventTypeTag string
+	CCSMTRootResourceType  string
+	GenesisAccountAddress  string
 	// KeyStorePath       string
 	// KeyStorePwdSet     map[string]string
 	PrivateKeys        []map[string]string

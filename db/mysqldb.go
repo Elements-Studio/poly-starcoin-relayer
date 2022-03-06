@@ -548,7 +548,7 @@ func IsDuplicatePolyTxRetryError(db DB, r *PolyTxRetry, err error) (bool, error)
 }
 
 // calculate SMT root hash after current transaction included.
-func (w *MySqlDB) calculatePloyTxInclusionRootHash(tx *PolyTx) ([]byte, error) {
+func (w *MySqlDB) computePloyTxInclusionRootHash(tx *PolyTx) ([]byte, error) {
 	nodeStore := NewSmtNodeMapStore(w)
 	valueStore := NewPolyTxMapStore(w, tx)
 	nonMemberRootHash, err := hex.DecodeString(tx.SmtNonMembershipRootHash)

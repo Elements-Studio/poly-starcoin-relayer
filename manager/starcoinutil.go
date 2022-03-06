@@ -14,16 +14,6 @@ import (
 	"github.com/starcoinorg/starcoin-go/types"
 )
 
-func GetTokenCodeString(tc *stcpolyevts.TokenCode) string {
-	return "0x" + hex.EncodeToString(tc.Address[:]) + "::" + tc.Module + "::" + tc.Name
-}
-
-func Uint128ToBigInt(u *serde.Uint128) *big.Int {
-	h := new(big.Int).SetUint64(u.High)
-	l := new(big.Int).SetUint64(u.Low)
-	return new(big.Int).SetBytes(append(h.Bytes(), l.Bytes()...))
-}
-
 // type CrossChainManager struct {
 // 	starcoinClient *stcclient.StarcoinClient
 // 	module         string
@@ -35,6 +25,37 @@ func Uint128ToBigInt(u *serde.Uint128) *big.Int {
 // 		module:         module,
 // 	}
 // }
+
+func GetTokenCodeString(tc *stcpolyevts.TokenCode) string {
+	return "0x" + hex.EncodeToString(tc.Address[:]) + "::" + tc.Module + "::" + tc.Name
+}
+
+func Uint128ToBigInt(u *serde.Uint128) *big.Int {
+	h := new(big.Int).SetUint64(u.High)
+	l := new(big.Int).SetUint64(u.Low)
+	return new(big.Int).SetBytes(append(h.Bytes(), l.Bytes()...))
+}
+
+type SparseMerkleTreeRootResource struct {
+	Raw  string `json:"raw"`
+	Json struct {
+		Hash string `json:"hash"`
+	} `json:"json"`
+}
+
+func GetStarcoinCrossChainSmtRoot(starcoinClient *stcclient.StarcoinClient, accountAddress string, resType string) (string, error) {
+	getResOption := stcclient.GetResourceOption{
+		Decode: true,
+	}
+	lockRes := new(SparseMerkleTreeRootResource) //new(map[string]interface{})
+	r, err := starcoinClient.GetResource(context.Background(), accountAddress, resType, getResOption, lockRes)
+	if err != nil {
+		return "", err
+	}
+	//fmt.Println(r)
+	lockRes = r.(*SparseMerkleTreeRootResource)
+	return lockRes.Json.Hash, nil
+}
 
 func LockStarcoinAsset(starcoinClient *stcclient.StarcoinClient, privateKeyConfig map[string]string, ccScriptModule string, from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128) (string, error) {
 	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(privateKeyConfig)

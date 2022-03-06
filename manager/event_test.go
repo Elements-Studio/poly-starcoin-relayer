@@ -48,7 +48,6 @@ func TestGetAssetLockedAmount(t *testing.T) {
 	//10000000 STC
 }
 
-//0x18351d311d32201149a4df2a9fc2db8a::LockProxy::LockTreasury<0x00000000000000000000000000000001::STC::STC>
 func TestGetTransactionGas(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
 	//txHash := "0x08bc1d3e076c75519f1d2bdea08b980e5e2c7ec62b56136f038012e4333f541a" // GasUsed: 37982971

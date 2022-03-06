@@ -14,6 +14,8 @@
     "CCDModule": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript",
     "CrossChainEventAddress": "0x6c3bc3a6c651e88f5af8a570e661c6af",
     "CrossChainEventTypeTag": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainManager::CrossChainEvent",
+    "CCSMTRootResourceType": "0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainData::SparseMerkleTreeRoot",
+    "GenesisAccountAddress": "0x6c3bc3a6c651e88f5af8a570e661c6af",
     "PrivateKeys": [
       {
         "0x6c3bc3a6c651e88f5af8a570e661c6af": "${PRIVATE_KEY_6c3bc3a}"

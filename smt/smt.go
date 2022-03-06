@@ -18,8 +18,8 @@ var (
 )
 
 func UpdateRoot(path []byte, value []byte, sideNodes [][]byte, oldLeafData []byte) ([]byte, error) {
-	var pathNode_0 []byte //pathNodes[0]
-	if oldLeafData == nil {
+	var pathNode_0 []byte      //pathNodes[0]
+	if len(oldLeafData) == 0 { //or oldLeafData == nil
 		pathNode_0 = placeholder()
 	} else {
 		pathNode_0 = digest(oldLeafData)

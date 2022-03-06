@@ -133,14 +133,14 @@ func TestUpdatePolyTxNonMembershipProofByIndex(t *testing.T) {
 	}
 }
 
-func TestCalculatePloyTxInclusionRootHash(t *testing.T) {
+func TestComputePloyTxInclusionRootHash(t *testing.T) {
 	mysqldb := devNetDB().(*MySqlDB)
 	polyTx, err := mysqldb.GetPolyTxByIndex(3)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	rootHash, err := mysqldb.calculatePloyTxInclusionRootHash(polyTx)
+	rootHash, err := mysqldb.computePloyTxInclusionRootHash(polyTx)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()

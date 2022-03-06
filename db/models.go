@@ -6,6 +6,7 @@ import (
 
 	"github.com/celestiaorg/smt"
 	"github.com/elements-studio/poly-starcoin-relayer/poly/msg"
+	rsmt "github.com/elements-studio/poly-starcoin-relayer/smt"
 	pcommon "github.com/polynetwork/poly/common"
 )
 
@@ -234,6 +235,28 @@ func (p *PolyTx) GetPolyTxProof() (*PolyTxProof, error) {
 		return nil, err
 	}
 	return proof, nil
+}
+
+func (p *PolyTx) ComputePloyTxInclusionSmtRootHash() ([]byte, error) {
+	path, err := hex.DecodeString(p.SmtTxPath) // Txn. path(SMT leaf hash)
+	if err != nil {
+		return nil, err
+	}
+	value := PolyTxExistsValue
+	sideNodes, err := DecodeSmtProofSideNodes(p.SmtProofSideNodes)
+	if err != nil {
+		return nil, err
+	}
+	// smt_proof_non_membership_leaf_data
+	oldLeafData, err := hex.DecodeString(p.SmtProofNonMembershipLeafData)
+	if err != nil {
+		return nil, err
+	}
+	r, err := rsmt.UpdateRoot(path, value, sideNodes, oldLeafData)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
 }
 
 type SmtNode struct {
