@@ -274,6 +274,7 @@ func (this *PolyManager) handleTimedOutOrFailedPolyTxList(list []*db.PolyTx) err
 	return nil
 }
 
+// Set PolyTx's status to PROCESSED if the SMT Root which included it matchs On-Chain SMT Root.
 // Return Starcoin tx. hash if matched, or else return empty string.
 func (this *PolyManager) setPolyTxProcessedIfOnChainSmtRootMatched(polyTx *db.PolyTx, smtRoot []byte, starcoinHeight uint64) (string, error) {
 	if polyTx.StarcoinTxHash == "" {
