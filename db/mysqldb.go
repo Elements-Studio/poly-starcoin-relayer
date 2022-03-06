@@ -49,27 +49,9 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 	return w, nil
 }
 
-func (w *MySqlDB) PutStarcoinTxCheck(txHash string, v []byte, event client.Event) error {
-	j, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
-	tx := StarcoinTxCheck{
-		TxHash:            txHash,
-		CrossTransferData: hex.EncodeToString(v),
-		StarcoinEvent:     string(j),
-	}
-	return w.db.Create(tx).Error
-}
-
-func (w *MySqlDB) DeleteStarcoinTxCheck(txHash string) error {
-	tx := StarcoinTxCheck{
-		TxHash: txHash,
-	}
-	return w.db.Delete(tx).Error
-}
-
-// Put Starcoin cross-chain Tx.(to poly) Retry
+// Put Starcoin(to poly) cross-chain Tx. Retry.
+// The parameter `k` is bytes of serialized Tx. info,
+// and `event` is attached Starcoin Event info.
 func (w *MySqlDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
 	hash := sha3.Sum256(k)
 	j, err := json.Marshal(event)
@@ -84,6 +66,8 @@ func (w *MySqlDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
 	return w.db.Create(tx).Error
 }
 
+// Delete Starcoin(to poly) cross-chain Tx. Retry.
+// The parameter `k` is bytes of serialized Tx. info.
 func (w *MySqlDB) DeleteStarcoinTxRetry(k []byte) error {
 	hash := sha3.Sum256(k)
 	tx := StarcoinTxRetry{
@@ -92,27 +76,8 @@ func (w *MySqlDB) DeleteStarcoinTxRetry(k []byte) error {
 	return w.db.Delete(tx).Error
 }
 
-func (w *MySqlDB) GetAllStarcoinTxCheck() (map[string]BytesAndEvent, error) {
-	var list []StarcoinTxCheck
-	if err := w.db.Find(&list).Error; err != nil {
-		return nil, err
-	}
-	m := make(map[string]BytesAndEvent, len(list))
-	for _, v := range list {
-		bs, _ := hex.DecodeString(v.CrossTransferData)
-		e := &client.Event{}
-		err := json.Unmarshal([]byte(v.StarcoinEvent), e)
-		if err != nil {
-			return nil, err
-		}
-		m[v.TxHash] = BytesAndEvent{
-			Bytes: bs,
-			Event: *e,
-		}
-	}
-	return m, nil
-}
-
+// Get all Starcoin(to poly) cross-chain Tx. Retry list.
+// Return list of bytes(serialized Tx. info) and list of attached Starcoin Event.
 func (w *MySqlDB) GetAllStarcoinTxRetry() ([][]byte, []client.Event, error) {
 	var list []StarcoinTxRetry
 	if err := w.db.Find(&list).Error; err != nil {
@@ -134,6 +99,54 @@ func (w *MySqlDB) GetAllStarcoinTxRetry() ([][]byte, []client.Event, error) {
 		es = append(es, *e)
 	}
 	return cs, es, nil
+}
+
+// Put Starcoin(to poly) cross-chain Tx. check.
+// The parameter `txHash` is poly Tx. hash,
+// `v` is bytes of serialized cross-chain Tx. info,
+// and `event` is attached Starcoin Event info.
+func (w *MySqlDB) PutStarcoinTxCheck(txHash string, v []byte, event client.Event) error {
+	j, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	tx := StarcoinTxCheck{
+		TxHash:            txHash,
+		CrossTransferData: hex.EncodeToString(v),
+		StarcoinEvent:     string(j),
+	}
+	return w.db.Create(tx).Error
+}
+
+// Delete Starcoin(to poly) cross-chain Tx. check by (poly)Tx. Hash.
+func (w *MySqlDB) DeleteStarcoinTxCheck(txHash string) error {
+	tx := StarcoinTxCheck{
+		TxHash: txHash,
+	}
+	return w.db.Delete(tx).Error
+}
+
+// Get Starcoin(to poly) cross-chain Tx. check list.
+// Return mappings of (poly)Tx. Hash to  serialized cross-chain Tx. and attached Starcoin Event.
+func (w *MySqlDB) GetAllStarcoinTxCheck() (map[string]BytesAndEvent, error) {
+	var list []StarcoinTxCheck
+	if err := w.db.Find(&list).Error; err != nil {
+		return nil, err
+	}
+	m := make(map[string]BytesAndEvent, len(list))
+	for _, v := range list {
+		bs, _ := hex.DecodeString(v.CrossTransferData)
+		e := &client.Event{}
+		err := json.Unmarshal([]byte(v.StarcoinEvent), e)
+		if err != nil {
+			return nil, err
+		}
+		m[v.TxHash] = BytesAndEvent{
+			Bytes: bs,
+			Event: *e,
+		}
+	}
+	return m, nil
 }
 
 // Update poly height synced to Starcoin
