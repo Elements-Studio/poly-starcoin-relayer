@@ -36,8 +36,9 @@ import (
 )
 
 const (
-	ChanLen                    = 64
-	WaitTransactionConfirmTime = time.Second * 90
+	ChanLen                                = 64
+	WAIT_STARCOIN_TRANSACTION_CONFIRM_TIME = time.Second * 120
+	MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS = 120
 )
 
 type PolyManager struct {
@@ -214,7 +215,59 @@ func (this *PolyManager) MonitorFailedPolyTx() {
 	}
 }
 
-// TODO: handle timed-out transactions...
+// handle timed-out transactions.
+func (this *PolyManager) MonitorTimedOutPolyTx() {
+	monitorTicker := time.NewTicker(config.POLY_MONITOR_INTERVAL)
+	for {
+		select {
+		case <-monitorTicker.C:
+			polyTx, err := this.db.GetFirstTimedOutPolyTx()
+			if err != nil {
+				log.Errorf("PolyManager.MonitorTimedOutPolyTx - failed to GetFirstTimedOutPolyTx: %s", err.Error())
+				continue
+			}
+			if polyTx != nil {
+				//log.Debugf("Get timed-out poly Tx. hash: %s", polyTx.TxHash)
+				this.handleTimedOutPolyTx(polyTx)
+			}
+		case <-this.exitChan:
+			return
+		}
+	}
+}
+
+func (this *PolyManager) handleTimedOutPolyTx(polyTx *db.PolyTx) {
+	if polyTx.StarcoinTxHash == "" {
+		this.db.SetPolyTxStatus(polyTx.TxHash, polyTx.FromChainID, db.STATUS_FAILED)
+		return
+	}
+	stcTx, err := this.starcoinClient.GetTransactionInfoByHash(context.Background(), polyTx.StarcoinTxHash)
+	if err != nil {
+		log.Errorf("PolyManager.handleTimedOutPolyTx GetTransactionInfoByHash - failed to GetTransactionInfoByHash: %s", err.Error())
+		return
+	}
+	var isKnownFailure bool = true
+	if stcTx == nil || bytes.Equal(stcTx.Status, []byte{}) {
+		isKnownFailure = false
+	} else {
+		var executed bool
+		executed, isKnownFailure = tools.IsStarcoinTxStatusExecutedOrKnownFailure(stcTx.Status)
+		if executed {
+			this.db.SetPolyTxStatusProcessed(polyTx.TxHash, polyTx.FromChainID, polyTx.StarcoinTxHash)
+			log.Info("PolyManager.handleTimedOutPolyTx set timed-out PolyTx status to EXECUTED. Starcoin hash: %s", polyTx.StarcoinTxHash)
+			return
+		}
+	}
+	if isKnownFailure {
+		this.db.SetPolyTxStatus(polyTx.TxHash, polyTx.FromChainID, db.STATUS_FAILED)
+		log.Info("PolyManager.handleTimedOutPolyTx set timed-out PolyTx status to FAILED. Starcoin hash: %s", polyTx.StarcoinTxHash)
+	} else {
+		if polyTx.UpdatedAt < db.CurrentTimeMillis()-MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS*1000 {
+			this.db.SetPolyTxStatus(polyTx.TxHash, polyTx.FromChainID, db.STATUS_FAILED)
+			log.Info("PolyManager.handleTimedOutPolyTx set timed-out PolyTx status to FAILED because exceeded MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS. Starcoin hash: %s", polyTx.StarcoinTxHash)
+		}
+	}
+}
 
 func (this *PolyManager) MonitorDeposit() {
 	monitorTicker := time.NewTicker(config.POLY_MONITOR_INTERVAL)
@@ -979,7 +1032,7 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 	}
 
 	hdrhash := header.Hash()
-	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
+	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WAIT_STARCOIN_TRANSACTION_CONFIRM_TIME)
 	if isSuccess {
 		log.Infof("successful to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s)",
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
@@ -1037,7 +1090,7 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 	// /////////////////////////////////////////////
 
 	//isSuccess := this.waitTransactionConfirm(txInfo.polyTxHash, hash)
-	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WaitTransactionConfirmTime)
+	isSuccess, err := tools.WaitTransactionConfirm(*this.starcoinClient, txhash, WAIT_STARCOIN_TRANSACTION_CONFIRM_TIME)
 	if isSuccess {
 		log.Infof("successful to relay tx to starcoin: (starcoin_hash: %s, nonce: %d, poly_hash: %s, starcoin_explorer: %s)",
 			txhash, nonce, txInfo.polyTxHash, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)

@@ -260,6 +260,32 @@ func TestGetFirstFailedPolyTx(t *testing.T) {
 	// }
 }
 
+func TestGetFirstTimedOutPolyTx(t *testing.T) {
+	px1, err := testNetDB().GetFirstTimedOutPolyTx()
+	if err != nil {
+		t.FailNow()
+	}
+	if px1 != nil {
+		fmt.Printf("First timed-out PolyTx index: %v\n", px1.TxIndex)
+	} else {
+		fmt.Println(px1)
+	}
+}
+
+func TestGetTimedOutOrFailedPolyTxList(t *testing.T) {
+	pxList, err := testNetDB().GetTimedOutOrFailedPolyTxList()
+	if err != nil {
+		t.FailNow()
+	}
+	if pxList != nil {
+		for _, px := range pxList {
+			fmt.Printf("Current timed-out or failed PolyTx in list, index: %v, Starcoin TxHash: %s\n", px.TxIndex, px.StarcoinTxHash)
+		}
+	} else {
+		fmt.Println(pxList)
+	}
+}
+
 func TestUpdatePolyTransactionsToProcessedBeforeIndex(t *testing.T) {
 	db := devNetDB().(*MySqlDB)
 	err := db.updatePolyTransactionsToProcessedBeforeIndex(17)

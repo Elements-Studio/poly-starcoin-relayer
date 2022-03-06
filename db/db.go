@@ -17,7 +17,7 @@ const (
 	STATUS_FAILED     = "F" //Failed
 	STATUS_PROCESSED  = "D" //processeD
 	STATUS_CONFIRMED  = "C" //Confirmed
-	STATUS_TIMEDOUT   = "T" //TimedOut
+	STATUS_TIMEDOUT   = "T" //TimedOut(or unknown error)
 )
 
 type DB interface {
@@ -66,6 +66,10 @@ type DB interface {
 
 	GetFirstFailedPolyTx() (*PolyTx, error)
 
+	GetFirstTimedOutPolyTx() (*PolyTx, error)
+
+	GetTimedOutOrFailedPolyTxList() ([]*PolyTx, error)
+
 	Close()
 }
 
@@ -88,6 +92,6 @@ func New256Hasher() hash.Hash {
 	return sha3.New256() //sha256.New()
 }
 
-func currentTimeMillis() int64 {
+func CurrentTimeMillis() int64 {
 	return time.Now().UnixNano() / 1000000
 }

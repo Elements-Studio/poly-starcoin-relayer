@@ -229,7 +229,7 @@ func (w *MySqlDB) IncreasePolyTxRetryCheckFeeCount(txHash string, fromChainID ui
 		return err
 	}
 	px.CheckFeeCount = px.CheckFeeCount + 1
-	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic need this!
+	px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
 	return w.db.Save(px).Error
 	// // use optimistic lock here
 	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
@@ -308,7 +308,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) e
 	if px.Status == STATUS_PROCESSING {
 		// when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
 		if px.StarcoinTxHash == "" {
-			if !(px.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
+			if !(px.UpdatedAt < CurrentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
 				return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s, FromChainID: %d", px.TxHash, px.FromChainID)
 			}
 		}
@@ -317,7 +317,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) e
 	px.StarcoinTxHash = ""
 	//fmt.Println("px.StarcoinTxHash = " + px.StarcoinTxHash)
 	px.RetryCount = px.RetryCount + 1
-	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic need this!
+	px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
 	return w.db.Save(px).Error
 	// // use optimistic lock here
 	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
@@ -352,7 +352,7 @@ func (w *MySqlDB) SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID u
 	// }
 	px.Status = STATUS_PROCESSING
 	px.StarcoinTxHash = starcoinTxHash
-	px.UpdatedAt = currentTimeMillis() // UpdateWithOptimistic need this!
+	px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
 	return w.db.Save(px).Error
 	// // use optimistic lock here
 	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
@@ -393,11 +393,53 @@ func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 		return nil, nil
 	}
 	first := list[0]
-	if first.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000 {
+	if first.UpdatedAt < CurrentTimeMillis()-PolyTxMaxProcessingSeconds*1000 {
 		return &first, nil
 	} else {
 		return nil, nil
 	}
+}
+
+func (w *MySqlDB) GetFirstTimedOutPolyTx() (*PolyTx, error) {
+	var list []PolyTx
+	timedOutStatuses := []string{STATUS_TIMEDOUT}
+	err := w.db.Where(map[string]interface{}{"status": timedOutStatuses}).Limit(1).Find(&list).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	first := list[0]
+	if first.UpdatedAt < CurrentTimeMillis()-PolyTxMaxProcessingSeconds*1000 {
+		return &first, nil
+	} else {
+		return nil, nil
+	}
+}
+
+func (w *MySqlDB) GetTimedOutOrFailedPolyTxList() ([]*PolyTx, error) {
+	lastIndex, _, err := w.getLastPolyTx()
+	if err != nil {
+		return nil, err
+	}
+	var list []*PolyTx
+	indexDiffLimit := uint64(50) // TODO: is this ok??
+	indexAfter := uint64(1)
+	if lastIndex > indexDiffLimit {
+		indexAfter = lastIndex - indexDiffLimit
+	}
+	limit := 10
+	statuses := []string{STATUS_TIMEDOUT, STATUS_FAILED}
+	err = w.db.Where("tx_index <= ? and tx_index >= ? and status IN ?", lastIndex, indexAfter, statuses).Limit(limit).Find(&list).Error
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
 }
 
 func (w *MySqlDB) updatePolyTransactionsToProcessedBeforeIndex(index uint64) error {
@@ -429,18 +471,9 @@ func (w *MySqlDB) updatePolyTransactionsToProcessedBeforeIndex(index uint64) err
 }
 
 func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
-	lastTx := &PolyTx{}
-	var lastIndex uint64
-	err := w.db.Last(lastTx).Error
+	lastIndex, lastTx, err := w.getLastPolyTx()
 	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) { // error only once
-			return 0, err
-		} else {
-			lastIndex = 0
-			lastTx = nil
-		}
-	} else {
-		lastIndex = lastTx.TxIndex
+		return 0, err
 	}
 	// tx := PolyTx{
 	// 	TxIndex: lastIndex + 1,
@@ -461,6 +494,23 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 		return 0, err
 	}
 	return tx.TxIndex, nil
+}
+
+func (w *MySqlDB) getLastPolyTx() (uint64, *PolyTx, error) {
+	lastTx := &PolyTx{}
+	var lastIndex uint64
+	err := w.db.Last(lastTx).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) { // error only once
+			return 0, nil, err
+		} else {
+			lastIndex = 0
+			lastTx = nil
+		}
+	} else {
+		lastIndex = lastTx.TxIndex
+	}
+	return lastIndex, lastTx, nil
 }
 
 func IsDuplicatePolyTxError(db DB, tx *PolyTx, err error) (bool, error) {

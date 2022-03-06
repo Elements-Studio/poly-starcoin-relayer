@@ -297,6 +297,14 @@ func (w *BoltDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) GetFirstTimedOutPolyTx() (*PolyTx, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) GetTimedOutOrFailedPolyTxList() ([]*PolyTx, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) Close() {
 	w.rwlock.Lock()
 	w.db.Close()

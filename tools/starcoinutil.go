@@ -146,10 +146,11 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 			}
 			tx, err := client.GetTransactionInfoByHash(context.Background(), hash)
 			if err != nil {
+				log.Debugf("GetTransactionInfoByHash error, %v", err)
 				continue
 			}
 			//log.Debug("Transaction status: " + tx.Status)
-			if strings.EqualFold("\"Executed\"", string(tx.Status)) {
+			if isStarcoinTxStatusExecuted(tx.Status) {
 				return true, nil
 			} else if isKnownStarcoinTxFailureStatus(tx.Status) {
 				return false, fmt.Errorf("isKnownStarcoinTxFailureStatus: %s", string(tx.Status))
@@ -160,6 +161,20 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 			return false, nil //fmt.Errorf("WaitTransactionConfirm exceed timeout %v", timeout)
 		}
 	}
+}
+
+func IsStarcoinTxStatusExecutedOrKnownFailure(status []byte) (bool, bool) {
+	if isStarcoinTxStatusExecuted(status) {
+		return true, false
+	} else if isKnownStarcoinTxFailureStatus(status) {
+		return false, true
+	} else {
+		return false, false
+	}
+}
+
+func isStarcoinTxStatusExecuted(status []byte) bool {
+	return strings.EqualFold("\"Executed\"", string(status))
 }
 
 func isKnownStarcoinTxFailureStatus(status []byte) bool {
