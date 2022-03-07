@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -66,6 +67,37 @@ func GetStarcoinNodeHeight(url string, restClient *RestClient) (uint64, error) {
 	} else {
 		return uint64(height), nil
 	}
+}
+
+func IsAcceptToken(client *stcclient.StarcoinClient, accountAddress string, tokenType string) (bool, error) {
+	c := stcclient.ContractCall{
+		FunctionId: "0x1::Account::is_accept_token",
+		TypeArgs:   []string{tokenType},
+		Args:       []string{accountAddress},
+	}
+	r, err := client.CallContract(context.Background(), c)
+	if err != nil {
+		return false, err
+	}
+	return toBool(extractSingleResult(r))
+}
+
+func extractSingleResult(result interface{}) interface{} {
+	r := result.([]interface{})
+	if len(r) == 0 {
+		return nil
+	}
+	return r[0]
+}
+
+func toBool(i interface{}) (bool, error) {
+	switch i := i.(type) {
+	case bool:
+		return i, nil
+	case string:
+		return strconv.ParseBool(i)
+	}
+	return false, fmt.Errorf("unknown type to bool %t", i)
 }
 
 type starcoinTransactionProofRsp struct {

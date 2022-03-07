@@ -46,3 +46,15 @@ func TestGetTransactionInfoByHash(t *testing.T) {
 	fmt.Println(txInfo.Status)
 	fmt.Println(isKnownStarcoinTxFailureStatus(txInfo.Status))
 }
+
+func TestIsAcceptToken(t *testing.T) {
+	stcclient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
+	accountAddr := "0xd117638e105403784bf6A92AA1276Ec1"
+	tokenType := "0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH"
+	a, err := IsAcceptToken(&stcclient, accountAddr, tokenType)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Printf("Is account '%s' accept token '%s': %v\n", accountAddr, tokenType, a)
+}
