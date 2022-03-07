@@ -250,6 +250,21 @@ func (w *MySqlDB) SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, sta
 	return w.db.Save(px).Error
 }
 
+func (w *MySqlDB) UpdatePolyTxStarcoinStatus(txHash string, fromChainID uint64, status string, msg string) error {
+	px := PolyTxRetry{}
+	if err := w.db.Where(&PolyTxRetry{
+		TxHash:      txHash,
+		FromChainID: fromChainID,
+	}).First(&px).Error; err != nil {
+		return err
+	}
+	px.StarcoinStatus = status
+	px.CheckStarcoinCount = px.CheckStarcoinCount + 1
+	px.CheckStarcoinMessage = msg
+	//px.UpdatedAt = currentTimeMillis()
+	return w.db.Save(px).Error
+}
+
 func (w *MySqlDB) GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error) {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
@@ -762,7 +777,8 @@ func (m *SmtNodeMapStore) Get(key []byte) ([]byte, error) { // Get gets the valu
 	return d, nil
 }
 
-func (m *SmtNodeMapStore) Set(key []byte, value []byte) error { // Set updates the value for a key.
+// The 'Set' function updates the `value` of the `key``.
+func (m *SmtNodeMapStore) Set(key []byte, value []byte) error {
 	h := hex.EncodeToString(key)
 	d := hex.EncodeToString(value)
 	n := SmtNode{
@@ -771,12 +787,12 @@ func (m *SmtNodeMapStore) Set(key []byte, value []byte) error { // Set updates t
 	}
 	err := m.db.db.Create(n).Error
 	var mysqlErr *gomysql.MySQLError
-	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 { // Duplicate entry error
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 { // if it is Duplicate-entry DB error
 		oldData, err := m.Get(key)
 		if err != nil {
 			return err
 		}
-		if bytes.Equal(value, oldData) {
+		if bytes.Equal(value, oldData) { // if it is really duplicate entry
 			return nil
 		} else {
 			return fmt.Errorf("reset value is not allowed, key: %s, value: %s, old value: %s", h, d, hex.EncodeToString(oldData))
@@ -785,7 +801,8 @@ func (m *SmtNodeMapStore) Set(key []byte, value []byte) error { // Set updates t
 	return err
 }
 
-func (m *SmtNodeMapStore) Delete(key []byte) error { // Delete deletes a key.
+// The 'Delete' function deletes a key.
+func (m *SmtNodeMapStore) Delete(key []byte) error {
 	// h := hex.EncodeToString(key)
 	// n := SmtNode{
 	// 	Hash: h,

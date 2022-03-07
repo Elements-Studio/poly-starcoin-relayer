@@ -269,6 +269,10 @@ func (w *BoltDB) SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, stat
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) UpdatePolyTxStarcoinStatus(txHash string, fromChainID uint64, status string, msg string) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }

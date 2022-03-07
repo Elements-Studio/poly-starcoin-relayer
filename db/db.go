@@ -52,6 +52,8 @@ type DB interface {
 
 	SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, status string) error
 
+	UpdatePolyTxStarcoinStatus(txHash string, fromChainID uint64, status string, msg string) error
+
 	GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error)
 
 	PutPolyTx(tx *PolyTx) (uint64, error)

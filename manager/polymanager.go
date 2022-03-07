@@ -375,7 +375,10 @@ func (this *PolyManager) handlePolyTxRetry(r *db.PolyTxRetry) error {
 	}
 	starcoinOk, starcoinStatus, starcoinMsg := this.checkStarcoinStatusByProof(bridgeTransaction.rawAuditPath)
 	if !starcoinOk {
-		//TODO: update database
+		dbErr := this.db.UpdatePolyTxStarcoinStatus(r.TxHash, r.FromChainID, starcoinStatus, starcoinMsg)
+		if dbErr != nil {
+			log.Errorf("handlePolyTxRetry - UpdatePolyTxStarcoinStatus() error: %s", err.Error())
+		}
 		return fmt.Errorf(starcoinStatus + " " + starcoinMsg)
 	}
 
