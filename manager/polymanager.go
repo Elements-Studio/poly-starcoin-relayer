@@ -361,7 +361,6 @@ func (this *PolyManager) MonitorDeposit() {
 }
 
 func (this *PolyManager) handlePolyTxRetry(r *db.PolyTxRetry) error {
-
 	bridgeTransactionBS, err := hex.DecodeString(r.BridgeTransaction)
 	if err != nil {
 		log.Errorf("handlePolyTxRetry - bridgeTransaction.Deserialization error: %s", err.Error())
@@ -545,6 +544,8 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 	return true
 }
 
+// Check Starcoin on-chain status for the PolyTx, see if it is suitable to commit on chain.
+// If suitable, return true, or else return false and check-status and message.
 func (this *PolyManager) checkStarcoinStatusByProof(proof []byte) (bool, string, string) {
 	_, unlockArgs, err := ParseCrossChainUnlockParamsFromProof(proof)
 	if err != nil {
@@ -555,11 +556,15 @@ func (this *PolyManager) checkStarcoinStatusByProof(proof []byte) (bool, string,
 	tokenType := string(unlockArgs.ToAssetHash)
 	b, err := tools.IsAcceptToken(this.starcoinClient, addr, tokenType)
 	if err != nil {
-		msg := fmt.Sprintf("'%s' not accept token '%s'", addr, tokenType)
-		log.Info("PolyManager.checkStarcoinStatusByProof - " + msg)
-		return false, db.STARCOIN_STATUS_NOT_ACCEPT_TOKEN, msg
+		log.Infof("PolyManager.checkStarcoinStatusByProof - call IsAcceptToken() error: %s", err.Error())
 	}
-	return b, "", ""
+	if !b {
+		msg := fmt.Sprintf("'%s' not accept token '%s'", addr, tokenType)
+		log.Debug("PolyManager.checkStarcoinStatusByProof - " + msg)
+		return false, db.STARCOIN_STATUS_NOT_ACCEPT_TOKEN, msg
+	} else {
+		return true, "", ""
+	}
 }
 
 func (this *PolyManager) putPolyTxRetry(height uint32, event *pcommon.SmartContactEvent, notify *pcommon.NotifyEventInfo, hdr *polytypes.Header, param *common2.ToMerkleValue, hp string, anchor *polytypes.Header, auditpath []byte) bool {
