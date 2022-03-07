@@ -42,7 +42,7 @@ type DB interface {
 
 	GetPolyTxRetry(txHash string, fromChainID uint64) (*PolyTxRetry, error)
 
-	GetAllPolyTxRetryNotPaid() ([]*PolyTxRetry, error)
+	GetAllPolyTxRetry() ([]*PolyTxRetry, error)
 
 	DeletePolyTxRetry(txHash string, fromChainID uint64) error
 

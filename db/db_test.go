@@ -45,7 +45,7 @@ func TestGetMethods(t *testing.T) {
 
 }
 
-func TestGetAllPolyTxRetryNotPaid(t *testing.T) {
+func TestGetAllPolyTxRetry(t *testing.T) {
 	db := testNetDB()
 
 	// // insert a PolyTxRetry
@@ -60,7 +60,7 @@ func TestGetAllPolyTxRetryNotPaid(t *testing.T) {
 	// 	t.FailNow()
 	// }
 
-	list, err := db.GetAllPolyTxRetryNotPaid()
+	list, err := db.GetAllPolyTxRetry()
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()

@@ -189,10 +189,10 @@ func (w *MySqlDB) GetPolyTxRetry(txHash string, fromChainID uint64) (*PolyTxRetr
 	return &r, nil
 }
 
-func (w *MySqlDB) GetAllPolyTxRetryNotPaid() ([]*PolyTxRetry, error) {
+func (w *MySqlDB) GetAllPolyTxRetry() ([]*PolyTxRetry, error) {
 	var list []*PolyTxRetry
-	if err := w.db.Where(&PolyTxRetry{
-		FeeStatus: FEE_STATUS_NOT_PAID,
+	if err := w.db.Where(&PolyTxRetry{ //TODO: Maybe ignore some statuses...
+		//FeeStatus: FEE_STATUS_NOT_PAID,
 	}).Find(&list).Error; err != nil {
 		return nil, err
 	}

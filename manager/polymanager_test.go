@@ -408,6 +408,17 @@ func TestGetPolyLastConfigBlockNumAtHeight(t *testing.T) {
 	polyManager.getPolyLastConfigBlockNumAtHeight(1319999)
 }
 
+func TestCheckStarcoinStatusByProof(t *testing.T) {
+	p, err := tools.HexToBytes("0xfd230120ab2c4dea41a96f2ac5becbc2ad8775db1416742bd597c99de6015f2b5e2f811b0200000000000000200000000000000000000000000000000000000000000000000000000000002da1200177d9fc54ec34995ac699485135a8ca3ba73c5e21341ecca08db78145b272ee14d8ae73e06552e270340b63a8bcabf9277a1aac993e0100000000000034307831383335316433313164333232303131343961346466326139666332646238613a3a43726f7373436861696e53637269707406756e6c6f636b5e2c307830303030303030303030303030303030303030303030303030303030303030313a3a5354433a3a5354431066a75557fc3f687eb849d9199498f4aa00ab904100000000000000000000000000000000000000000000000000000000")
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	polyManager := getTestNetPolyManager(t)
+	b, s, m := polyManager.checkStarcoinStatusByProof(p)
+	fmt.Println(b, s, m)
+}
+
 func getDevNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-devnet.json")
 	p, err := getPolyManager(config, false)

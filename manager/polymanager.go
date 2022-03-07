@@ -346,13 +346,13 @@ func (this *PolyManager) MonitorDeposit() {
 		select {
 		case <-monitorTicker.C:
 			//this.handleLockDepositEvents()
-			list, err := this.db.GetAllPolyTxRetryNotPaid()
+			list, err := this.db.GetAllPolyTxRetry()
 			if err != nil {
-				log.Errorf("MonitorDeposit - db.GetAllPolyTxRetryNotPaid error: %s", err.Error())
+				log.Errorf("MonitorDeposit - db.GetAllPolyTxRetry error: %s", err.Error())
 				continue
 			}
 			for _, r := range list {
-				this.handlePolyTxRetryNotPaid(r)
+				this.handlePolyTxRetry(r)
 			}
 		case <-this.exitChan:
 			return
@@ -360,20 +360,39 @@ func (this *PolyManager) MonitorDeposit() {
 	}
 }
 
-func (this *PolyManager) handlePolyTxRetryNotPaid(r *db.PolyTxRetry) error {
-	err := this.db.IncreasePolyTxRetryCheckFeeCount(r.TxHash, r.FromChainID, r.CheckFeeCount)
+func (this *PolyManager) handlePolyTxRetry(r *db.PolyTxRetry) error {
+
+	bridgeTransactionBS, err := hex.DecodeString(r.BridgeTransaction)
 	if err != nil {
-		log.Errorf("handlePolyTxRetryNotPaid - IncreasePolyTxRetryCheckFeeCount() error: %s", err.Error())
+		log.Errorf("handlePolyTxRetry - bridgeTransaction.Deserialization error: %s", err.Error())
+		return err
+	}
+	bridgeTransaction := new(BridgeTransaction)
+	err = bridgeTransaction.Deserialization(common.NewZeroCopySource(bridgeTransactionBS))
+	if err != nil {
+		log.Errorf("handlePolyTxRetry - bridgeTransaction.Deserialization error: %s", err.Error())
+		return err
+	}
+	starcoinOk, starcoinStatus, starcoinMsg := this.checkStarcoinStatusByProof(bridgeTransaction.rawAuditPath)
+	if !starcoinOk {
+		//TODO: update database
+		return fmt.Errorf(starcoinStatus + " " + starcoinMsg)
+	}
+
+	// ///////////////////////
+	err = this.db.IncreasePolyTxRetryCheckFeeCount(r.TxHash, r.FromChainID, r.CheckFeeCount)
+	if err != nil {
+		log.Errorf("handlePolyTxRetry - IncreasePolyTxRetryCheckFeeCount() error: %s", err.Error())
 		return err
 	}
 	e, err := r.GetPolyEvent()
 	if err != nil {
-		log.Errorf("handlePolyTxRetryNotPaid - GetPolyEvent() error: %s", err.Error())
+		log.Errorf("handlePolyTxRetry - GetPolyEvent() error: %s", err.Error())
 		return err
 	}
 	s, err := CheckFee(this.bridgeSdk, r.FromChainID, e.TxId, e.PolyHash)
 	if err != nil {
-		log.Errorf("handlePolyTxRetryNotPaid - CheckFee() error: %s", err.Error())
+		log.Errorf("handlePolyTxRetry - CheckFee() error: %s", err.Error())
 		return err
 	}
 	if s.Pass() {
@@ -385,11 +404,11 @@ func (this *PolyManager) handlePolyTxRetryNotPaid(r *db.PolyTxRetry) error {
 		log.Infof("sender %s is handling poly tx ( PolyTxHash: %s, TxHash: %s, FromChainId: %d )", tools.EncodeToHex(sender.acc.Address[:]), px.PolyTxHash, px.TxHash, px.FromChainID)
 		sent, saved := sender.putPolyTxThenSend(px)
 		if !sent {
-			log.Errorf("handlePolyTxRetryNotPaid - failed to putPolyTxThenSend, not sent. PolyTxHash: %s, TxHash: %s, FromChainId: %d", px.PolyTxHash, px.TxHash, px.FromChainID)
+			log.Errorf("handlePolyTxRetry - failed to putPolyTxThenSend, not sent. PolyTxHash: %s, TxHash: %s, FromChainId: %d", px.PolyTxHash, px.TxHash, px.FromChainID)
 		}
 		if !saved {
 			err := fmt.Errorf("Failed to putPolyTxThenSend, not saved. PolyTxHash: %s, TxHash: %s, FromChainId: %d", px.PolyTxHash, px.TxHash, px.FromChainID)
-			log.Errorf("handlePolyTxRetryNotPaid - error: %s", err.Error())
+			log.Errorf("handlePolyTxRetry - error: %s", err.Error())
 			return err
 		} else {
 			//return this.db.SetPolyTxRetryFeeStatus(r.TxHash, r.FromChainID, strconv.Itoa(int(bridge.PAID)))
@@ -398,7 +417,7 @@ func (this *PolyManager) handlePolyTxRetryNotPaid(r *db.PolyTxRetry) error {
 	} else {
 		err := this.db.SetPolyTxRetryFeeStatus(r.TxHash, r.FromChainID, strconv.Itoa(int(s.Status)))
 		if err != nil {
-			log.Errorf("handlePolyTxRetryNotPaid - SetPolyTxRetryFeeStatus() error: %s", err.Error())
+			log.Errorf("handlePolyTxRetry - SetPolyTxRetryFeeStatus() error: %s", err.Error())
 			return err
 		}
 	}
@@ -489,25 +508,29 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 				}
 				cnt++
 
-				if this.config.CheckFee {
+				putToRetry := this.config.CheckFee
+				if !putToRetry {
+					b, _, _ := this.checkStarcoinStatusByProof(auditpath)
+					putToRetry = !b
+				}
+				if putToRetry {
 					return this.putPolyTxRetry(height, event, notify, hdr, param, hp, anchor, auditpath)
-					// ////////////////////////////
-					// then check fee...
-					// ////////////////////////////
+					// /////////////////////////////////////////////////////////
+					// then check fee and starcoin status for PolyTxRetry ...
+					// /////////////////////////////////////////////////////////
 				} else {
 					sender := this.selectSender()
 					log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )", tools.EncodeToHex(sender.acc.Address[:]), event.TxHash, height)
 					// //////////////////////////
-					// temporarily ignore the error for tx?
 					sent, saved := sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
-					if !sent {
+					if !sent { // temporarily ignore the error for tx?
 						log.Errorf("handleDepositEvents - failed to commitDepositEventsWithHeader, not sent. Poly tx hash: %s", event.TxHash)
 					}
 					if !saved {
 						log.Errorf("handleDepositEvents - failed to commitDepositEventsWithHeader, not saved. Poly tx hash: %s", event.TxHash)
 						return false
 					}
-				} // end if check fee
+				} // end if
 			}
 		}
 	}
@@ -517,6 +540,23 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 	}
 
 	return true
+}
+
+func (this *PolyManager) checkStarcoinStatusByProof(proof []byte) (bool, string, string) {
+	_, unlockArgs, err := ParseCrossChainUnlockParamsFromProof(proof)
+	if err != nil {
+		log.Errorf("PolyManager.checkStarcoinStatusByProof - failed to ParseCrossChainUnlockParamsFromProof, error: %s", err.Error())
+		return false, db.STARCOIN_STATUS_PARSE_TX_ERROR, "ParseCrossChainUnlockParamsFromProof error"
+	}
+	addr := tools.EncodeToHex(unlockArgs.ToAddress)
+	tokenType := string(unlockArgs.ToAssetHash)
+	b, err := tools.IsAcceptToken(this.starcoinClient, addr, tokenType)
+	if err != nil {
+		msg := fmt.Sprintf("'%s' not accept token '%s'", addr, tokenType)
+		log.Info("PolyManager.checkStarcoinStatusByProof - " + msg)
+		return false, db.STARCOIN_STATUS_NOT_ACCEPT_TOKEN, msg
+	}
+	return b, "", ""
 }
 
 func (this *PolyManager) putPolyTxRetry(height uint32, event *pcommon.SmartContactEvent, notify *pcommon.NotifyEventInfo, hdr *polytypes.Header, param *common2.ToMerkleValue, hp string, anchor *polytypes.Header, auditpath []byte) bool {
@@ -814,13 +854,13 @@ func (this *StarcoinSender) putPolyTxThenSend(polyTx *db.PolyTx) (bool, bool) {
 	_, err := this.db.PutPolyTx(polyTx)
 	if err != nil {
 		log.Errorf("putPolyTxThenSend - db.PutPolyTx error: %s", err.Error())
-		duplicate, err := db.IsDuplicatePolyTxError(this.db, polyTx, err)
-		if err != nil {
-			return false, false
+		duplicate, checkErr := db.IsDuplicatePolyTxError(this.db, polyTx, err)
+		if checkErr != nil {
+			return false, false // not sent, not saved
 		}
 		if duplicate {
-			log.Warnf("putPolyTxThenSend - duplicate poly tx. hash: %s", polyTx.TxHash)
-			return false, true
+			log.Warnf("putPolyTxThenSend - db.PutPolyTx found duplicate poly tx., FromChainID: %d, Txhash: %s", polyTx.FromChainID, polyTx.TxHash)
+			return false, true // not sent, but treated as saved
 		}
 		return false, false
 	}

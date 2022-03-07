@@ -40,6 +40,9 @@ const (
 	FEE_STATUS_NOT_PAID string = "-1" // Not paid or paid too low
 	FEE_STATUS_MISSING  string = "0"  // Tx not received yet
 	FEE_STATUS_PAID     string = "1"  // Paid and enough pass
+
+	STARCOIN_STATUS_NOT_ACCEPT_TOKEN string = "NOT_ACCEPT_TOKEN"
+	STARCOIN_STATUS_PARSE_TX_ERROR   string = "PARSE_TX_ERROR"
 )
 
 type PolyTxRetry struct {
@@ -49,11 +52,15 @@ type PolyTxRetry struct {
 	PolyEvent         string `gorm:"size:5000"`
 	PolyTxHash        string `gorm:"size:66"` // only use this hash for memo
 
-	FeeStatus string `gorm:"size:20;index"`
-	UpdatedAt int64  `gorm:"autoUpdateTime:milli;index"`
+	FeeStatus string `gorm:"size:20"`
+	UpdatedAt int64  `gorm:"autoUpdateTime:milli"`
 
 	CheckFeeCount int   `gorm:"default:0;NOT NULL"`
 	Version       int64 `gorm:"column:version;default:0;NOT NULL"`
+
+	StarcoinStatus       string `gorm:"size:20"`
+	CheckStarcoinCount   int    `gorm:"default:0;NOT NULL"`
+	CheckStarcoinMessage string `gorm:"size:200"`
 }
 
 func (o *PolyTxRetry) GetVersion() int64 {

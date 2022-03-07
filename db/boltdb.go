@@ -249,7 +249,7 @@ func (w *BoltDB) GetPolyTxRetry(txHash string, fromChainID uint64) (*PolyTxRetry
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) GetAllPolyTxRetryNotPaid() ([]*PolyTxRetry, error) {
+func (w *BoltDB) GetAllPolyTxRetry() ([]*PolyTxRetry, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
