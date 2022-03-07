@@ -125,17 +125,12 @@ func TestGetToMerkleValueFromProof(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	ps := pcommon.NewZeroCopySource(p)
-	d, _ := ps.NextVarBytes()
-	fmt.Println(d)
-	fmt.Println(hex.EncodeToString(d))
-
-	param := &common2.ToMerkleValue{}
-	if err = param.Deserialization(pcommon.NewZeroCopySource(d)); err != nil {
-		//log.Errorf("handleDepositEvents - failed to deserialize MakeTxParam (value: %x, err: %v)", value, err)
-		fmt.Print(err)
+	param, unlockArgs, err := ParseCrossChainUnlockParamsFromProof(p)
+	if err != nil {
+		fmt.Println(err)
 		t.FailNow()
 	}
+
 	fmt.Println(param)
 	fmt.Println("-------------- ToMerkleValue.TxHash --------------")
 	fmt.Println(hex.EncodeToString(param.TxHash))
@@ -155,29 +150,14 @@ func TestGetToMerkleValueFromProof(t *testing.T) {
 	fmt.Println(param.MakeTxParam.Method)
 	fmt.Println("------------------- ToMerkleValue.MakeTxParam.Args -------------------")
 	fmt.Println(param.MakeTxParam.Args)
-	// TxHash              []byte
-	// CrossChainID        []byte
-	// FromContractAddress []byte
-	// ToChainID           uint64
-	// ToContractAddress   []byte
-	// Method              string
-	// Args                []byte
-	// ////////////////////////////////////
+
 	fmt.Println("-------- ToMerkleValue.MakeTxParam.Args(decoded) --------")
-	s2 := pcommon.NewZeroCopySource(param.MakeTxParam.Args)
-	toAssetHash, b := s2.NextVarBytes()
 	fmt.Println("To asset hash:")
-	fmt.Println(string(toAssetHash))
-	toAddress, b := s2.NextVarBytes()
+	fmt.Println(string(unlockArgs.ToAssetHash))
 	fmt.Println("To address:")
-	fmt.Println(hex.EncodeToString(toAddress))
+	fmt.Println(hex.EncodeToString(unlockArgs.ToAddress))
 	fmt.Println("Amount:")
-	amount_1, b := s2.NextUint64()
-	amount_2, b := s2.NextUint64()
-	amount_3, b := s2.NextUint64()
-	amount_4, b := s2.NextUint64()
-	fmt.Println(amount_1, ",", amount_2, ",", amount_3, ",", amount_4)
-	_ = b //fmt.Println(b)
+	fmt.Println(unlockArgs.Amount.String())
 }
 
 func TestDeserializeCrossChainEventRawData2(t *testing.T) {
