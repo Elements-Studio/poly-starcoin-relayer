@@ -284,6 +284,9 @@ func (this *PolyManager) setPolyTxProcessedIfOnChainSmtRootMatched(polyTx *db.Po
 	if err != nil {
 		return "", nil
 	}
+	if txInfo == nil || txInfo.BlockNumber == "" {
+		return "", nil // Cannot find Transaction info on-chain
+	}
 	txHeight, err := strconv.ParseUint(txInfo.BlockNumber, 10, 64)
 	if err != nil {
 		return "", err
@@ -318,7 +321,7 @@ func (this *PolyManager) handleTimedOutPolyTx(polyTx *db.PolyTx) {
 		return
 	}
 	var isKnownFailure bool = true
-	if stcTx == nil || bytes.Equal(stcTx.Status, []byte{}) {
+	if stcTx == nil || stcTx.BlockNumber == "" || bytes.Equal(stcTx.Status, []byte{}) {
 		isKnownFailure = false
 	} else {
 		var executed bool

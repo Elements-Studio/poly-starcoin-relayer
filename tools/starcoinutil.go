@@ -181,6 +181,9 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 				log.Debugf("GetTransactionInfoByHash error, %v", err)
 				continue
 			}
+			if tx == nil || tx.BlockNumber == "" {
+				return false, nil // Cannot find Transaction info on-chain
+			}
 			//log.Debug("Transaction status: " + tx.Status)
 			if isStarcoinTxStatusExecuted(tx.Status) {
 				return true, nil
