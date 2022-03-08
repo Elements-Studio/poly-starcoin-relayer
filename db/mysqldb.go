@@ -42,7 +42,7 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 	}
 	// Migrate the schema
 	db.AutoMigrate(&ChainHeight{})
-	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{}, &StarcoinTxRetry{}, &StarcoinTxCheck{}, &PolyTxRetry{})
+	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{}, &StarcoinTxRetry{}, &StarcoinTxCheck{}, &PolyTxRetry{}, &RemovedPolyTx{})
 
 	w := new(MySqlDB)
 	w.db = db
@@ -395,7 +395,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, st
 func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	var list []PolyTx
 	//err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
-	notFailedStatuses := []string{STATUS_PROCESSED, STATUS_CONFIRMED, STATUS_TIMEDOUT}
+	notFailedStatuses := []string{STATUS_PROCESSED, STATUS_CONFIRMED, STATUS_TIMEDOUT, STATUS_TO_BE_REMOVED}
 	err := w.db.Where("retry_count < ?", PolyTxMaxRetryCount).Not(map[string]interface{}{"status": notFailedStatuses}).Limit(1).Find(&list).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -435,6 +435,28 @@ func (w *MySqlDB) GetFirstTimedOutPolyTx() (*PolyTx, error) {
 	} else {
 		return nil, nil
 	}
+}
+
+func (w *MySqlDB) GetFirstPolyTxToBeRemoved() (*PolyTx, error) {
+	var list []PolyTx
+	status := []string{STATUS_TO_BE_REMOVED}
+	err := w.db.Where(map[string]interface{}{"status": status}).Limit(1).Find(&list).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	first := list[0]
+	//if first.UpdatedAt < CurrentTimeMillis()-PolyTxMaxProcessingSeconds*1000 {
+	return &first, nil
+	//} else {
+	//	return nil, nil
+	//}
 }
 
 func (w *MySqlDB) GetTimedOutOrFailedPolyTxList() ([]*PolyTx, error) {
@@ -509,6 +531,31 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 		return 0, err
 	}
 	return tx.TxIndex, nil
+}
+
+func (w *MySqlDB) RemovePolyTx(tx *PolyTx) error {
+	if tx.Status != STATUS_TO_BE_REMOVED {
+		return fmt.Errorf("PolyTx(index: '%d') status is not TO_BE_REMOVED, it is: %s", tx.TxIndex, tx.Status)
+	}
+	r := tx.ToRemovedPolyTx()
+
+	err := w.db.Transaction(func(dbtx *gorm.DB) error {
+		dbErr := dbtx.Save(r).Error
+		if dbErr != nil {
+			return dbErr
+		}
+		dbErr = dbtx.Delete(tx).Error
+		if dbErr != nil {
+			return dbErr
+		}
+		// reset non-membership proof after removed PolyTx
+		dbErr = dbtx.Table("poly_tx").Where("tx_index > ?", tx.TxIndex).Updates(map[string]interface{}{"smt_non_membership_root_hash": ""}).Error
+		if dbErr != nil {
+			return dbErr
+		}
+		return nil
+	})
+	return err
 }
 
 func (w *MySqlDB) getLastPolyTx() (uint64, *PolyTx, error) {

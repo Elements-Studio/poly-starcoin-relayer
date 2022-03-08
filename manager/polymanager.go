@@ -221,12 +221,21 @@ func (this *PolyManager) MonitorTimedOutPolyTx() {
 	for {
 		select {
 		case <-monitorTicker.C:
+			// //////////  setPolyTxProcessedIfOnChainSmtRootMatched ///////////
 			polyTxList, err := this.db.GetTimedOutOrFailedPolyTxList()
 			if err != nil {
 				log.Errorf("PolyManager.MonitorTimedOutPolyTx - failed to GetTimedOutOrFailedPolyTxList: %s", err.Error())
 			} else if polyTxList != nil {
 				this.handleTimedOutOrFailedPolyTxList(polyTxList)
 			}
+			// /////////////// remove PolyTx blocking the process //////////////
+			polyTxToBeRemoved, err := this.db.GetFirstPolyTxToBeRemoved()
+			if err != nil {
+				log.Errorf("PolyManager.MonitorTimedOutPolyTx - failed to GetFirstPolyTxToBeRemoved: %s", err.Error())
+			} else if polyTxToBeRemoved != nil {
+				this.handlePolyTxToBeRemoved(polyTxToBeRemoved)
+			}
+			// ////////////////// handle First timed-out PolyTx ////////////////
 			polyTx, err := this.db.GetFirstTimedOutPolyTx()
 			if err != nil {
 				log.Errorf("PolyManager.MonitorTimedOutPolyTx - failed to GetFirstTimedOutPolyTx: %s", err.Error())
@@ -242,6 +251,36 @@ func (this *PolyManager) MonitorTimedOutPolyTx() {
 	}
 }
 
+func (this *PolyManager) handlePolyTxToBeRemoved(polyTx *db.PolyTx) error {
+	smtRootStr, err := this.getStarcoinCrossChainSmtRoot()
+	if err != nil {
+		log.Errorf("PolyManager.handlePolyTxToBeRemoved - failed to getStarcoinCrossChainSmtRoot: %s", err.Error())
+		return err
+	}
+	onChainSmtRoot, err := tools.HexToBytes(smtRootStr)
+	if err != nil {
+		log.Errorf("PolyManager.handlePolyTxToBeRemoved - failed to tools.HexToBytes: %s", err.Error())
+		return err
+	}
+	nonMemberSmtRoot, err := polyTx.GetSmtNonMembershipRootHash()
+	if err != nil {
+		log.Errorf("PolyManager.handlePolyTxToBeRemoved - failed to PolyTx.GetSmtNonMembershipRootHash: %s", err.Error())
+		return err
+	}
+	if bytes.Equal(onChainSmtRoot, nonMemberSmtRoot) {
+		err = this.db.RemovePolyTx(polyTx)
+		if err != nil {
+			log.Errorf("PolyManager.handlePolyTxToBeRemoved - failed to db.RemovePolyTx: %s", err.Error())
+			return err
+		}
+	} else {
+		err = fmt.Errorf("PolyTx cannot be removed because it's non-membership SMT root is not matched with current on-chain SMT Root")
+		log.Errorf("PolyManager.handlePolyTxToBeRemoved - %s, TxIndex: %d", err.Error(), polyTx.TxIndex)
+		return err
+	}
+	return nil
+}
+
 func (this *PolyManager) handleTimedOutOrFailedPolyTxList(list []*db.PolyTx) error {
 	starcoinHeight, err := tools.GetStarcoinNodeHeight(this.config.StarcoinConfig.RestURL, tools.NewRestClient())
 	if err != nil {
@@ -253,19 +292,20 @@ func (this *PolyManager) handleTimedOutOrFailedPolyTxList(list []*db.PolyTx) err
 		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - failed to getStarcoinCrossChainSmtRoot: %s", err.Error())
 		return err
 	}
+	onChainSmtRoot, err := tools.HexToBytes(smtRootStr)
 	if err != nil {
 		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - failed to tools.HexToBytes: %s", err.Error())
 		return err
 	}
-	smtRoot, err := tools.HexToBytes(smtRootStr)
+
 	for _, polyTx := range list {
-		s, err := this.setPolyTxProcessedIfOnChainSmtRootMatched(polyTx, smtRoot, starcoinHeight)
+		s, err := this.setPolyTxProcessedIfOnChainSmtRootMatched(polyTx, onChainSmtRoot, starcoinHeight)
 		if err != nil {
 			log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - setPolyTxProcessedIfOnChainSmtRootMatched error: %s", err.Error())
 			continue
 		}
 		if s != "" {
-			log.Infof("PolyManager.handleTimedOutOrFailedPolyTxList - set PolyTx status to PROCESSED because of matched SMT root. Starcoin hash: %s, SMT root: %s", polyTx.StarcoinTxHash, hex.EncodeToString(smtRoot))
+			log.Infof("PolyManager.handleTimedOutOrFailedPolyTxList - set PolyTx status to PROCESSED because of matched SMT root. Starcoin hash: %s, SMT root: %s", polyTx.StarcoinTxHash, hex.EncodeToString(onChainSmtRoot))
 			break
 		} else {
 			continue
@@ -276,7 +316,7 @@ func (this *PolyManager) handleTimedOutOrFailedPolyTxList(list []*db.PolyTx) err
 
 // Set PolyTx's status to PROCESSED if the SMT Root which included it matchs On-Chain SMT Root.
 // Return Starcoin tx. hash if matched, or else return empty string.
-func (this *PolyManager) setPolyTxProcessedIfOnChainSmtRootMatched(polyTx *db.PolyTx, smtRoot []byte, starcoinHeight uint64) (string, error) {
+func (this *PolyManager) setPolyTxProcessedIfOnChainSmtRootMatched(polyTx *db.PolyTx, onChainSmtRoot []byte, starcoinHeight uint64) (string, error) {
 	if polyTx.StarcoinTxHash == "" {
 		return "", nil
 	}
@@ -295,7 +335,7 @@ func (this *PolyManager) setPolyTxProcessedIfOnChainSmtRootMatched(polyTx *db.Po
 		return "", nil
 	}
 	computedSmtRoot, err := polyTx.ComputePloyTxInclusionSmtRootHash()
-	if bytes.Equal(smtRoot, computedSmtRoot) {
+	if bytes.Equal(onChainSmtRoot, computedSmtRoot) {
 		this.db.SetPolyTxStatusProcessed(polyTx.TxHash, polyTx.FromChainID, polyTx.StarcoinTxHash)
 		return polyTx.StarcoinTxHash, nil
 	} else {
@@ -591,6 +631,7 @@ func (this *PolyManager) checkStarcoinStatusByProof(proof []byte) (bool, string,
 	}
 }
 
+// Put PolyTx in DB, return true if saved in DB.
 func (this *PolyManager) putPolyTxRetry(height uint32, event *pcommon.SmartContactEvent, notify *pcommon.NotifyEventInfo, hdr *polytypes.Header, param *common2.ToMerkleValue, hp string, anchor *polytypes.Header, auditpath []byte) bool {
 	polyMsgTx, err := newPolyMsgTx(height, event, notify)
 	if err != nil {
@@ -617,13 +658,14 @@ func (this *PolyManager) putPolyTxRetry(height uint32, event *pcommon.SmartConta
 	}
 	err = this.db.PutPolyTxRetry(txRetry)
 	if err != nil {
-		duplicate, derr := db.IsDuplicatePolyTxRetryError(this.db, txRetry, err)
-		if derr != nil {
-			log.Errorf("putPolyTxRetry - call db.IsDuplicatePolyTxError() error: %s", derr.Error())
+		duplicate, checkErr := db.IsDuplicatePolyTxRetryError(this.db, txRetry, err)
+		if checkErr != nil {
+			log.Errorf("putPolyTxRetry - call db.IsDuplicatePolyTxError() error: %s", checkErr.Error())
+			return false // treated as not saved
 		}
 		if duplicate {
 			log.Warnf("putPolyTxRetry - duplicate PolyTxRetry. Poly tx hash: %s", event.TxHash)
-			// ignore
+			// ignore, treated as saved
 		} else {
 			log.Errorf("putPolyTxRetry - failed to PutPolyTxRetry, not saved. Poly tx hash: %s", event.TxHash)
 			return false
@@ -888,7 +930,7 @@ func (this *StarcoinSender) putPolyTxThenSend(polyTx *db.PolyTx) (bool, bool) {
 		log.Errorf("putPolyTxThenSend - db.PutPolyTx error: %s", err.Error())
 		duplicate, checkErr := db.IsDuplicatePolyTxError(this.db, polyTx, err)
 		if checkErr != nil {
-			return false, false // not sent, not saved
+			return false, false // not sent, treated as not saved
 		}
 		if duplicate {
 			log.Warnf("putPolyTxThenSend - db.PutPolyTx found duplicate poly tx., FromChainID: %d, Txhash: %s", polyTx.FromChainID, polyTx.TxHash)
@@ -1006,7 +1048,19 @@ func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 		log.Errorf("failed to SetPolyTxStatusProcessing. Error: %v, txIndex: %d", err, polyTx.TxIndex)
 		return false
 	}
-	// //////////////////////////////////////////////////////
+	if polyTx.SmtNonMembershipRootHash == "" {
+		err = this.db.UpdatePolyTxNonMembershipProofByIndex(polyTx.TxIndex)
+		if err != nil {
+			log.Errorf("failed to db.UpdatePolyTxNonMembershipProofByIndex. Error: %v, txIndex: %d", err, polyTx.TxIndex)
+			return false
+		}
+		polyTx, err = this.db.GetPolyTx(polyTx.TxHash, polyTx.FromChainID)
+		if err != nil {
+			log.Errorf("failed to re-get PolyTx, error: %v, txIndex: %d", err, polyTx.TxIndex)
+			return false
+		}
+	}
+	// ///////////////////////////////////////////////////////////
 	stcTxInfo, err := this.polyTxToStarcoinTxInfo(polyTx)
 	if err != nil {
 		return false

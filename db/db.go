@@ -12,12 +12,13 @@ import (
 const KEY_POLY_HEIGHT = "poly_height"
 
 const (
-	STATUS_CREATED    = "N" //New
-	STATUS_PROCESSING = "P" //Processing
-	STATUS_FAILED     = "F" //Failed
-	STATUS_PROCESSED  = "D" //processeD
-	STATUS_CONFIRMED  = "C" //Confirmed
-	STATUS_TIMEDOUT   = "T" //TimedOut(or unknown error)
+	STATUS_CREATED       = "N"   //New
+	STATUS_PROCESSING    = "P"   //Processing
+	STATUS_FAILED        = "F"   //Failed
+	STATUS_PROCESSED     = "D"   //processeD
+	STATUS_CONFIRMED     = "C"   //Confirmed
+	STATUS_TIMEDOUT      = "T"   //TimedOut(or unknown error)
+	STATUS_TO_BE_REMOVED = "TBR" //To Be Removed
 )
 
 type DB interface {
@@ -58,6 +59,10 @@ type DB interface {
 
 	PutPolyTx(tx *PolyTx) (uint64, error)
 
+	RemovePolyTx(tx *PolyTx) error
+
+	UpdatePolyTxNonMembershipProofByIndex(idx uint64) error
+
 	SetPolyTxStatus(txHash string, fromChainID uint64, status string) error
 
 	SetPolyTxStatusProcessing(txHash string, fromChainID uint64) error
@@ -69,6 +74,8 @@ type DB interface {
 	GetFirstFailedPolyTx() (*PolyTx, error)
 
 	GetFirstTimedOutPolyTx() (*PolyTx, error)
+
+	GetFirstPolyTxToBeRemoved() (*PolyTx, error)
 
 	GetTimedOutOrFailedPolyTxList() ([]*PolyTx, error)
 

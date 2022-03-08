@@ -281,6 +281,14 @@ func (w *BoltDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	return 0, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) RemovePolyTx(tx *PolyTx) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) UpdatePolyTxNonMembershipProofByIndex(idx uint64) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) SetPolyTxStatus(txHash string, fromChainID uint64, status string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
@@ -302,6 +310,10 @@ func (w *BoltDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 }
 
 func (w *BoltDB) GetFirstTimedOutPolyTx() (*PolyTx, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) GetFirstPolyTxToBeRemoved() (*PolyTx, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 

@@ -141,11 +141,57 @@ type PolyTx struct {
 
 	RetryCount int   `gorm:"default:0;NOT NULL"`
 	Version    int64 `gorm:"column:version;default:0;NOT NULL"`
+	CreatedAt  int64 `gorm:"autoCreateTime:milli"`
+}
+
+type RemovedPolyTx struct {
+	ID                            uint64 `gorm:"primaryKey;autoIncrement:true"`
+	OriginTxIndex                 uint64 `gorm:"index"`
+	FromChainID                   uint64 `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"`
+	TxHash                        string `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"` // TxHash //TxData   string `gorm:"size:5000"`
+	PolyTxProof                   string `gorm:"size:36000"`
+	SmtTxPath                     string `gorm:"size:66;uniqueIndex"`
+	SmtNonMembershipRootHash      string `gorm:"size:66"`
+	SmtProofSideNodes             string `gorm:"size:18000"`
+	SmtProofNonMembershipLeafData string `gorm:"size:132"`
+	SmtProofSiblingData           string `gorm:"size:132"`
+	SmtProofBitMask               string `gorm:"size:66"`
+	SmtProofNumSideNodes          int
+	UpdatedAt                     int64  `gorm:"autoUpdateTime:milli;index"`
+	Status                        string `gorm:"size:20;index"`
+	StarcoinTxHash                string `gorm:"size:66;uniqueIndex"`
+	PolyTxHash                    string `gorm:"size:66"`
+	RetryCount                    int    `gorm:"default:0;NOT NULL"`
+	Version                       int64  `gorm:"column:version;default:0;NOT NULL"`
+	CreatedAt                     int64  `gorm:"autoCreateTime:milli"`
 }
 
 //
 // note: alter table `poly_tx` convert to charset latin1;
 //
+
+func (o *PolyTx) ToRemovedPolyTx() *RemovedPolyTx {
+	r := RemovedPolyTx{
+		OriginTxIndex:                 o.TxIndex,
+		FromChainID:                   o.FromChainID,
+		TxHash:                        o.TxHash,
+		PolyTxProof:                   o.PolyTxProof,
+		SmtTxPath:                     o.SmtTxPath,
+		SmtNonMembershipRootHash:      o.SmtNonMembershipRootHash,
+		SmtProofSideNodes:             o.SmtProofSideNodes,
+		SmtProofNonMembershipLeafData: o.SmtProofNonMembershipLeafData,
+		SmtProofBitMask:               o.SmtProofBitMask,
+		SmtProofNumSideNodes:          o.SmtProofNumSideNodes,
+		//UpdatedAt:                     o.UpdatedAt,
+		Status:         o.Status,
+		StarcoinTxHash: o.StarcoinTxHash,
+		PolyTxHash:     o.PolyTxHash,
+		RetryCount:     o.RetryCount,
+		//Version:        o.Version,
+		//CreatedAt: o.CreatedAt,
+	}
+	return &r
+}
 
 func (o *PolyTx) GetVersion() int64 {
 	return o.Version

@@ -209,6 +209,22 @@ func TestPutPolyTx(t *testing.T) {
 
 }
 
+func TestRemovePolyTx(t *testing.T) {
+	db := testNetDB()
+	txHash := "90f0a7b0c9b4d5d556b8058caeaaf5fee2b249340efd3cfa6325cc44adaab4f7"
+	fromChainId := 318
+	polyTx, err := db.GetPolyTx(txHash, uint64(fromChainId))
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	err = db.RemovePolyTx(polyTx)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+}
+
 func TestHasher(t *testing.T) {
 	// Move version println:
 	// [debug] (&) [1]
