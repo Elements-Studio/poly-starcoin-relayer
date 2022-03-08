@@ -462,15 +462,19 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 		log.Errorf("handleDepositEvents - get block event at height:%d error: %s", height, err.Error())
 		return false
 	}
+
+	heightProcessed := true
 	for _, event := range events {
 		for _, notify := range event.Notify {
 			if notify.ContractAddress == this.config.PolyConfig.EntranceContractAddress {
 				states := notify.States.([]interface{})
 				method, _ := states[0].(string)
 				if method != "makeProof" {
+					//log.Debug("It is not a 'makeProof' method!")
 					continue
 				}
 				if uint64(states[2].(float64)) != this.config.StarcoinConfig.SideChainId {
+					//log.Debug("uint64(states[2].(float64)) != this.config.StarcoinConfig.SideChainId")
 					continue
 				}
 				proof, err := this.polySdk.GetCrossStatesProof(hdr.Height-1, states[5].(string))
@@ -508,10 +512,14 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 						}
 					}
 					if !isTarget {
+						//log.Debug("!isTarget, IGNORE!")
 						continue
 					}
 				}
 				cnt++
+
+				// log.Debug(cnt)
+				// log.Debug(states[0].(string))
 
 				putToRetry := this.config.CheckFee
 				if !putToRetry {
@@ -519,7 +527,13 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					putToRetry = !b
 				}
 				if putToRetry {
-					return this.putPolyTxRetry(height, event, notify, hdr, param, hp, anchor, auditpath)
+					ok := this.putPolyTxRetry(height, event, notify, hdr, param, hp, anchor, auditpath)
+					if !ok {
+						heightProcessed = false // break! re-process this height!
+						break
+					} else {
+						//continue
+					}
 					// /////////////////////////////////////////////////////////
 					// then check fee and starcoin status for PolyTxRetry ...
 					// /////////////////////////////////////////////////////////
@@ -533,11 +547,18 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					}
 					if !saved {
 						log.Errorf("handleDepositEvents - failed to commitDepositEventsWithHeader, not saved. Poly tx hash: %s", event.TxHash)
-						return false
+						heightProcessed = false // break! re-process this height!
+						break
+					} else {
+						// continue
 					}
 				} // end if
 			}
 		}
+	}
+
+	if !heightProcessed {
+		return false
 	}
 	if cnt == 0 && isEpoch && isCurr {
 		sender := this.selectSender()

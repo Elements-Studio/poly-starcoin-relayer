@@ -337,10 +337,10 @@ func testLockStarcoinAssetWithStcFee(from_asset_hash []byte, to_chain_id uint64,
 }
 
 func TestHandleDepositEvents(t *testing.T) {
-	polyManager := getDevNetPolyManager(t)
-	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//polyManager := getDevNetPolyManager(t)
+	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	var height uint32 = 6003
+	var height uint32 = 24924223
 	ok := polyManager.handleDepositEvents(height)
 	fmt.Println("---------------- handleDepositEvents result -----------------")
 	fmt.Println(ok)
