@@ -296,6 +296,23 @@ func (w *MySqlDB) GetPolyTxByIndex(idx uint64) (*PolyTx, error) {
 	return &px, nil
 }
 
+func (w *MySqlDB) GetPreviousePolyTx(idx uint64) (*PolyTx, error) {
+	var list []PolyTx
+	err := w.db.Where("tx_index < ?", idx).Order("tx_index desc").Limit(1).Find(&list).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	first := list[0]
+	return &first, nil
+}
+
 func (w *MySqlDB) SetPolyTxStatus(txHash string, fromChainID uint64, status string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
@@ -634,7 +651,7 @@ func (w *MySqlDB) UpdatePolyTxNonMembershipProofByIndex(idx uint64) error {
 	if tx == nil || err != nil {
 		return fmt.Errorf("cannot get PolyTx by index: %d", idx)
 	}
-	preTx, err := w.GetPolyTxByIndex(idx - 1)
+	preTx, err := w.GetPreviousePolyTx(idx) //GetPolyTxByIndex(idx - 1)
 	if err != nil {
 		return fmt.Errorf("cannot get PolyTx by index: %d", idx-1)
 	}

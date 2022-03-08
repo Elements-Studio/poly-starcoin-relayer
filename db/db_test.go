@@ -125,8 +125,9 @@ func TestGetAndDeleteAllStarcoinTxRetry(t *testing.T) {
 // }
 
 func TestUpdatePolyTxNonMembershipProofByIndex(t *testing.T) {
-	mysqldb := devNetDB().(*MySqlDB)
-	err := mysqldb.UpdatePolyTxNonMembershipProofByIndex(2)
+	//mysqldb := devNetDB().(*MySqlDB)
+	mysqldb := testNetDB().(*MySqlDB)
+	err := mysqldb.UpdatePolyTxNonMembershipProofByIndex(21)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
