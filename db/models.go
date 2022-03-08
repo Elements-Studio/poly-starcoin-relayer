@@ -193,6 +193,29 @@ func (o *PolyTx) ToRemovedPolyTx() *RemovedPolyTx {
 	return &r
 }
 
+func (o *RemovedPolyTx) ToPolyTx() *PolyTx {
+	r := PolyTx{
+		//TxIndex:                       txIndex,
+		FromChainID:                   o.FromChainID,
+		TxHash:                        o.TxHash,
+		PolyTxProof:                   o.PolyTxProof,
+		SmtTxPath:                     o.SmtTxPath,
+		SmtNonMembershipRootHash:      "", //o.SmtNonMembershipRootHash,
+		SmtProofSideNodes:             o.SmtProofSideNodes,
+		SmtProofNonMembershipLeafData: o.SmtProofNonMembershipLeafData,
+		SmtProofBitMask:               o.SmtProofBitMask,
+		SmtProofNumSideNodes:          o.SmtProofNumSideNodes,
+		//UpdatedAt:                     o.UpdatedAt,
+		Status:         o.Status,
+		StarcoinTxHash: o.StarcoinTxHash,
+		PolyTxHash:     o.PolyTxHash,
+		RetryCount:     o.RetryCount,
+		//Version:        o.Version,
+		//CreatedAt: o.CreatedAt,
+	}
+	return &r
+}
+
 func (o *PolyTx) GetVersion() int64 {
 	return o.Version
 }

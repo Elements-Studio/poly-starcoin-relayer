@@ -245,10 +245,27 @@ func (this *PolyManager) MonitorTimedOutPolyTx() {
 				//log.Debugf("Get timed-out poly Tx. hash: %s", polyTx.TxHash)
 				this.handleTimedOutPolyTx(polyTx)
 			}
+			// /////////////// handle RemovedPolyTxToBePushedBack //////////////
+			removedPolyTx, err := this.db.GetFirstRemovedPolyTxToBePushedBack()
+			if err != nil {
+				log.Errorf("PolyManager.MonitorTimedOutPolyTx - failed to GetFirstRemovedPolyTxToBePushedBack: %s", err.Error())
+				continue
+			}
+			if removedPolyTx != nil {
+				this.handleRemovedPolyTxToBePushedBack(removedPolyTx)
+			}
 		case <-this.exitChan:
 			return
 		}
 	}
+}
+
+func (this *PolyManager) handleRemovedPolyTxToBePushedBack(removedPolyTx *db.RemovedPolyTx) error {
+	if removedPolyTx.Status != db.STATTUS_TO_BE_PUSHED_BACK {
+		return nil // just ignore
+	}
+	err := this.db.PushBackRemovePolyTx(removedPolyTx.ID)
+	return err
 }
 
 func (this *PolyManager) handlePolyTxToBeRemoved(polyTx *db.PolyTx) error {

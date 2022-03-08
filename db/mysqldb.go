@@ -476,6 +476,24 @@ func (w *MySqlDB) GetFirstPolyTxToBeRemoved() (*PolyTx, error) {
 	//}
 }
 
+func (w *MySqlDB) GetFirstRemovedPolyTxToBePushedBack() (*RemovedPolyTx, error) {
+	var list []RemovedPolyTx
+	status := []string{STATTUS_TO_BE_PUSHED_BACK}
+	err := w.db.Where(map[string]interface{}{"status": status}).Limit(1).Find(&list).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	first := list[0]
+	return &first, nil
+}
+
 func (w *MySqlDB) GetTimedOutOrFailedPolyTxList() ([]*PolyTx, error) {
 	lastIndex, _, err := w.getLastPolyTx()
 	if err != nil {
@@ -534,9 +552,11 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	// 	TxHash:  txHash,
 	// }
 	tx.TxIndex = lastIndex + 1
-	err = w.setPolyTxNonMembershipProof(tx, lastTx)
-	if err != nil {
-		return 0, err
+	if lastTx.SmtNonMembershipRootHash != "" { // If previouse SmtNonMembershipRootHash is empty, ignore set current proof
+		err = w.setPolyTxNonMembershipProof(tx, lastTx)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	//tx.UpdatedAt = currentTimeMillis()
@@ -572,6 +592,31 @@ func (w *MySqlDB) RemovePolyTx(tx *PolyTx) error {
 		}
 		return nil
 	})
+	return err
+}
+
+func (w *MySqlDB) PushBackRemovePolyTx(id uint64) error {
+	px := RemovedPolyTx{}
+	if err := w.db.Where(&RemovedPolyTx{
+		ID: id,
+	}).First(&px).Error; err != nil {
+		return err
+	}
+	p := px.ToPolyTx()
+
+	err := w.db.Transaction(func(dbtx *gorm.DB) error {
+		idx, putErr := w.PutPolyTx(p)
+		_ = idx
+		if putErr != nil {
+			return putErr
+		}
+		delErr := dbtx.Delete(px).Error
+		if delErr != nil {
+			return delErr
+		}
+		return nil
+	})
+
 	return err
 }
 

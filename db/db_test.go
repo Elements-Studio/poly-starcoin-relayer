@@ -226,6 +226,16 @@ func TestRemovePolyTx(t *testing.T) {
 	}
 }
 
+func TestPushBackRemovePolyTx(t *testing.T) {
+	db := testNetDB()
+	removedId := 1
+	err := db.PushBackRemovePolyTx(uint64(removedId))
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+}
+
 func TestHasher(t *testing.T) {
 	// Move version println:
 	// [debug] (&) [1]
