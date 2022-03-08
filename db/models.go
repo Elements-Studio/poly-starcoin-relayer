@@ -159,7 +159,7 @@ type RemovedPolyTx struct {
 	SmtProofNumSideNodes          int
 	UpdatedAt                     int64  `gorm:"autoUpdateTime:milli;index"`
 	Status                        string `gorm:"size:20;index"`
-	StarcoinTxHash                string `gorm:"size:66;uniqueIndex"`
+	StarcoinTxHash                string `gorm:"size:66"`
 	PolyTxHash                    string `gorm:"size:66"`
 	RetryCount                    int    `gorm:"default:0;NOT NULL"`
 	Version                       int64  `gorm:"column:version;default:0;NOT NULL"`
