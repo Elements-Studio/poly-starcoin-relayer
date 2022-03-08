@@ -32,3 +32,12 @@ Check `poly_tx` table:
 select tx_index, from_chain_id, poly_tx_hash, smt_non_membership_root_hash, status, retry_count, starcoin_tx_hash from poly_tx order by tx_index desc limit 10;
 ```
 
+## Is-Accept-Token checking of Starcoin account
+
+Before relay Poly Tx.(to-Starcoin), realyer will check the target(Starcoin) account is-accept the token in cross-chain transfer Tx., if not, save it in `poly_tx_retry` table.
+
+Check `poly_tx_retry` table:
+
+```sql
+select from_chain_id, tx_hash, starcoin_status, check_starcoin_count, check_starcoin_message, fee_status from poly_tx_retry;
+```
