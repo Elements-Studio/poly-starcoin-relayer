@@ -271,28 +271,28 @@ func (this *PolyManager) handleRemovedPolyTxToBePushedBack(removedPolyTx *db.Rem
 func (this *PolyManager) handlePolyTxToBeRemoved(polyTx *db.PolyTx) error {
 	smtRootStr, err := this.getStarcoinCrossChainSmtRoot()
 	if err != nil {
-		log.Errorf("PolyManager.handlePolyTxToBeRemoved - failed to getStarcoinCrossChainSmtRoot: %s", err.Error())
+		log.Errorf("PolyManager.handlePolyTxToBeRemoved - (poly to starcoin)failed to getStarcoinCrossChainSmtRoot: %s", err.Error())
 		return err
 	}
 	onChainSmtRoot, err := tools.HexToBytes(smtRootStr)
 	if err != nil {
-		log.Errorf("PolyManager.handlePolyTxToBeRemoved - failed to tools.HexToBytes: %s", err.Error())
+		log.Errorf("PolyManager.handlePolyTxToBeRemoved - (poly to starcoin)failed to tools.HexToBytes: %s", err.Error())
 		return err
 	}
 	nonMemberSmtRoot, err := polyTx.GetSmtNonMembershipRootHash()
 	if err != nil {
-		log.Errorf("PolyManager.handlePolyTxToBeRemoved - failed to PolyTx.GetSmtNonMembershipRootHash: %s", err.Error())
+		log.Errorf("PolyManager.handlePolyTxToBeRemoved - (poly to starcoin)failed to PolyTx.GetSmtNonMembershipRootHash: %s", err.Error())
 		return err
 	}
 	if bytes.Equal(onChainSmtRoot, nonMemberSmtRoot) {
 		err = this.db.RemovePolyTx(polyTx)
 		if err != nil {
-			log.Errorf("PolyManager.handlePolyTxToBeRemoved - failed to db.RemovePolyTx: %s", err.Error())
+			log.Errorf("PolyManager.handlePolyTxToBeRemoved - (poly to starcoin)failed to db.RemovePolyTx: %s", err.Error())
 			return err
 		}
 	} else {
 		err = fmt.Errorf("PolyTx cannot be removed because it's non-membership SMT root is not matched with current on-chain SMT Root")
-		log.Errorf("PolyManager.handlePolyTxToBeRemoved - %s, TxIndex: %d", err.Error(), polyTx.TxIndex)
+		log.Errorf("PolyManager.handlePolyTxToBeRemoved - (poly to starcoin)%s, TxIndex: %d", err.Error(), polyTx.TxIndex)
 		return err
 	}
 	return nil
@@ -301,28 +301,28 @@ func (this *PolyManager) handlePolyTxToBeRemoved(polyTx *db.PolyTx) error {
 func (this *PolyManager) handleTimedOutOrFailedPolyTxList(list []*db.PolyTx) error {
 	starcoinHeight, err := tools.GetStarcoinNodeHeight(this.config.StarcoinConfig.RestURL, tools.NewRestClient())
 	if err != nil {
-		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - failed to GetStarcoinNodeHeight: %s", err.Error())
+		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - (poly to starcoin)failed to GetStarcoinNodeHeight: %s", err.Error())
 		return err
 	}
 	smtRootStr, err := this.getStarcoinCrossChainSmtRoot()
 	if err != nil {
-		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - failed to getStarcoinCrossChainSmtRoot: %s", err.Error())
+		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - (poly to starcoin)failed to getStarcoinCrossChainSmtRoot: %s", err.Error())
 		return err
 	}
 	onChainSmtRoot, err := tools.HexToBytes(smtRootStr)
 	if err != nil {
-		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - failed to tools.HexToBytes: %s", err.Error())
+		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - (poly to starcoin)failed to tools.HexToBytes: %s", err.Error())
 		return err
 	}
 
 	for _, polyTx := range list {
 		s, err := this.setPolyTxProcessedIfOnChainSmtRootMatched(polyTx, onChainSmtRoot, starcoinHeight)
 		if err != nil {
-			log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - setPolyTxProcessedIfOnChainSmtRootMatched error: %s", err.Error())
+			log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - (poly to starcoin)setPolyTxProcessedIfOnChainSmtRootMatched error: %s", err.Error())
 			continue
 		}
 		if s != "" {
-			log.Infof("PolyManager.handleTimedOutOrFailedPolyTxList - set PolyTx status to PROCESSED because of matched SMT root. Starcoin hash: %s, SMT root: %s", polyTx.StarcoinTxHash, hex.EncodeToString(onChainSmtRoot))
+			log.Infof("PolyManager.handleTimedOutOrFailedPolyTxList - set Poly(to starcoin)Tx status to PROCESSED because of matched SMT root. Starcoin hash: %s, SMT root: %s", polyTx.StarcoinTxHash, hex.EncodeToString(onChainSmtRoot))
 			break
 		} else {
 			continue
@@ -385,17 +385,17 @@ func (this *PolyManager) handleTimedOutPolyTx(polyTx *db.PolyTx) {
 		executed, isKnownFailure = tools.IsStarcoinTxStatusExecutedOrKnownFailure(stcTx.Status)
 		if executed {
 			this.db.SetPolyTxStatusProcessed(polyTx.TxHash, polyTx.FromChainID, polyTx.StarcoinTxHash)
-			log.Infof("PolyManager.handleTimedOutPolyTx set timed-out PolyTx status to EXECUTED. Starcoin hash: %s", polyTx.StarcoinTxHash)
+			log.Infof("PolyManager.handleTimedOutPolyTx set timed-out Poly(to starcoin)Tx status to EXECUTED. Starcoin hash: %s", polyTx.StarcoinTxHash)
 			return
 		}
 	}
 	if isKnownFailure {
 		this.db.SetPolyTxStatus(polyTx.TxHash, polyTx.FromChainID, db.STATUS_FAILED)
-		log.Infof("PolyManager.handleTimedOutPolyTx set timed-out PolyTx status to FAILED. Starcoin hash: %s", polyTx.StarcoinTxHash)
+		log.Infof("PolyManager.handleTimedOutPolyTx set timed-out Poly(to starcoin)Tx status to FAILED. Starcoin hash: %s", polyTx.StarcoinTxHash)
 	} else {
 		if polyTx.UpdatedAt < db.CurrentTimeMillis()-MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS*1000 {
 			this.db.SetPolyTxStatus(polyTx.TxHash, polyTx.FromChainID, db.STATUS_FAILED)
-			log.Infof("PolyManager.handleTimedOutPolyTx set timed-out PolyTx status to FAILED because exceeded MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS. Starcoin hash: %s", polyTx.StarcoinTxHash)
+			log.Infof("PolyManager.handleTimedOutPolyTx set timed-out Poly(to starcoin)Tx status to FAILED because exceeded MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS. Starcoin hash: %s", polyTx.StarcoinTxHash)
 		}
 	}
 }
