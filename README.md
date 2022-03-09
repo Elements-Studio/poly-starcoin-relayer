@@ -44,7 +44,7 @@ select from_chain_id, tx_hash, starcoin_status, check_starcoin_count, check_star
 
 ## Disable (Starcoin)to Poly relaying
 
-Can use command flag `to-poly-disabled` to do this:
+Can use command flag `to-poly-disabled`(or env. variable `TO_POLY_DISABLED`) to do this:
 
 ```shell
 ./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-poly-disabled true
@@ -52,7 +52,7 @@ Can use command flag `to-poly-disabled` to do this:
 
 ## Disable (Poly)to Starcoin relaying
 
-Can use command flag `to-starcoin-disabled` to do this:
+Can use command flag `to-starcoin-disabled`(or env. variable `TO_STARCOIN_DISABLED`) to do this:
 
 ```shell
 ./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-starcoin-disabled true
