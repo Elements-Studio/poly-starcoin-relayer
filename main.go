@@ -56,6 +56,7 @@ func setupApp() *cli.App {
 		cmd.LogDir,
 		cmd.ToPolyDisabled,
 		cmd.ToStarcoinDisabled,
+		cmd.ReHandlePolyHeight,
 	}
 	app.Commands = []cli.Command{}
 	app.Before = func(context *cli.Context) error {
@@ -126,6 +127,22 @@ func startServer(ctx *cli.Context) {
 	mysqldb, err := db.NewMySqlDB(servConfig.MySqlDSN)
 	if err != nil {
 		log.Fatalf("db.NewMySqlDB error:%s", err.Error())
+		return
+	}
+
+	rehandlePolyHeight := ctx.GlobalUint64(cmd.GetFlagName(cmd.ReHandlePolyHeight))
+	if rehandlePolyHeight > 0 {
+		mgr, err := manager.NewPolyManager(servConfig, uint32(PolyStartHeight), polySdk, &stcclient, mysqldb)
+		if err != nil {
+			log.Errorf("main - NewStarcoinManager error: %s", err.Error())
+			return
+		}
+		ok := mgr.ReHandlePolyHeight(rehandlePolyHeight)
+		if ok {
+			log.Info("main - ReHandlePolyHeight OK.")
+		} else {
+			log.Info("main - ReHandlePolyHeight failed.")
+		}
 		return
 	}
 

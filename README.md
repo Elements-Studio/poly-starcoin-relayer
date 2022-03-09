@@ -58,3 +58,10 @@ Can use command flag `to-starcoin-disabled` to do this:
 ./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-starcoin-disabled true
 ```
 
+## Re-handle Poly height
+
+If relayer somehow missed hanlding a poly height, can use this to re-handle it:
+
+```shell
+./poly-starcoin-relayer --cliconfig ./config-testnet.json --re-handle-poly-height 24924223
+```

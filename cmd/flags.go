@@ -95,6 +95,12 @@ var (
 		Usage:    "disable Poly to Starcoin relaying",
 		Required: false,
 	}
+
+	ReHandlePolyHeight = cli.Uint64Flag{
+		Name:  "re-handle-poly-height",
+		Usage: "Re-handle Poly height",
+		Value: uint64(0),
+	}
 )
 
 //GetFlagName deal with short flag, and return the flag name whether flag name have short name

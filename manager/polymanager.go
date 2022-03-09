@@ -486,6 +486,10 @@ func (this *PolyManager) handlePolyTxRetry(r *db.PolyTxRetry) error {
 	return nil
 }
 
+func (this *PolyManager) ReHandlePolyHeight(height uint64) bool {
+	return this.handleDepositEvents(uint32(height))
+}
+
 func (this *PolyManager) handleDepositEvents(height uint32) bool {
 	lastEpoch := this.findCurEpochStartHeight()
 	hdr, err := this.polySdk.GetHeaderByHeight(height + 1)
