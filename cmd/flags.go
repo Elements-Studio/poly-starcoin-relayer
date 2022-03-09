@@ -88,12 +88,14 @@ var (
 		Name:     "to-poly-disabled",
 		Usage:    "disable Starcoin to Poly relaying",
 		Required: false,
+		EnvVar:   "TO_POLY_DISABLED",
 	}
 
 	ToStarcoinDisabled = cli.BoolFlag{
 		Name:     "to-starcoin-disabled",
 		Usage:    "disable Poly to Starcoin relaying",
 		Required: false,
+		EnvVar:   "TO_STARCOIN_DISABLED",
 	}
 
 	ReHandlePolyHeight = cli.Uint64Flag{

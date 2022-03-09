@@ -149,10 +149,14 @@ func startServer(ctx *cli.Context) {
 	toStarcoinDisabled := ctx.GlobalBool(cmd.GetFlagName(cmd.ToStarcoinDisabled))
 	if !toStarcoinDisabled {
 		initPolyServer(servConfig, polySdk, &stcclient, mysqldb)
+	} else {
+		log.Info("main - Poly-to-Starcoin is disabled!")
 	}
 	toPolyDisabled := ctx.GlobalBool(cmd.GetFlagName(cmd.ToPolyDisabled))
 	if !toPolyDisabled {
 		initStarcoinServer(servConfig, polySdk, &stcclient, mysqldb)
+	} else {
+		log.Info("main - Starcoin-to-Poly is disabled!")
 	}
 	waitToExit()
 }
