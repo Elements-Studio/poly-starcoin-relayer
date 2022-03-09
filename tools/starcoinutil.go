@@ -159,7 +159,7 @@ type StarcoinAccount struct {
 // Wait transaction to confirmed.
 // Return `true, nil`` if transaction confirmed;
 // return `false, {NOT-NIL-ERROR}` for known error;
-// return `false, nil` for UNKNOWN ERROR or TIMED-OUT or cannot get transaction info.
+// return `false, nil` for UNKNOWN ERROR or TIMED-OUT or CANNOT-GET-TX-INFO(Cannot get Transaction info on-chain).
 func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeout time.Duration) (bool, error) {
 	monitorTicker := time.NewTicker(time.Second)
 	exitTicker := time.NewTicker(timeout)
@@ -181,8 +181,8 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 				log.Debugf("GetTransactionInfoByHash error, %v", err)
 				continue
 			}
-			if tx == nil || tx.BlockNumber == "" {
-				return false, nil // Cannot find Transaction info on-chain
+			if tx == nil || tx.BlockNumber == "" || tx.Status == nil {
+				continue // CANNOT-GET-TX-INFO, continue till get transaction's status or time-out
 			}
 			//log.Debug("Transaction status: " + tx.Status)
 			if isStarcoinTxStatusExecuted(tx.Status) {
@@ -190,10 +190,12 @@ func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeou
 			} else if isKnownStarcoinTxFailureStatus(tx.Status) {
 				return false, fmt.Errorf("isKnownStarcoinTxFailureStatus: %s", string(tx.Status))
 			} else {
-				continue // TODO: return false on some statuses???
+				// TODO: or continue?
+				return false, nil // UNKNOWN-ERROR
 			}
 		case <-exitTicker.C:
-			return false, nil //fmt.Errorf("WaitTransactionConfirm exceed timeout %v", timeout)
+			//log.Debugf("WaitTransactionConfirm exceed timeout %v", timeout)
+			return false, nil // TIMED-OUT
 		}
 	}
 }
