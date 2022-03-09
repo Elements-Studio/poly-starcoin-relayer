@@ -54,6 +54,8 @@ func setupApp() *cli.App {
 		cmd.StarcoinStartForceFlag,
 		cmd.PolyStartFlag,
 		cmd.LogDir,
+		cmd.ToPolyDisabled,
+		cmd.ToStarcoinDisabled,
 	}
 	app.Commands = []cli.Command{}
 	app.Before = func(context *cli.Context) error {
@@ -127,8 +129,14 @@ func startServer(ctx *cli.Context) {
 		return
 	}
 
-	initPolyServer(servConfig, polySdk, &stcclient, mysqldb)
-	initStarcoinServer(servConfig, polySdk, &stcclient, mysqldb)
+	toStarcoinDisabled := ctx.GlobalBool(cmd.GetFlagName(cmd.ToStarcoinDisabled))
+	if !toStarcoinDisabled {
+		initPolyServer(servConfig, polySdk, &stcclient, mysqldb)
+	}
+	toPolyDisabled := ctx.GlobalBool(cmd.GetFlagName(cmd.ToPolyDisabled))
+	if !toPolyDisabled {
+		initStarcoinServer(servConfig, polySdk, &stcclient, mysqldb)
+	}
 	waitToExit()
 }
 

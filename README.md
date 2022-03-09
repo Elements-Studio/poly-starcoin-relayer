@@ -34,10 +34,27 @@ select tx_index, from_chain_id, poly_tx_hash, smt_non_membership_root_hash, stat
 
 ## Is-Accept-Token checking of Starcoin account
 
-Before relay Poly Tx.(to-Starcoin), realyer will check the target(Starcoin) account is-accept the token in cross-chain transfer Tx., if not, save it in `poly_tx_retry` table.
+Before relay Poly Tx.(to-Starcoin), realyer will check the target(Starcoin) account is-accept the token in cross-chain transfer Tx., if account not accept, save it in `poly_tx_retry` table temporary. The scheduled tasks will check it periodically, and commit it to Starcoin when account accept.  
 
 Check `poly_tx_retry` table:
 
 ```sql
 select from_chain_id, tx_hash, starcoin_status, check_starcoin_count, check_starcoin_message, fee_status from poly_tx_retry;
 ```
+
+## Disable (Starcoin)to Poly relaying
+
+Can use command flag `to-poly-disabled` to do this:
+
+```shell
+./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-poly-disabled true
+```
+
+## Disable (Poly)to Starcoin relaying
+
+Can use command flag `to-starcoin-disabled` to do this:
+
+```shell
+./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-starcoin-disabled true
+```
+

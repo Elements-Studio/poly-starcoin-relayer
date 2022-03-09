@@ -159,7 +159,7 @@ type StarcoinAccount struct {
 // Wait transaction to confirmed.
 // Return `true, nil`` if transaction confirmed;
 // return `false, {NOT-NIL-ERROR}` for known error;
-// return `false, nil` for UNKNOWN ERROR or TIMED-OUT.
+// return `false, nil` for UNKNOWN ERROR or TIMED-OUT or cannot get transaction info.
 func WaitTransactionConfirm(client stcclient.StarcoinClient, hash string, timeout time.Duration) (bool, error) {
 	monitorTicker := time.NewTicker(time.Second)
 	exitTicker := time.NewTicker(timeout)

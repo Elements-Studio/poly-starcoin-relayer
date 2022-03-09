@@ -83,6 +83,18 @@ var (
 	//	Usage: "encrypt string `pwd`",
 	//	Value: "",
 	//}
+
+	ToPolyDisabled = cli.BoolFlag{
+		Name:     "to-poly-disabled",
+		Usage:    "disable Starcoin to Poly relaying",
+		Required: false,
+	}
+
+	ToStarcoinDisabled = cli.BoolFlag{
+		Name:     "to-starcoin-disabled",
+		Usage:    "disable Poly to Starcoin relaying",
+		Required: false,
+	}
 )
 
 //GetFlagName deal with short flag, and return the flag name whether flag name have short name

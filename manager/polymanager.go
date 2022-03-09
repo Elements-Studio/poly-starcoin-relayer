@@ -1252,7 +1252,7 @@ func (this *StarcoinSender) changeBookKeeper(header *polytypes.Header, pubkList 
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash)
 	} else {
 		if err == nil {
-			log.Infof("failed to relay poly header to starcoin, error is nil.  Maybe timed out.")
+			log.Infof("failed to relay poly header to starcoin, error is nil.  Maybe timed out or cannot get transaction info.")
 		}
 		log.Errorf("failed to relay poly header to starcoin: (header_hash: %s, height: %d, starcoin_txhash: %s, nonce: %d, starcoin_explorer: %s), error: %v",
 			hdrhash.ToHexString(), header.Height, txhash, nonce, tools.GetExplorerUrl(this.keyStore.GetChainId())+txhash, err)
@@ -1311,7 +1311,7 @@ func (this *StarcoinSender) sendTxToStarcoin(txInfo *StarcoinTxInfo) error {
 		this.db.SetPolyTxStatusProcessed(txInfo.polyTxHash, txInfo.polyFromChainID, txhash)
 	} else {
 		if err == nil {
-			log.Infof("failed to relay tx to starcoin, error is nil. Maybe timed out.")
+			log.Infof("failed to relay tx to starcoin, error is nil. Maybe timed out or cannot get transaction info.")
 			dbErr := this.db.SetPolyTxStatus(txInfo.polyTxHash, txInfo.polyFromChainID, db.STATUS_TIMEDOUT) // set relay-to-starcoin status to TIMED-OUT!
 			if dbErr != nil {
 				log.Errorf("failed to SetPolyTxStatus to timed-out. Error: %v, polyTxHash: %s", err, txInfo.polyTxHash)
