@@ -103,6 +103,13 @@ var (
 		Usage: "Re-handle Poly height",
 		Value: uint64(0),
 	}
+
+	UseBoltDB = cli.BoolFlag{
+		Name:     "use-boltdb",
+		Usage:    "Use BoltDB(Need to disable Poly to Starcoin relaying)",
+		Required: false,
+		EnvVar:   "USE_BOLTDB",
+	}
 )
 
 //GetFlagName deal with short flag, and return the flag name whether flag name have short name

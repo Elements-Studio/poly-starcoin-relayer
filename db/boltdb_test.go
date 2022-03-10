@@ -10,6 +10,12 @@ import (
 	"github.com/starcoinorg/starcoin-go/client"
 )
 
+func TestCleanBoltDB(t *testing.T) {
+	db := testNetBoltDB(t)
+	testCleanBoltDBStarcoinTxRetry(db, t)
+	testCleanBoltDBStarcoinTxCheck(db, t)
+}
+
 func TestBoltDBPutStarcoinTxRetry(t *testing.T) {
 	db := testNetBoltDB(t)
 
@@ -25,10 +31,16 @@ func TestBoltDBPutStarcoinTxRetry(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
+	testCleanBoltDBStarcoinTxRetry(db, t)
+}
 
+func testCleanBoltDBStarcoinTxRetry(db *BoltDB, t *testing.T) {
 	// test Get All
 	bytesList, eventList, err := db.GetAllStarcoinTxRetry()
-
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 	//fmt.Println(eventList)
 	for _, event := range eventList {
 		e, _ := json.Marshal(event)
@@ -65,6 +77,10 @@ func TestBoltDBPutStarcoinCheck(t *testing.T) {
 		t.FailNow()
 	}
 
+	testCleanBoltDBStarcoinTxCheck(db, t)
+}
+
+func testCleanBoltDBStarcoinTxCheck(db *BoltDB, t *testing.T) {
 	// test Get all
 	checkMap, err := db.GetAllStarcoinTxCheck()
 	if err != nil {

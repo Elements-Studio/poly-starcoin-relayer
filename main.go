@@ -57,6 +57,7 @@ func setupApp() *cli.App {
 		cmd.ToPolyDisabled,
 		cmd.ToStarcoinDisabled,
 		cmd.ReHandlePolyHeight,
+		cmd.UseBoltDB,
 	}
 	app.Commands = []cli.Command{}
 	app.Before = func(context *cli.Context) error {
@@ -114,25 +115,33 @@ func startServer(ctx *cli.Context) {
 		return
 	}
 
-	// var boltDB *db.BoltDB
-	// if servConfig.BoltDbPath == "" {
-	// 	boltDB, err = db.NewBoltDB("boltdb")
-	// } else {
-	// 	boltDB, err = db.NewBoltDB(servConfig.BoltDbPath)
-	// }
-	// if err != nil {
-	// 	log.Fatalf("db.NewBoltDB error:%s", err.Error())
-	// 	return
-	// }
-	mysqldb, err := db.NewMySqlDB(servConfig.MySqlDSN)
-	if err != nil {
-		log.Fatalf("db.NewMySqlDB error:%s", err.Error())
-		return
+	var database db.DB
+	useBoltDB := ctx.GlobalBool(cmd.GetFlagName(cmd.UseBoltDB))
+	if useBoltDB {
+		var boltdb *db.BoltDB
+		if servConfig.BoltDbPath == "" {
+			boltdb, err = db.NewBoltDB("boltdb")
+		} else {
+			boltdb, err = db.NewBoltDB(servConfig.BoltDbPath)
+		}
+		if err != nil {
+			log.Fatalf("db.NewBoltDB error:%s", err.Error())
+			return
+		}
+		database = boltdb
+	} else {
+		var mysqldb *db.MySqlDB
+		mysqldb, err = db.NewMySqlDB(servConfig.MySqlDSN)
+		if err != nil {
+			log.Fatalf("db.NewMySqlDB error:%s", err.Error())
+			return
+		}
+		database = mysqldb
 	}
 
 	rehandlePolyHeight := ctx.GlobalUint64(cmd.GetFlagName(cmd.ReHandlePolyHeight))
 	if rehandlePolyHeight > 0 {
-		mgr, err := manager.NewPolyManager(servConfig, uint32(PolyStartHeight), polySdk, &stcclient, mysqldb)
+		mgr, err := manager.NewPolyManager(servConfig, uint32(PolyStartHeight), polySdk, &stcclient, database)
 		if err != nil {
 			log.Errorf("main - NewStarcoinManager error: %s", err.Error())
 			return
@@ -148,13 +157,13 @@ func startServer(ctx *cli.Context) {
 
 	toStarcoinDisabled := ctx.GlobalBool(cmd.GetFlagName(cmd.ToStarcoinDisabled))
 	if !toStarcoinDisabled {
-		initPolyServer(servConfig, polySdk, &stcclient, mysqldb)
+		initPolyServer(servConfig, polySdk, &stcclient, database)
 	} else {
 		log.Info("main - Poly-to-Starcoin is disabled!")
 	}
 	toPolyDisabled := ctx.GlobalBool(cmd.GetFlagName(cmd.ToPolyDisabled))
 	if !toPolyDisabled {
-		initStarcoinServer(servConfig, polySdk, &stcclient, mysqldb)
+		initStarcoinServer(servConfig, polySdk, &stcclient, database)
 	} else {
 		log.Info("main - Starcoin-to-Poly is disabled!")
 	}

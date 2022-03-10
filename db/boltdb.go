@@ -305,7 +305,7 @@ func (w *BoltDB) RemovePolyTx(tx *PolyTx) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func PushBackRemovePolyTx(id uint64) error {
+func (w *BoltDB) PushBackRemovePolyTx(id uint64) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 

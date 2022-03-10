@@ -136,8 +136,9 @@ func (this *StarcoinManager) MonitorChain() {
 				// ///////////////////////////////////////////////////////////////////////////
 				// TODO: if len(this.header4sync) is too large, should not continue???
 				// ///////////////////////////////////////////////////////////////////////////
-				if len(this.header4sync) > this.config.StarcoinConfig.HeadersPerBatch*3 {
-					log.Errorf("StarcoinManager.MonitorChain - len(this.header4sync) is too large. Starcoin block height: %d. Reset!", this.currentHeight)
+				max_header4sync_size := this.config.StarcoinConfig.HeadersPerBatch * 3
+				if len(this.header4sync) > max_header4sync_size {
+					log.Errorf("StarcoinManager.MonitorChain - length of this.header4sync is too large(%d > %d). Starcoin block height: %d. Reset!", len(this.header4sync), max_header4sync_size, this.currentHeight)
 					time.Sleep(time.Second * 10)
 					// ////////////////////////////////////////////////////////////////////
 					// reset???
@@ -222,7 +223,7 @@ func (this *StarcoinManager) commitHeader() int {
 	if err != nil {
 		errDesc := err.Error()
 		if strings.Contains(errDesc, ERROR_DESC_GET_PARENT_BLOCK_FAILED) || strings.Contains(errDesc, ERROR_DESC_MISSING_REQUIRED_FIELD) {
-			log.Warnf("StarcoinManager.commitHeader - send transaction to poly chain err: %s", errDesc)
+			log.Warnf("StarcoinManager.commitHeader - send transaction to poly chain err: %s, about to rollBackToCommAncestor...", errDesc)
 			this.rollBackToCommAncestor()
 			return 0
 		} else {

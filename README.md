@@ -65,3 +65,11 @@ If relayer somehow missed hanlding a poly height, can use this to re-handle it:
 ```shell
 ./poly-starcoin-relayer --cliconfig ./config-testnet.json --re-handle-poly-height 24924223
 ```
+
+# Use BoltDB
+
+Relayer use MySQL DB by default, can use BoltDB also, but only when (Poly)to Starcoin relaying is disabled:
+
+```shell
+./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-starcoin-disabled true --use-boltdb
+```
