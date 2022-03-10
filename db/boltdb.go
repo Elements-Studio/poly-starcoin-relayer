@@ -19,6 +19,7 @@ package db
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -28,7 +29,7 @@ import (
 	"github.com/starcoinorg/starcoin-go/client"
 )
 
-const MAX_NUM = 1000
+const BOLTDB_MAX_NUM = 1000
 
 var (
 	BKTStarcoinTxCheck = []byte("StarcoinTxCheck")
@@ -92,7 +93,6 @@ func NewBoltDB(filePath string) (*BoltDB, error) {
 }
 
 func (w *BoltDB) PutStarcoinTxCheck(txHash string, v []byte, e client.Event) error {
-	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 	w.rwlock.Lock()
 	defer w.rwlock.Unlock()
 
@@ -100,9 +100,15 @@ func (w *BoltDB) PutStarcoinTxCheck(txHash string, v []byte, e client.Event) err
 	if err != nil {
 		return err
 	}
+	ve := NewBytesAndEvent(v, e)
+	veBytes, err := json.Marshal(ve)
+	if err != nil {
+		return err
+	}
+
 	return w.db.Update(func(btx *bolt.Tx) error {
 		bucket := btx.Bucket(BKTStarcoinTxCheck)
-		err := bucket.Put(k, v)
+		err := bucket.Put(k, veBytes)
 		if err != nil {
 			return err
 		}
@@ -129,18 +135,51 @@ func (w *BoltDB) DeleteStarcoinTxCheck(txHash string) error {
 	})
 }
 
-func (w *BoltDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
-	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+func (w *BoltDB) GetAllStarcoinTxCheck() (map[string]BytesAndEvent, error) {
 	w.rwlock.Lock()
 	defer w.rwlock.Unlock()
 
+	checkMap := make(map[string]BytesAndEvent)
+	err := w.db.Update(func(tx *bolt.Tx) error {
+		bw := tx.Bucket(BKTStarcoinTxCheck)
+		bw.ForEach(func(k, v []byte) error {
+			_k := make([]byte, len(k))
+			_v := make([]byte, len(v))
+			copy(_k, k)
+			copy(_v, v)
+			bytesAndEvent := new(BytesAndEvent)
+			mErr := json.Unmarshal(_v, bytesAndEvent)
+			if mErr != nil {
+				return mErr
+			}
+			checkMap[hex.EncodeToString(_k)] = *bytesAndEvent
+			if len(checkMap) >= BOLTDB_MAX_NUM {
+				return fmt.Errorf("max num")
+			}
+			return nil
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return checkMap, nil
+}
+
+func (w *BoltDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
+	w.rwlock.Lock()
+	defer w.rwlock.Unlock()
+
+	eventBS, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
 	return w.db.Update(func(btx *bolt.Tx) error {
 		bucket := btx.Bucket(BKTStarcoinTxRetry)
-		err := bucket.Put(k, []byte{0x00})
+		err := bucket.Put(k, eventBS) //[]byte{0x00}
 		if err != nil {
 			return err
 		}
-
 		return nil
 	})
 }
@@ -159,46 +198,27 @@ func (w *BoltDB) DeleteStarcoinTxRetry(k []byte) error {
 	})
 }
 
-func (w *BoltDB) GetAllStarcoinTxCheck() (map[string]BytesAndEvent, error) {
-	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
-	// w.rwlock.Lock()
-	// defer w.rwlock.Unlock()
-
-	// checkMap := make(map[string][]byte)
-	// err := w.db.Update(func(tx *bolt.Tx) error {
-	// 	bw := tx.Bucket(BKTStarcoinTxCheck)
-	// 	bw.ForEach(func(k, v []byte) error {
-	// 		_k := make([]byte, len(k))
-	// 		_v := make([]byte, len(v))
-	// 		copy(_k, k)
-	// 		copy(_v, v)
-	// 		checkMap[hex.EncodeToString(_k)] = _v
-	// 		if len(checkMap) >= MAX_NUM {
-	// 			return fmt.Errorf("max num")
-	// 		}
-	// 		return nil
-	// 	})
-	// 	return nil
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return checkMap, nil
-}
-
 func (w *BoltDB) GetAllStarcoinTxRetry() ([][]byte, []client.Event, error) {
-	return nil, nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 	w.rwlock.Lock()
 	defer w.rwlock.Unlock()
 
 	retryList := make([][]byte, 0)
+	eventList := make([]client.Event, 0)
 	err := w.db.Update(func(tx *bolt.Tx) error {
 		bw := tx.Bucket(BKTStarcoinTxRetry)
-		bw.ForEach(func(k, _ []byte) error {
+		bw.ForEach(func(k, v []byte) error {
 			_k := make([]byte, len(k))
+			_v := make([]byte, len(v))
 			copy(_k, k)
+			copy(_v, v)
 			retryList = append(retryList, _k)
-			if len(retryList) >= MAX_NUM {
+			e := new(client.Event)
+			umErr := json.Unmarshal(_v, e)
+			if umErr != nil {
+				return umErr
+			}
+			eventList = append(eventList, *e)
+			if len(retryList) >= BOLTDB_MAX_NUM {
 				return fmt.Errorf("max num")
 			}
 			return nil
@@ -208,7 +228,7 @@ func (w *BoltDB) GetAllStarcoinTxRetry() ([][]byte, []client.Event, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	return retryList, nil, nil
+	return retryList, eventList, nil
 }
 
 func (w *BoltDB) UpdatePolyHeight(h uint32) error {

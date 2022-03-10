@@ -88,8 +88,16 @@ type DB interface {
 }
 
 type BytesAndEvent struct {
-	Bytes []byte
-	Event client.Event
+	Bytes []byte       `json:"bytes"` // []byte encodes as a base64-encoded string
+	Event client.Event `json:"event"` // Starcoin Event
+}
+
+func NewBytesAndEvent(bytes []byte, event client.Event) *BytesAndEvent {
+	r := BytesAndEvent{
+		Bytes: bytes,
+		Event: event,
+	}
+	return &r
 }
 
 func Hash256Hex(v []byte) string {
