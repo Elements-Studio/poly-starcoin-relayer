@@ -2,10 +2,6 @@ package manager
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
@@ -17,7 +13,7 @@ type CrossChainData struct {
 }
 
 func NewCrossChainData(client *stcclient.StarcoinClient, module string) (*CrossChainData, error) {
-	_, _, err := parseModuleId(module)
+	_, _, err := tools.ParseStarcoinModuleId(module)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +36,7 @@ func (ccd *CrossChainData) getCurEpochStartHeight() (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return toUint64(extractSingleResult(r))
+	return tools.ToUint64(tools.ExtractSingleResult(r))
 }
 
 // Get Consensus book Keepers Public Key Bytes.
@@ -56,7 +52,7 @@ func (ccd *CrossChainData) getCurEpochConPubKeyBytes() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return toBytes(extractSingleResult(r))
+	return tools.ToBytes(tools.ExtractSingleResult(r))
 }
 
 // // Check if from chain tx fromChainTx has been processed before.
@@ -80,7 +76,7 @@ func (ccd *CrossChainData) getCurEpochConPubKeyBytes() ([]byte, error) {
 
 // Get on-chain cross chain txn. SMT root hash.
 func (ccd *CrossChainData) getOnChainTxSparseMerkleTreeRootHash() ([]byte, error) {
-	addr, _, err := parseModuleId(ccd.module)
+	addr, _, err := tools.ParseStarcoinModuleId(ccd.module)
 	if err != nil {
 		return nil, err
 	}
@@ -97,63 +93,27 @@ func (ccd *CrossChainData) getOnChainTxSparseMerkleTreeRootHash() ([]byte, error
 	if err != nil {
 		return nil, err
 	}
-	return toBytes(extractSingleResult(r))
+	return tools.ToBytes(tools.ExtractSingleResult(r))
 }
 
 func (ccd *CrossChainData) getFunctionId(funcName string) string {
 	return ccd.module + "::" + funcName
 }
 
-func extractSingleResult(result interface{}) interface{} {
-	r := result.([]interface{})
-	if len(r) == 0 {
-		return nil
-	}
-	return r[0]
-}
+// func ExtractSingleResult(result interface{}) interface{} {
+// 	r := result.([]interface{})
+// 	if len(r) == 0 {
+// 		return nil
+// 	}
+// 	return r[0]
+// }
 
-func toBool(i interface{}) (bool, error) {
-	switch i := i.(type) {
-	case bool:
-		return i, nil
-	case string:
-		return strconv.ParseBool(i)
-	}
-	return false, fmt.Errorf("unknown type to bool %t", i)
-}
-
-func toBytes(i interface{}) ([]byte, error) {
-	switch i := i.(type) {
-	case []byte:
-		return i, nil
-	case string:
-		return tools.HexToBytes(i)
-	}
-	return nil, fmt.Errorf("unknown type to []byte %t", i)
-}
-
-func toUint64(i interface{}) (uint64, error) {
-	switch i := i.(type) {
-	case uint64:
-		return i, nil
-	case float64:
-		return uint64(i), nil
-	case string:
-		return strconv.ParseUint(i, 10, 64)
-	case json.Number:
-		r, err := i.Int64()
-		return uint64(r), err
-	}
-	return 0, fmt.Errorf("unknown type to uint64 %t", i)
-}
-
-// Parse module Id., return address and module name.
-func parseModuleId(str string) (string, string, error) {
-	ss := strings.Split(str, "::")
-	if len(ss) < 2 {
-		return "", "", fmt.Errorf("module Id string format error")
-	} else if len(ss) > 2 {
-		return "", "", fmt.Errorf("module Id string format error")
-	}
-	return ss[0], ss[1], nil
-}
+// func ToBool(i interface{}) (bool, error) {
+// 	switch i := i.(type) {
+// 	case bool:
+// 		return i, nil
+// 	case string:
+// 		return strconv.ParseBool(i)
+// 	}
+// 	return false, fmt.Errorf("unknown type to bool %t", i)
+// }

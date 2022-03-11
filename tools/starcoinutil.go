@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +36,31 @@ type starcoinChainInfoRsp struct {
 	} `json:"result,omitempty"`
 	Error *jsonRpcError `json:"error,omitempty"`
 	Id    uint          `json:"id"`
+}
+
+type StarcoinAccountBalanceResource struct {
+	Raw  string `json:"raw"`
+	Json struct {
+		Token struct {
+			Value big.Int `json:"value"`
+		} `json:"token"`
+	} `json:"json"`
+}
+
+func GetStarcoinAccountTokenBalance(starcoinClient *stcclient.StarcoinClient, account string, tokenType string) (*big.Int, error) {
+	resType := "0x00000000000000000000000000000001::Account::Balance<" + tokenType + ">"
+	getResOption := stcclient.GetResourceOption{
+		Decode: true,
+	}
+	//accountBalanceRes := new(map[string]interface{}) // &map[json:map[token:map[value:8.300340036e+09]] raw:0x4423bdee010000000000000000000000]
+	accountBalanceRes := new(StarcoinAccountBalanceResource)
+	getResResult, err := starcoinClient.GetResource(context.Background(), account, resType, getResOption, accountBalanceRes)
+	if err != nil {
+		return nil, err
+	}
+	//fmt.Println(getResResult)
+	b := getResResult.(*StarcoinAccountBalanceResource)
+	return &b.Json.Token.Value, nil
 }
 
 // Get starcoin node current height.
@@ -79,25 +105,7 @@ func IsAcceptToken(client *stcclient.StarcoinClient, accountAddress string, toke
 	if err != nil {
 		return false, err
 	}
-	return toBool(extractSingleResult(r))
-}
-
-func extractSingleResult(result interface{}) interface{} {
-	r := result.([]interface{})
-	if len(r) == 0 {
-		return nil
-	}
-	return r[0]
-}
-
-func toBool(i interface{}) (bool, error) {
-	switch i := i.(type) {
-	case bool:
-		return i, nil
-	case string:
-		return strconv.ParseBool(i)
-	}
-	return false, fmt.Errorf("unknown type to bool %t", i)
+	return ToBool(ExtractSingleResult(r))
 }
 
 type starcoinTransactionProofRsp struct {
@@ -249,4 +257,82 @@ func ParseStructTypeTag(s string) (types.TypeTag, error) {
 		Name:    types.Identifier(ss[2]),
 	}
 	return &types.TypeTag__Struct{Value: st}, nil
+}
+
+func ExtractSingleResult(result interface{}) interface{} {
+	r := result.([]interface{})
+	if len(r) == 0 {
+		return nil
+	}
+	return r[0]
+}
+
+func ToBool(i interface{}) (bool, error) {
+	switch i := i.(type) {
+	case bool:
+		return i, nil
+	case string:
+		return strconv.ParseBool(i)
+	}
+	return false, fmt.Errorf("unknown type to bool %t", i)
+}
+
+func ToBytes(i interface{}) ([]byte, error) {
+	switch i := i.(type) {
+	case []byte:
+		return i, nil
+	case string:
+		return HexToBytes(i)
+	}
+	return nil, fmt.Errorf("unknown type to []byte %t", i)
+}
+
+func ToUint64(i interface{}) (uint64, error) {
+	switch i := i.(type) {
+	case uint64:
+		return i, nil
+	case float64:
+		return uint64(i), nil
+	case string:
+		return strconv.ParseUint(i, 10, 64)
+	case json.Number:
+		r, err := i.Int64()
+		return uint64(r), err
+	}
+	return 0, fmt.Errorf("unknown type to uint64 %t", i)
+}
+
+func ToBigInt(i interface{}) (*big.Int, error) {
+	switch i := i.(type) {
+	case uint64:
+		r := new(big.Int).SetUint64(i)
+		return r, nil
+	case float64:
+		r, _ := big.NewFloat(i).Int(nil)
+		return r, nil
+	case string:
+		r, ok := new(big.Int).SetString(i, 10)
+		if !ok {
+			fmt.Errorf("convert string to big.Int failed: %s", i)
+		}
+		return r, nil
+	case json.Number:
+		r, ok := new(big.Int).SetString(i.String(), 10)
+		if !ok {
+			fmt.Errorf("convert string to big.Int failed: %s", i)
+		}
+		return r, nil
+	}
+	return nil, fmt.Errorf("unknown type to big.Int %t", i)
+}
+
+// Parse module Id., return address and module name.
+func ParseStarcoinModuleId(str string) (string, string, error) {
+	ss := strings.Split(str, "::")
+	if len(ss) < 2 {
+		return "", "", fmt.Errorf("module Id string format error")
+	} else if len(ss) > 2 {
+		return "", "", fmt.Errorf("module Id string format error")
+	}
+	return ss[0], ss[1], nil
 }

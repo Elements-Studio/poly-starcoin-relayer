@@ -158,3 +158,25 @@ func EncodeU64AndU8TxPaylaod(module string, function string, u1 uint64, u2 uint8
 		},
 	}
 }
+
+func EncodeTwoTypeArgsAndU128TxPaylaod(module string, function string, t1, t2 diemtypes.TypeTag, u serde.Uint128) diemtypes.TransactionPayload {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: diemtypes.Identifier(function),
+			TyArgs:   []diemtypes.TypeTag{t1, t2},
+			Args:     [][]byte{encode_u128_argument(u)},
+		},
+	}
+}
+
+func EncodeTwoTypeArgsAndFourU128TxPaylaod(module string, function string, t1, t2 diemtypes.TypeTag, u1, u2, u3, u4 serde.Uint128) diemtypes.TransactionPayload {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: diemtypes.Identifier(function),
+			TyArgs:   []diemtypes.TypeTag{t1, t2},
+			Args:     [][]byte{encode_u128_argument(u1), encode_u128_argument(u2), encode_u128_argument(u3), encode_u128_argument(u4)},
+		},
+	}
+}

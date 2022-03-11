@@ -36,6 +36,21 @@ func Uint128ToBigInt(u *serde.Uint128) *big.Int {
 	return new(big.Int).SetBytes(append(h.Bytes(), l.Bytes()...))
 }
 
+func BigIntToUint128(i *big.Int) serde.Uint128 {
+	var h, l uint64
+	if len(i.Bytes()) > 8 {
+		h = new(big.Int).SetBytes(i.Bytes()[0:8]).Uint64()
+		l = new(big.Int).SetBytes(i.Bytes()[8:len(i.Bytes())]).Uint64()
+	} else {
+		h = 0
+		l = new(big.Int).SetBytes(i.Bytes()[0:len(i.Bytes())]).Uint64()
+	}
+	return serde.Uint128{
+		High: h,
+		Low:  l,
+	}
+}
+
 type SparseMerkleTreeRootResource struct {
 	Raw  string `json:"raw"`
 	Json struct {
