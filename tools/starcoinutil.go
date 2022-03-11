@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/elements-studio/poly-starcoin-relayer/log"
+	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 	"github.com/starcoinorg/starcoin-go/types"
 )
@@ -335,4 +336,27 @@ func ParseStarcoinModuleId(str string) (string, string, error) {
 		return "", "", fmt.Errorf("module Id string format error")
 	}
 	return ss[0], ss[1], nil
+}
+
+func Uint128ToBigInt(u serde.Uint128) *big.Int {
+	h := new(big.Int).SetUint64(u.High)
+	l := new(big.Int).SetUint64(u.Low)
+	hbuf := make([]byte, 8)
+	return new(big.Int).SetBytes(append(h.Bytes(), l.FillBytes(hbuf)...))
+}
+
+func BigIntToUint128(i *big.Int) serde.Uint128 {
+	var h, l uint64
+	bytesLen := len(i.Bytes())
+	if bytesLen > 8 {
+		h = new(big.Int).SetBytes(i.Bytes()[0 : bytesLen-8]).Uint64()
+		l = new(big.Int).SetBytes(i.Bytes()[bytesLen-8 : bytesLen]).Uint64()
+	} else {
+		h = 0
+		l = i.Uint64()
+	}
+	return serde.Uint128{
+		High: h,
+		Low:  l,
+	}
 }

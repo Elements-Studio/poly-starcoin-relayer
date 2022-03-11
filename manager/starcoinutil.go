@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"encoding/hex"
-	"math/big"
 
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
@@ -28,27 +27,6 @@ import (
 
 func GetTokenCodeString(tc *stcpolyevts.TokenCode) string {
 	return "0x" + hex.EncodeToString(tc.Address[:]) + "::" + tc.Module + "::" + tc.Name
-}
-
-func Uint128ToBigInt(u *serde.Uint128) *big.Int {
-	h := new(big.Int).SetUint64(u.High)
-	l := new(big.Int).SetUint64(u.Low)
-	return new(big.Int).SetBytes(append(h.Bytes(), l.Bytes()...))
-}
-
-func BigIntToUint128(i *big.Int) serde.Uint128 {
-	var h, l uint64
-	if len(i.Bytes()) > 8 {
-		h = new(big.Int).SetBytes(i.Bytes()[0:8]).Uint64()
-		l = new(big.Int).SetBytes(i.Bytes()[8:len(i.Bytes())]).Uint64()
-	} else {
-		h = 0
-		l = new(big.Int).SetBytes(i.Bytes()[0:len(i.Bytes())]).Uint64()
-	}
-	return serde.Uint128{
-		High: h,
-		Low:  l,
-	}
 }
 
 type SparseMerkleTreeRootResource struct {

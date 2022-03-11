@@ -177,7 +177,7 @@ func TestFetchLockEvent(t *testing.T) {
 		fmt.Println("--------------- ToAddress ----------------")
 		fmt.Println(hex.EncodeToString(lockEvent.ToAddress))
 		fmt.Println("--------------- Amount ----------------")
-		fmt.Println(Uint128ToBigInt(&lockEvent.Amount))
+		fmt.Println(tools.Uint128ToBigInt(lockEvent.Amount))
 	}
 }
 
@@ -223,7 +223,7 @@ func TestFetchUnlockEvent(t *testing.T) {
 		fmt.Println("--------------- ToAddress ----------------")
 		fmt.Println(hex.EncodeToString(unlockEvent.ToAddress))
 		fmt.Println("--------------- Amount ----------------")
-		fmt.Println(Uint128ToBigInt(&unlockEvent.Amount))
+		fmt.Println(tools.Uint128ToBigInt(unlockEvent.Amount))
 	}
 }
 
@@ -271,11 +271,11 @@ func TestFetchCrossChainFeeLockEvents(t *testing.T) {
 		fmt.Println("--------------- ToAddress ----------------")
 		fmt.Println(hex.EncodeToString(feeEvent.ToAddress))
 		fmt.Println("--------------- Net ----------------")
-		fmt.Println(Uint128ToBigInt(&feeEvent.Net))
+		fmt.Println(tools.Uint128ToBigInt(feeEvent.Net))
 		fmt.Println("--------------- Fee ----------------")
-		fmt.Println(Uint128ToBigInt(&feeEvent.Fee))
+		fmt.Println(tools.Uint128ToBigInt(feeEvent.Fee))
 		fmt.Println("--------------- Id ----------------")
-		fmt.Println(Uint128ToBigInt(&feeEvent.Id))
+		fmt.Println(tools.Uint128ToBigInt(feeEvent.Id))
 	}
 }
 
@@ -343,9 +343,9 @@ func TestDeserializeCrossChainFeeLockEvent(t *testing.T) {
 	fmt.Println("--------------- ToAddress ----------------")
 	fmt.Println(hex.EncodeToString(feeEvent.ToAddress))
 	fmt.Println("--------------- Net ----------------")
-	fmt.Println(Uint128ToBigInt(&feeEvent.Net))
+	fmt.Println(tools.Uint128ToBigInt(feeEvent.Net))
 	fmt.Println("--------------- Fee ----------------")
-	fmt.Println(Uint128ToBigInt(&feeEvent.Fee))
+	fmt.Println(tools.Uint128ToBigInt(feeEvent.Fee))
 	fmt.Println("--------------- Id ----------------")
-	fmt.Println(Uint128ToBigInt(&feeEvent.Id))
+	fmt.Println(tools.Uint128ToBigInt(feeEvent.Id))
 }

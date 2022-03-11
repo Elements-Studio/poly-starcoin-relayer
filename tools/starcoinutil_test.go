@@ -3,10 +3,13 @@ package tools
 import (
 	"context"
 	"fmt"
+	"math"
+	"math/big"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
@@ -57,4 +60,39 @@ func TestIsAcceptToken(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Printf("Is account '%s' accept token '%s': %v\n", accountAddr, tokenType, a)
+}
+
+func TestUint128AndBigIntConvert(t *testing.T) {
+	u1 := serde.Uint128{
+		High: 0,
+		Low:  2423531242,
+	}
+	b1 := Uint128ToBigInt(u1)
+	if u1.Low != b1.Uint64() {
+		t.FailNow()
+	}
+	fmt.Println(b1.String())
+	u1_c := BigIntToUint128(b1)
+	fmt.Println(u1_c.Low)
+	if u1.High != u1_c.High || u1.Low != u1_c.Low {
+		t.FailNow()
+	}
+
+	// /////////////////////
+	u2 := serde.Uint128{
+		High: 1124,
+		Low:  2423531242,
+	}
+	b2 := Uint128ToBigInt(u2)
+	fmt.Println(b2.String())
+	b2_expected := new(big.Int).Add(new(big.Int).Mul(new(big.Int).Add(new(big.Int).SetUint64(math.MaxUint64), new(big.Int).SetUint64(1)), new(big.Int).SetUint64(u2.High)), new(big.Int).SetUint64(u2.Low))
+	fmt.Println(b2_expected.String())
+	if b2.String() != b2_expected.String() {
+		t.FailNow()
+	}
+	// ////////////////////
+	u2_c := BigIntToUint128(b2)
+	if u2.High != u2_c.High || u2.Low != u2_c.Low {
+		t.FailNow()
+	}
 }
