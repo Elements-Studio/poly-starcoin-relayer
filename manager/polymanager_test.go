@@ -51,7 +51,7 @@ func TestSetChainId(t *testing.T) {
 		fmt.Print(err)
 		t.FailNow()
 	}
-	fmt.Println(ok, err)
+	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
 }
 
 func TestInitFeeEventStore(t *testing.T) {
@@ -68,7 +68,7 @@ func TestInitFeeEventStore(t *testing.T) {
 		fmt.Print(err)
 		t.FailNow()
 	}
-	fmt.Println(ok, err)
+	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
 }
 
 // Before cross from/to ethereum, bind the LockProxy hash first.
@@ -109,7 +109,7 @@ func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, config *config.
 		fmt.Print(err)
 		t.FailNow()
 	}
-	fmt.Println(ok, err)
+	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
 }
 
 func TestBindXETHAssetHash(t *testing.T) {
@@ -159,7 +159,7 @@ func testBindAssetHash(fromAssetHash []byte, toChainId uint64, toAssetHash []byt
 		fmt.Print(err)
 		t.FailNow()
 	}
-	fmt.Println(ok, err)
+	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
 }
 
 func TestXEthInit(t *testing.T) {
@@ -179,7 +179,7 @@ func TestXEthInit(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println(ok, err)
+	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
 }
 
 func TestXUsdtInit(t *testing.T) {
@@ -199,7 +199,7 @@ func TestXUsdtInit(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println(ok, err)
+	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
 }
 
 // ///////////////////////// Test Init Starcoin Contracts END ///////////////////////////
@@ -318,7 +318,7 @@ func testLockStarcoinAsset(from_asset_hash []byte, to_chain_id uint64, to_addres
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println(ok, err)
+	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
 }
 
 func testLockStarcoinAssetWithStcFee(from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128, fee serde.Uint128, id serde.Uint128, polyManager *PolyManager, t *testing.T) {
@@ -333,7 +333,7 @@ func testLockStarcoinAssetWithStcFee(from_asset_hash []byte, to_chain_id uint64,
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println(ok, err)
+	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
 }
 
 func TestHandleDepositEvents(t *testing.T) {

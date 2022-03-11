@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: barnard-starcoin-to-poly-relayer
-        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-e1538fa
+        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-f996772
         ports:
         - containerPort: 8600
         env:
