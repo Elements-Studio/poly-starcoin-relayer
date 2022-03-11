@@ -35,6 +35,11 @@ COPY --from=build /poly-starcoin-relayer/poly-starcoin-relayer_linux_amd64 \
 #RUN mkdir /data/poly-starcoin-relayer/config
 #COPY --from=build /poly-starcoin-relayer/config /data/poly-starcoin-relayer/config
 
+# Make BoltDB directories
+RUN mkdir /data/poly-starcoin-relayer/db-testnet
+RUN mkdir /data/poly-starcoin-relayer/db-devnet
+RUN mkdir /data/poly-starcoin-relayer/db-mainnet
+
 RUN ls -la /data/poly-starcoin-relayer
 
 # ENTRYPOINT ["/data/poly-starcoin-relayer/entrypoint.sh"]

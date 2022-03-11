@@ -118,6 +118,7 @@ func startServer(ctx *cli.Context) {
 	var database db.DB
 	useBoltDB := ctx.GlobalBool(cmd.GetFlagName(cmd.UseBoltDB))
 	if useBoltDB {
+		log.Info("startServer - We are using BoltDB now. DB path config: " + servConfig.BoltDbPath)
 		var boltdb *db.BoltDB
 		if servConfig.BoltDbPath == "" {
 			boltdb, err = db.NewBoltDB("boltdb")
@@ -130,6 +131,7 @@ func startServer(ctx *cli.Context) {
 		}
 		database = boltdb
 	} else {
+		log.Info("startServer - Using default MySQL DB.")
 		var mysqldb *db.MySqlDB
 		mysqldb, err = db.NewMySqlDB(servConfig.MySqlDSN)
 		if err != nil {

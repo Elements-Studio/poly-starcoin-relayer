@@ -29,7 +29,7 @@
   "BridgeURLs": [
     "https://bridge.poly.network/testnet/v1"
   ],
-  "BoltDbPath": "./db-devnet",
+  "BoltDbPath": "${BOLTDB_PATH}",
   "MySqlDSN": "${MYSQL_DSN_DEVNET}",
   "RoutineNum": 64,
   "CheckFee": false,

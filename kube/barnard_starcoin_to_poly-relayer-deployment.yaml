@@ -22,6 +22,10 @@ spec:
         env:
         - name: TO_STARCOIN_DISABLED
           value: "true"
+        - name: BOLTDB_PATH
+          value: "/data/poly-starcoin-relayer/db-testnet"
+        - name: USE_BOLTDB
+          value: "true"
         - name: MYSQL_DSN_TESTNET
           valueFrom:
             secretKeyRef:

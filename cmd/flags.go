@@ -106,7 +106,7 @@ var (
 
 	UseBoltDB = cli.BoolFlag{
 		Name:     "use-boltdb",
-		Usage:    "Use BoltDB(Need to disable Poly to Starcoin relaying)",
+		Usage:    "Use BoltDB, need to disable Poly to Starcoin relaying",
 		Required: false,
 		EnvVar:   "USE_BOLTDB",
 	}

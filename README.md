@@ -47,7 +47,7 @@ select from_chain_id, tx_hash, starcoin_status, check_starcoin_count, check_star
 Can use command flag `to-poly-disabled`(or env. variable `TO_POLY_DISABLED`) to do this:
 
 ```shell
-./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-poly-disabled true
+./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-poly-disabled
 ```
 
 ## Disable (Poly)to Starcoin relaying
@@ -55,7 +55,7 @@ Can use command flag `to-poly-disabled`(or env. variable `TO_POLY_DISABLED`) to 
 Can use command flag `to-starcoin-disabled`(or env. variable `TO_STARCOIN_DISABLED`) to do this:
 
 ```shell
-./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-starcoin-disabled true
+./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-starcoin-disabled
 ```
 
 ## Re-handle Poly height
@@ -71,5 +71,5 @@ If relayer somehow missed hanlding a poly height, can use this to re-handle it:
 Relayer use MySQL DB by default, can use BoltDB also, but only when (Poly)to Starcoin relaying is disabled:
 
 ```shell
-./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-starcoin-disabled true --use-boltdb
+./poly-starcoin-relayer --cliconfig ./config-testnet.json --to-starcoin-disabled --use-boltdb
 ```
