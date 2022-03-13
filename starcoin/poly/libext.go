@@ -7,21 +7,6 @@ import (
 	diemtypes "github.com/starcoinorg/starcoin-go/types"
 )
 
-func ParseModuleId(str string) *diemtypes.ModuleId {
-	ss := strings.Split(str, "::")
-	if len(ss) < 2 {
-		panic("module Id string format error")
-	}
-	addr, err := diemtypes.ToAccountAddress(ss[0])
-	if err != nil {
-		panic("module Id string address format error")
-	}
-	return &diemtypes.ModuleId{
-		Address: *addr,                       //[16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61},
-		Name:    diemtypes.Identifier(ss[1]), //"CrossChainScript",
-	}
-}
-
 func EncodeCCMChangeBookKeeperTxPayload(module string, raw_header []byte, pub_key_list []byte, sig_list []byte) diemtypes.TransactionPayload {
 	// copy from generated code:
 	return &diemtypes.TransactionPayload__ScriptFunction{
@@ -200,5 +185,20 @@ func EncodeTwoTypeArgsAndFourU128TxPaylaod(module string, function string, t1, t
 			TyArgs:   []diemtypes.TypeTag{t1, t2},
 			Args:     [][]byte{encode_u128_argument(u1), encode_u128_argument(u2), encode_u128_argument(u3), encode_u128_argument(u4)},
 		},
+	}
+}
+
+func ParseModuleId(str string) *diemtypes.ModuleId {
+	ss := strings.Split(str, "::")
+	if len(ss) < 2 {
+		panic("module Id string format error")
+	}
+	addr, err := diemtypes.ToAccountAddress(ss[0])
+	if err != nil {
+		panic("module Id string address format error")
+	}
+	return &diemtypes.ModuleId{
+		Address: *addr,                       //[16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61},
+		Name:    diemtypes.Identifier(ss[1]), //"CrossChainScript",
 	}
 }
