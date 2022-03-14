@@ -262,7 +262,7 @@ func TestLockSTCWithSTCFee(t *testing.T) {
 	fmt.Println(polyManager)
 	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
 	var to_chain_id uint64 = 318                                              // 318
-	to_address, _ := tools.HexToBytes("0x18351d311d32201149a4df2a9fc2db8a")
+	to_address, _ := tools.HexToBytes("0x4afb6a3ED1e2ff212586fc6BcDb8DdAF")   //("0x18351d311d32201149a4df2a9fc2db8a")
 	amount := serde.Uint128{
 		High: 0,
 		Low:  10000000,
