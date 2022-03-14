@@ -51,7 +51,11 @@ func TestSetChainId(t *testing.T) {
 		fmt.Print(err)
 		t.FailNow()
 	}
-	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 func TestInitFeeEventStore(t *testing.T) {
@@ -68,7 +72,11 @@ func TestInitFeeEventStore(t *testing.T) {
 		fmt.Print(err)
 		t.FailNow()
 	}
-	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 // Before cross from/to ethereum, bind the LockProxy hash first.
@@ -109,7 +117,11 @@ func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, config *config.
 		fmt.Print(err)
 		t.FailNow()
 	}
-	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 func TestBindXETHAssetHash(t *testing.T) {
@@ -119,6 +131,20 @@ func TestBindXETHAssetHash(t *testing.T) {
 	fromAssetHash := []byte("0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH")          // asset hash on Starcoin
 	toChainId := uint64(2)                                                             // ethereum network
 	toAssetHash, err := tools.HexToBytes("0x0000000000000000000000000000000000000000") // ETH Asset Hash on Ethereum Contract
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, t)
+}
+
+func TestBindXUSDTAssetHash(t *testing.T) {
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	fmt.Println(polyManager)
+	fromAssetHash := []byte("0x18351d311d32201149a4df2a9fc2db8a::XUSDT::XUSDT")        // asset hash on Starcoin
+	toChainId := uint64(2)                                                             // ethereum network
+	toAssetHash, err := tools.HexToBytes("0xad3f96ae966ad60347f31845b7e4b333104c52fb") // USDT Asset Hash on Ethereum Contract
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -159,7 +185,11 @@ func testBindAssetHash(fromAssetHash []byte, toChainId uint64, toAssetHash []byt
 		fmt.Print(err)
 		t.FailNow()
 	}
-	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 func TestXEthInit(t *testing.T) {
@@ -179,7 +209,11 @@ func TestXEthInit(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 func TestXUsdtInit(t *testing.T) {
@@ -199,7 +233,11 @@ func TestXUsdtInit(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 // ///////////////////////// Test Init Starcoin Contracts END ///////////////////////////
@@ -318,7 +356,11 @@ func testLockStarcoinAsset(from_asset_hash []byte, to_chain_id uint64, to_addres
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 func testLockStarcoinAssetWithStcFee(from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128, fee serde.Uint128, id serde.Uint128, polyManager *PolyManager, t *testing.T) {
@@ -333,7 +375,11 @@ func testLockStarcoinAssetWithStcFee(from_asset_hash []byte, to_chain_id uint64,
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 func TestHandleDepositEvents(t *testing.T) {
