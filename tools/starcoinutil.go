@@ -109,6 +109,19 @@ func IsAcceptToken(client *stcclient.StarcoinClient, accountAddress string, toke
 	return ToBool(ExtractSingleResult(r))
 }
 
+func AccountExistsAt(client *stcclient.StarcoinClient, accountAddress string) (bool, error) {
+	c := stcclient.ContractCall{
+		FunctionId: "0x1::Account::exists_at",
+		TypeArgs:   []string{},
+		Args:       []string{accountAddress},
+	}
+	r, err := client.CallContract(context.Background(), c)
+	if err != nil {
+		return false, err
+	}
+	return ToBool(ExtractSingleResult(r))
+}
+
 type starcoinTransactionProofRsp struct {
 	JsonRpc string          `json:"jsonrpc"`
 	Result  json.RawMessage `json:"result,omitempty"`

@@ -52,14 +52,28 @@ func TestGetTransactionInfoByHash(t *testing.T) {
 
 func TestIsAcceptToken(t *testing.T) {
 	stcclient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-	accountAddr := "0xd117638e105403784bf6A92AA1276Ec1"
-	tokenType := "0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH"
+	accountAddr := "0xdb9d6f70922c8deb4c9c6500633f425d"
+	// accountAddr := "0xd117638e105403784bf6A92AA1276Ec1"
+	tokenType := "0x00000000000000000000000000000001::STC::STC"
+	// tokenType := "0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH"
 	a, err := IsAcceptToken(&stcclient, accountAddr, tokenType)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
 	fmt.Printf("Is account '%s' accept token '%s': %v\n", accountAddr, tokenType, a)
+}
+
+func TestAccountExistsAt(t *testing.T) {
+	stcclient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
+	//accountAddr := "0xdb9d6f70922c8deb4c9c6500633f425d"
+	accountAddr := "0x4afb6a3ED1e2ff212586fc6BcDb8DdAF"
+	a, err := AccountExistsAt(&stcclient, accountAddr)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Printf("Account Exists At '%s': %v\n", accountAddr, a)
 }
 
 func TestUint128AndBigIntConvert(t *testing.T) {

@@ -639,16 +639,26 @@ func (this *PolyManager) checkStarcoinStatusByProof(proof []byte) (bool, string,
 	}
 	addr := tools.EncodeToHex(unlockArgs.ToAddress)
 	tokenType := string(unlockArgs.ToAssetHash)
-	b, err := tools.IsAcceptToken(this.starcoinClient, addr, tokenType)
-	if err != nil {
-		log.Infof("PolyManager.checkStarcoinStatusByProof - call IsAcceptToken() error: %s", err.Error())
+	accountExists, existsErr := tools.AccountExistsAt(this.starcoinClient, addr)
+	if existsErr != nil {
+		log.Infof("PolyManager.checkStarcoinStatusByProof - call AccountExistsAt() error: %s", existsErr.Error())
+		return false, "", ""
 	}
-	if !b {
-		msg := fmt.Sprintf("'%s' not accept token '%s'", addr, tokenType)
-		log.Debug("PolyManager.checkStarcoinStatusByProof - " + msg)
-		return false, db.STARCOIN_STATUS_NOT_ACCEPT_TOKEN, msg
+	if accountExists {
+		isAcceptToken, isAccErr := tools.IsAcceptToken(this.starcoinClient, addr, tokenType)
+		if isAccErr != nil {
+			log.Infof("PolyManager.checkStarcoinStatusByProof - call IsAcceptToken() error: %s", isAccErr.Error())
+			return false, "", ""
+		}
+		if !isAcceptToken {
+			msg := fmt.Sprintf("'%s' not accept token '%s'", addr, tokenType)
+			log.Debug("PolyManager.checkStarcoinStatusByProof - " + msg)
+			return false, db.STARCOIN_STATUS_NOT_ACCEPT_TOKEN, msg
+		} else {
+			return true, "", ""
+		}
 	} else {
-		return true, "", ""
+		return true, "", "" // treated as Is-Accept-Token, cause account will be auto-created.
 	}
 }
 
