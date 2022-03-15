@@ -142,9 +142,10 @@ func TestBindXUSDTAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	fromAssetHash := []byte("0x18351d311d32201149a4df2a9fc2db8a::XUSDT::XUSDT")        // asset hash on Starcoin
-	toChainId := uint64(2)                                                             // ethereum network
-	toAssetHash, err := tools.HexToBytes("0xad3f96ae966ad60347f31845b7e4b333104c52fb") // USDT Asset Hash on Ethereum Contract
+	fromAssetHash := []byte("0x18351d311d32201149a4df2a9fc2db8a::XUSDT::XUSDT") // asset hash on Starcoin
+	toChainId := uint64(2)                                                      // ethereum network
+	//toAssetHash, err := tools.HexToBytes("0xad3f96ae966ad60347f31845b7e4b333104c52fb") // USDT Asset Hash on Ethereum Contract
+	toAssetHash, err := tools.HexToBytes("0x74E9a2447De2e31C3D8c1f6BAeFBD09ed1162891") // USDT Asset Hash on Ethereum Contract
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()

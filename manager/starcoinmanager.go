@@ -526,12 +526,23 @@ func (this *StarcoinManager) MonitorDeposit() {
 				log.Infof("MonitorDeposit - cannot get starcoin node height, err: %s", err.Error())
 				continue
 			}
-			snycheight, _ := this.findSyncedHeight()
-			log.Log.Info("MonitorDeposit from starcoin - snyced starcoin height", snycheight, "starcoin height", height, "diff", height-snycheight)
-			this.handleLockDepositEvents(snycheight)
+			snycheight, err := this.findSyncedHeight()
+			if err != nil {
+				log.Errorf("MonitorDeposit - Failed to findSyncedHeight %v %v", snycheight, err)
+			}
+			if snycheight > height-config.STARCOIN_PROOF_USERFUL_BLOCK {
+				log.Info("MonitorDeposit from starcoin - snyced starcoin height", snycheight, "starcoin height", height, "diff", height-snycheight)
+				// try to handle deposit event when we are at latest height
+				err := this.handleLockDepositEvents(snycheight)
+				if err != nil {
+					log.Errorf("MonitorDeposit - Failed to handleLockDepositEvents %v %v", snycheight, err)
+				}
+			}
+
 		case <-this.exitChan:
 			return
 		}
+
 	}
 }
 
