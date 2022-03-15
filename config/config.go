@@ -30,7 +30,7 @@ const (
 	STARCOIN_MONITOR_INTERVAL = 2 * time.Second
 	POLY_MONITOR_INTERVAL     = 2 * time.Second
 
-	STARCOIN_USEFUL_BLOCK_NUM    = 8  // eth relayer : 3
+	STARCOIN_USEFUL_BLOCK_NUM    = 9  // eth relayer : 3
 	STARCOIN_PROOF_USERFUL_BLOCK = 36 // eth relayer : 12
 	ONT_USEFUL_BLOCK_NUM         = 1
 	DEFAULT_CONFIG_FILE_NAME     = "./config.json"
