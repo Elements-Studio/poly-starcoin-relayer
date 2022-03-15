@@ -358,7 +358,11 @@ func (this *StarcoinManager) handleBlockHeader(height uint64) bool {
 	// return true
 	// // ------------------------------------ debug code end ------------------------------------
 
-	rawHdr, _ := json.Marshal(hdr)
+	rawHdr, marshalErr := json.Marshal(hdr)
+	if marshalErr != nil {
+		log.Errorf("handleBlockHeader - json.Marshal error on height: %d", height)
+		return false
+	}
 	raw, _ := this.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
 	// this var `raw` is block(header) hash saved in poly
@@ -480,7 +484,7 @@ func (this *StarcoinManager) fetchLockDepositEvents(height uint64) (bool, error)
 			}
 		}
 		param := &common2.MakeTxParam{}
-		_ = param.Deserialization(common.NewZeroCopySource([]byte(ccEvent.RawData)))
+		//_ = param.Deserialization(common.NewZeroCopySource([]byte(ccEvent.RawData)))
 		raw, _ := this.polySdk.GetStorage(autils.CrossChainManagerContractAddress.ToHexString(),
 			append(append([]byte(cross_chain_manager.DONE_TX), autils.GetUint64Bytes(this.config.StarcoinConfig.SideChainId)...), param.CrossChainID...))
 		if len(raw) != 0 {

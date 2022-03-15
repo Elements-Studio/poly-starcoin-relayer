@@ -137,7 +137,7 @@ func (this *PolyManager) init() bool {
 		log.Infof("PolyManager init - start height from flag: %d", this.currentHeight)
 		return true
 	}
-	this.currentHeight, _ = this.db.GetPolyHeight() // TODO: handle db error???
+	this.currentHeight, _ = this.db.GetPolyHeight() // TODO: ignore db error???
 	curEpochStart := this.findCurEpochStartHeight()
 	if curEpochStart > this.currentHeight {
 		this.currentHeight = curEpochStart
