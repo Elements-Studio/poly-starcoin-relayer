@@ -64,6 +64,20 @@ func GetStarcoinAccountTokenBalance(starcoinClient *stcclient.StarcoinClient, ac
 	return &b.Json.Token.Value, nil
 }
 
+func GetTokenScalingFactor(starcoinClient *stcclient.StarcoinClient, tokenType string) (*big.Int, error) {
+	// public fun scaling_factor<TokenType: store>(): u128
+	c := stcclient.ContractCall{
+		FunctionId: "0x1::Token::scaling_factor",
+		TypeArgs:   []string{tokenType},
+		Args:       []string{},
+	}
+	r, err := starcoinClient.CallContract(context.Background(), c)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+	return ToBigInt(ExtractSingleResult(r))
+}
+
 // Get starcoin node current height.
 func GetStarcoinNodeHeight(url string, restClient *RestClient) (uint64, error) {
 	req := &starcoinJsonRpcReq{

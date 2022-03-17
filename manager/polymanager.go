@@ -836,7 +836,7 @@ func (this *PolyManager) InitStarcoinGenesis(height *uint32) error {
 	// wait transaction confirmed?
 	ok, err := tools.WaitTransactionConfirm(*this.starcoinClient, txHash, time.Minute)
 	if err != nil {
-		log.Errorf("InitGenesis - WaitTransactionConfirm error: %s", err.Error())
+		log.Errorf("InitGenesis - WaitTransactionConfirm(%s) error: %s", txHash, err.Error())
 		return err
 	} else if !ok {
 		log.Errorf("InitGenesis - WaitTransactionConfirm failed(unknown error).")

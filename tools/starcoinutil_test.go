@@ -19,6 +19,17 @@ func TestWaitTransactionConfirm(t *testing.T) {
 	fmt.Println(b, err)
 }
 
+func TestGetTokenScalingFactor(t *testing.T) {
+	stcclient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
+	tokenType := "0xb6D69DD935EDf7f2054acF12eb884df8::XUSDT::XUSDT"
+	sf, err := GetTokenScalingFactor(&stcclient, tokenType)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Printf("Token(%s) scaling factor: %d\n", tokenType, sf)
+}
+
 func TestGetStarcoinNodeHeight(t *testing.T) {
 	restclient := NewRestClient()
 	h, err := GetStarcoinNodeHeight("https://barnard-seed.starcoin.org", restclient)
