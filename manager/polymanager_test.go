@@ -163,7 +163,7 @@ func TestBindSTCAssetHash(t *testing.T) {
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, t)
 }
 
-func TestBind_eSTC_AssetHash(t *testing.T) {
+func TestBindEthereumSTCAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
