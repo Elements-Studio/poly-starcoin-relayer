@@ -128,7 +128,7 @@ func TestBindXETHAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	fromAssetHash := []byte("0xb6d69dd935edf7f2054acf12eb884df8::XETH::XETH")          // asset hash on Starcoin
+	fromAssetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH")          // asset hash on Starcoin
 	toChainId := uint64(2)                                                             // ethereum network
 	toAssetHash, err := tools.HexToBytes("0x0000000000000000000000000000000000000000") // ETH Asset Hash on Ethereum Contract
 	if err != nil {
@@ -142,7 +142,7 @@ func TestBindXUSDTAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	fromAssetHash := []byte("0xb6d69dd935edf7f2054acf12eb884df8::XUSDT::XUSDT") // asset hash on Starcoin
+	fromAssetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT") // asset hash on Starcoin
 	toChainId := uint64(2)                                                      // ethereum network
 	//toAssetHash, err := tools.HexToBytes("0xad3f96ae966ad60347f31845b7e4b333104c52fb") // USDT Asset Hash on Ethereum Contract
 	toAssetHash, err := tools.HexToBytes("0x74E9a2447De2e31C3D8c1f6BAeFBD09ed1162891") // USDT Asset Hash on Ethereum Contract
@@ -197,7 +197,7 @@ func TestXEthInit(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	module := "0xb6d69dd935edf7f2054acf12eb884df8::XETHScripts"
+	module := "0x416b32009fe49fcab1d5f2ba0153838f::XETHScripts"
 	txPayload := stcpoly.EncodeEmptyArgsTxPaylaod(module, "init")
 	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], &txPayload)
 	if err != nil {
@@ -221,7 +221,7 @@ func TestXUsdtInit(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	module := "0xb6d69dd935edf7f2054acf12eb884df8::XUSDTScripts"
+	module := "0x416b32009fe49fcab1d5f2ba0153838f::XUSDTScripts"
 	txPayload := stcpoly.EncodeEmptyArgsTxPaylaod(module, "init")
 	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, polyManager.config.StarcoinConfig.PrivateKeys[0], &txPayload)
 	if err != nil {
@@ -249,7 +249,7 @@ func TestLockSTC(t *testing.T) {
 	fmt.Println(polyManager)
 	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
 	var to_chain_id uint64 = 318                                              // 318
-	to_address, _ := tools.HexToBytes("0xb6d69dd935edf7f2054acf12eb884df8")
+	to_address, _ := tools.HexToBytes("0x416b32009fe49fcab1d5f2ba0153838f")
 	amount := serde.Uint128{
 		High: 0,
 		Low:  10000000,
@@ -263,7 +263,7 @@ func TestLockSTCWithSTCFee(t *testing.T) {
 	fmt.Println(polyManager)
 	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
 	var to_chain_id uint64 = 318                                              // 318
-	to_address, _ := tools.HexToBytes("0x4afb6a3ED1e2ff212586fc6BcDb8DdAF")   //("0xb6d69dd935edf7f2054acf12eb884df8")
+	to_address, _ := tools.HexToBytes("0x4afb6a3ED1e2ff212586fc6BcDb8DdAF")   //("0x416b32009fe49fcab1d5f2ba0153838f")
 	amount := serde.Uint128{
 		High: 0,
 		Low:  10000000,
@@ -307,7 +307,7 @@ func TestLockXETHWithSTCFee(t *testing.T) {
 	fmt.Println("================== polyManager ================")
 	fmt.Println(polyManager)
 	var from_asset_hash []byte
-	from_asset_hash = []byte("0xb6d69dd935edf7f2054acf12eb884df8::XETH::XETH") // XETH asset hash(asset ID.) on Starcoin
+	from_asset_hash = []byte("0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH") // XETH asset hash(asset ID.) on Starcoin
 	var to_chain_id uint64 = 2                                                 // to an ethereum network
 	var to_address []byte
 	to_address, _ = tools.HexToBytes("0x208D1Ae5bb7FD323ce6386C443473eD660825D46") // to an ethereum address
@@ -335,7 +335,7 @@ func TestLockXETH(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	from_asset_hash := []byte("0xb6d69dd935edf7f2054acf12eb884df8::XETH::XETH")     // XETH asset hash(asset ID.) on Starcoin
+	from_asset_hash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH")     // XETH asset hash(asset ID.) on Starcoin
 	var to_chain_id uint64 = 2                                                      // to an ethereum network
 	to_address, _ := tools.HexToBytes("0x208D1Ae5bb7FD323ce6386C443473eD660825D46") // to an ethereum address
 	amount := serde.Uint128{

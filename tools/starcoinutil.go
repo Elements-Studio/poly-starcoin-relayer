@@ -262,7 +262,7 @@ func isKnownStarcoinTxFailureStatus(status []byte) bool {
 		if strings.EqualFold("MoveAbort", k) {
 			return true
 		} else if strings.EqualFold("ExecutionFailure", k) {
-			//{"ExecutionFailure":{"function":10,"code_offset":38,"location":{"Module":{"address":"0xb6d69dd935edf7f2054acf12eb884df8","name":"LockProxy"}}}}
+			//{"ExecutionFailure":{"function":10,"code_offset":38,"location":{"Module":{"address":"0x416b32009fe49fcab1d5f2ba0153838f","name":"LockProxy"}}}}
 			return true
 		}
 	}

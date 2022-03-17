@@ -26,11 +26,11 @@ type LockTreasuryResource struct {
 
 func TestGetAssetLockedAmount(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-	genesisAccountAddress := "0xb6d69dd935edf7f2054acf12eb884df8"
+	genesisAccountAddress := "0x416b32009fe49fcab1d5f2ba0153838f"
 	// ---------- STC lock Resource -----------
-	//resType := "0xb6d69dd935edf7f2054acf12eb884df8::LockProxy::LockTreasury<0x00000000000000000000000000000001::STC::STC>"
+	//resType := "0x416b32009fe49fcab1d5f2ba0153838f::LockProxy::LockTreasury<0x00000000000000000000000000000001::STC::STC>"
 	// ---------- XETH lock resource ------------
-	resType := "0xb6d69dd935edf7f2054acf12eb884df8::LockProxy::LockTreasury<0xb6d69dd935edf7f2054acf12eb884df8::XETH::XETH>"
+	resType := "0x416b32009fe49fcab1d5f2ba0153838f::LockProxy::LockTreasury<0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH>"
 	getResOption := stcclient.GetResourceOption{
 		Decode: true,
 	}
@@ -60,8 +60,8 @@ func TestGetTransactionGas(t *testing.T) {
 
 func TestFetchCrossChainEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-	address := "0xb6d69dd935edf7f2054acf12eb884df8"
-	typeTag := "0xb6d69dd935edf7f2054acf12eb884df8::CrossChainManager::CrossChainEvent"
+	address := "0x416b32009fe49fcab1d5f2ba0153838f"
+	typeTag := "0x416b32009fe49fcab1d5f2ba0153838f::CrossChainManager::CrossChainEvent"
 	height := uint64(3421831) //3422033) //3421831) //2977050)
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
@@ -133,8 +133,8 @@ func TestFetchCrossChainEvent(t *testing.T) {
 
 func TestFetchLockEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-	address := "0xb6d69dd935edf7f2054acf12eb884df8"
-	typeTag := "0xb6d69dd935edf7f2054acf12eb884df8::LockProxy::LockEvent"
+	address := "0x416b32009fe49fcab1d5f2ba0153838f"
+	typeTag := "0x416b32009fe49fcab1d5f2ba0153838f::LockProxy::LockEvent"
 	height := uint64(3422033) //3421831) //2977050)
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
@@ -184,8 +184,8 @@ func TestFetchLockEvent(t *testing.T) {
 func TestFetchUnlockEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
 	// tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0x08bc1d3e076c75519f1d2bdea08b980e5e2c7ec62b56136f038012e4333f541a")
-	address := "0xb6d69dd935edf7f2054acf12eb884df8"
-	typeTag := "0xb6d69dd935edf7f2054acf12eb884df8::LockProxy::UnlockEvent"
+	address := "0x416b32009fe49fcab1d5f2ba0153838f"
+	typeTag := "0x416b32009fe49fcab1d5f2ba0153838f::LockProxy::UnlockEvent"
 	height := uint64(2977211)
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
@@ -230,8 +230,8 @@ func TestFetchUnlockEvent(t *testing.T) {
 func TestFetchCrossChainFeeLockEvents(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
 	// tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0xe2ad6bfeed3f5c96236c348556cde88d31f2336cd505be8b5d6ed1293ed7cf90")
-	address := "0xb6d69dd935edf7f2054acf12eb884df8"
-	typeTag := "0xb6d69dd935edf7f2054acf12eb884df8::LockProxy::CrossChainFeeLockEvent"
+	address := "0x416b32009fe49fcab1d5f2ba0153838f"
+	typeTag := "0x416b32009fe49fcab1d5f2ba0153838f::LockProxy::CrossChainFeeLockEvent"
 	height := uint64(3422033) //3421831) //3421382) //3421326) //3414132) //CrossChainFeeLockEvent on barnard
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
@@ -282,8 +282,8 @@ func TestFetchCrossChainFeeLockEvents(t *testing.T) {
 func TestFetchVerifyHeaderAndExecuteTxEvent(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
 	// tx, _ := starcoinClient.GetTransactionInfoByHash(context.Background(), "0xe2ad6bfeed3f5c96236c348556cde88d31f2336cd505be8b5d6ed1293ed7cf90")
-	address := "0xb6d69dd935edf7f2054acf12eb884df8"
-	typeTag := "0xb6d69dd935edf7f2054acf12eb884df8::CrossChainManager::VerifyHeaderAndExecuteTxEvent"
+	address := "0x416b32009fe49fcab1d5f2ba0153838f"
+	typeTag := "0x416b32009fe49fcab1d5f2ba0153838f::CrossChainManager::VerifyHeaderAndExecuteTxEvent"
 	height := uint64(2977211)
 	eventFilter := &stcclient.EventFilter{
 		Address:   []string{address},
@@ -323,7 +323,7 @@ func TestFetchVerifyHeaderAndExecuteTxEvent(t *testing.T) {
 		fmt.Println("--------------- ToContract ----------------")
 		fmt.Println(hex.EncodeToString(veEvent.ToContract))
 		fmt.Println("--------------- ToContract(as string) ----------------")
-		fmt.Println(string(veEvent.ToContract)) //to Starcoin, it is like this: 0xb6d69dd935edf7f2054acf12eb884df8::CrossChainScript
+		fmt.Println(string(veEvent.ToContract)) //to Starcoin, it is like this: 0x416b32009fe49fcab1d5f2ba0153838f::CrossChainScript
 	}
 }
 

@@ -21,7 +21,7 @@ func TestWaitTransactionConfirm(t *testing.T) {
 
 func TestGetTokenScalingFactor(t *testing.T) {
 	stcclient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
-	tokenType := "0xb6D69DD935EDf7f2054acF12eb884df8::XUSDT::XUSDT"
+	tokenType := "0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT"
 	sf, err := GetTokenScalingFactor(&stcclient, tokenType)
 	if err != nil {
 		fmt.Println(err)
@@ -66,7 +66,7 @@ func TestIsAcceptToken(t *testing.T) {
 	accountAddr := "0xdb9d6f70922c8deb4c9c6500633f425d"
 	// accountAddr := "0xd117638e105403784bf6A92AA1276Ec1"
 	tokenType := "0x00000000000000000000000000000001::STC::STC"
-	// tokenType := "0xb6d69dd935edf7f2054acf12eb884df8::XETH::XETH"
+	// tokenType := "0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH"
 	a, err := IsAcceptToken(&stcclient, accountAddr, tokenType)
 	if err != nil {
 		fmt.Println(err)
