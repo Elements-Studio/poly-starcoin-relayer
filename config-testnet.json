@@ -9,16 +9,16 @@
     "SideChainId": 318,
     "RestURL": "https://barnard-seed.starcoin.org",
     "ChainId": 251,
-    "CCScriptModule": "0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript",
-    "CCMModule": "0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript",
-    "CCDModule": "0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript",
-    "CrossChainEventAddress": "0x18351d311d32201149a4df2a9fc2db8a",
-    "CrossChainEventTypeTag": "0x18351d311d32201149a4df2a9fc2db8a::CrossChainManager::CrossChainEvent",
-    "CCSMTRootResourceType": "0x18351d311d32201149a4df2a9fc2db8a::CrossChainData::SparseMerkleTreeRoot",
-    "GenesisAccountAddress": "0x18351d311d32201149a4df2a9fc2db8a",
+    "CCScriptModule": "0xb6d69dd935edf7f2054acf12eb884df8::CrossChainScript",
+    "CCMModule": "0xb6d69dd935edf7f2054acf12eb884df8::CrossChainScript",
+    "CCDModule": "0xb6d69dd935edf7f2054acf12eb884df8::CrossChainScript",
+    "CrossChainEventAddress": "0xb6d69dd935edf7f2054acf12eb884df8",
+    "CrossChainEventTypeTag": "0xb6d69dd935edf7f2054acf12eb884df8::CrossChainManager::CrossChainEvent",
+    "CCSMTRootResourceType": "0xb6d69dd935edf7f2054acf12eb884df8::CrossChainData::SparseMerkleTreeRoot",
+    "GenesisAccountAddress": "0xb6d69dd935edf7f2054acf12eb884df8",
     "PrivateKeys": [
       {
-        "0x18351d311d32201149a4df2a9fc2db8a": "${PRIVATE_KEY_18351d3}"
+        "0xb6d69dd935edf7f2054acf12eb884df8": "${PRIVATE_KEY_b6d69dd}"
       }
     ],
     "BlockConfirmations": 6,
@@ -35,7 +35,7 @@
   "CheckFee": true,
   "ProxyOrAssetContracts": [
     {
-      "0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript": {
+      "0xb6d69dd935edf7f2054acf12eb884df8::CrossChainScript": {
         "outbound": [
           1,
           2,

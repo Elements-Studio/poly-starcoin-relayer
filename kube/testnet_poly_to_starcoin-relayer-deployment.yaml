@@ -27,11 +27,11 @@ spec:
             secretKeyRef:
               name: poly-starcoin-relayer-testnet-sercets
               key: MYSQL_DSN_TESTNET
-        - name: PRIVATE_KEY_18351d3
+        - name: PRIVATE_KEY_b6d69dd
           valueFrom:
             secretKeyRef:
               name: poly-starcoin-relayer-testnet-sercets
-              key: PRIVATE_KEY_18351d3
+              key: PRIVATE_KEY_b6d69dd
         - name: POLY_WALLET_PASSWORD
           value: "123456"
         - name: POLY_WALLET_FILE
