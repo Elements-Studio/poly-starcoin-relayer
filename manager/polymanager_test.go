@@ -537,3 +537,10 @@ func setUpPoly(poly *polysdk.PolySdk, RpcAddr string) error {
 	poly.SetChainId(hdr.ChainID)
 	return nil
 }
+
+// func TestMisc3(t *testing.T) {
+// 	var i interface{} = big.NewInt(11111)
+// 	s, ok := i.(string)
+// 	fmt.Println(s)
+// 	fmt.Println(ok)
+// }

@@ -508,12 +508,24 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 		hp     string
 	)
 	if !isCurr { //lastEpoch >= height+1
-		anchor, _ = this.polySdk.GetHeaderByHeight(lastEpoch + 1)
-		proof, _ := this.polySdk.GetMerkleProof(height+1, lastEpoch+1)
+		anchor, err = this.polySdk.GetHeaderByHeight(lastEpoch + 1)
+		if err != nil {
+			log.Errorf("handleDepositEvents - polySdk.GetHeaderByHeight, height: %d, error: %v", lastEpoch+1, err)
+		}
+		proof, err := this.polySdk.GetMerkleProof(height+1, lastEpoch+1)
+		if err != nil {
+			log.Errorf("handleDepositEvents - polySdk.GetMerkleProof, block height: %d, root height: %d, error: %v", height+1, lastEpoch+1, err)
+		}
 		hp = proof.AuditPath
 	} else if isEpoch {
-		anchor, _ = this.polySdk.GetHeaderByHeight(height + 2)
-		proof, _ := this.polySdk.GetMerkleProof(height+1, height+2)
+		anchor, err = this.polySdk.GetHeaderByHeight(height + 2)
+		if err != nil {
+			log.Errorf("handleDepositEvents - polySdk.GetHeaderByHeight, height: %d, error: %v", height+2, err)
+		}
+		proof, err := this.polySdk.GetMerkleProof(height+1, height+2)
+		if err != nil {
+			log.Errorf("handleDepositEvents - polySdk.GetMerkleProof, block height: %d, root height: %d, error: %v", height+1, height+2, err)
+		}
 		hp = proof.AuditPath
 	}
 
@@ -529,7 +541,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 		for _, notify := range event.Notify {
 			if notify.ContractAddress == this.config.PolyConfig.EntranceContractAddress {
 				states := notify.States.([]interface{})
-				method, _ := states[0].(string)
+				method, _ := states[0].(string) // ignore is safe
 				if method != "makeProof" {
 					//log.Debug("It is not a 'makeProof' method!")
 					continue
@@ -543,8 +555,14 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 					log.Errorf("handleDepositEvents - failed to get proof for key %s: %v", states[5].(string), err)
 					continue
 				}
-				auditpath, _ := hex.DecodeString(proof.AuditPath)
-				value, _, _, _ := tools.ParseAuditpath(auditpath)
+				auditpath, err := hex.DecodeString(proof.AuditPath)
+				if err != nil {
+					log.Errorf("handleDepositEvents - failed to hex.DecodeString(proof.AuditPath): %v", err)
+				}
+				value, _, _, err := tools.ParseAuditpath(auditpath)
+				if err != nil {
+					log.Errorf("handleDepositEvents - failed to tools.ParseAuditpath(auditpath): %v", err)
+				}
 				param := &common2.ToMerkleValue{}
 				if err := param.Deserialization(common.NewZeroCopySource(value)); err != nil {
 					log.Errorf("handleDepositEvents - failed to deserialize MakeTxParam (value: %x, err: %v)", value, err)
@@ -584,7 +602,7 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 
 				putToRetry := this.config.CheckFee
 				if !putToRetry {
-					b, _, _ := this.checkStarcoinStatusByProof(auditpath)
+					b, _, _ := this.checkStarcoinStatusByProof(auditpath) // ignore check-status and message
 					putToRetry = !b
 				}
 				if putToRetry {
@@ -713,7 +731,7 @@ func newPolyMsgTx(height uint32, event *pcommon.SmartContactEvent, notify *pcomm
 	if len(states) < 6 {
 		return nil, fmt.Errorf("len(states) < 6")
 	}
-	method, _ := states[0].(string)
+	method, _ := states[0].(string) // ignore is safe
 	if method != "makeProof" {
 		return nil, fmt.Errorf("method != \"makeProof\"")
 	}
@@ -1013,14 +1031,20 @@ func getRawHeaderAndHeaderProofAndSig(header *polytypes.Header, param *common2.T
 		for _, sig := range anchorHeader.SigData {
 			temp := make([]byte, len(sig))
 			copy(temp, sig)
-			newsig, _ := signature.ConvertToEthCompatible(temp)
+			newsig, err := signature.ConvertToEthCompatible(temp)
+			if err != nil {
+				log.Errorf("getRawHeaderAndHeaderProofAndSig - signature.ConvertToEthCompatible error: %v", err)
+			}
 			sigs = append(sigs, newsig...)
 		}
 	} else {
 		for _, sig := range header.SigData {
 			temp := make([]byte, len(sig))
 			copy(temp, sig)
-			newsig, _ := signature.ConvertToEthCompatible(temp)
+			newsig, err := signature.ConvertToEthCompatible(temp)
+			if err != nil {
+				log.Errorf("getRawHeaderAndHeaderProofAndSig - signature.ConvertToEthCompatible error: %v", err)
+			}
 			sigs = append(sigs, newsig...)
 		}
 	}
@@ -1043,7 +1067,10 @@ func getRawHeaderAndHeaderProofAndSig(header *polytypes.Header, param *common2.T
 	// //log.Infof("poly proof with header, height: %d, key: %s, proof: %s", header.Height-1, string(key), proof.AuditPath)
 	// // ///////////////////////////////////
 
-	rawProof, _ := hex.DecodeString(headerProof)
+	rawProof, err := hex.DecodeString(headerProof)
+	if err != nil {
+		log.Errorf("getRawHeaderAndHeaderProofAndSig - hex.DecodeString(headerProof) error: %v", err)
+	}
 	var rawAnchor []byte
 	if anchorHeader != nil {
 		rawAnchor = anchorHeader.GetMessage()
@@ -1116,7 +1143,8 @@ func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 		go func() {
 			for v := range c {
 				if err := this.sendTxToStarcoin(v); err != nil {
-					txBytes, _ := v.txPayload.BcsSerialize()
+					txBytes, seErr := v.txPayload.BcsSerialize()
+					_ = seErr // ignore is safe
 					log.Errorf("failed to send tx to starcoin: error: %v, txData: %s", err, hex.EncodeToString(txBytes))
 				}
 			}
@@ -1390,8 +1418,14 @@ func readBookKeeperPublicKeyBytes(hdr *polytypes.Header) ([]byte, error) {
 func readBookKeeperPublicKeys(blkInfo *vconfig.VbftBlockInfo) []keypair.PublicKey {
 	var bookkeepers []keypair.PublicKey
 	for _, peer := range blkInfo.NewChainConfig.Peers {
-		keystr, _ := hex.DecodeString(peer.ID)
-		key, _ := keypair.DeserializePublicKey(keystr)
+		keystr, err := hex.DecodeString(peer.ID)
+		if err != nil {
+			log.Errorf("readBookKeeperPublicKeys - hex.DecodeString(peer.ID) error: %v", err)
+		}
+		key, err := keypair.DeserializePublicKey(keystr)
+		if err != nil {
+			log.Errorf("readBookKeeperPublicKeys - keypair.DeserializePublicKey(keystr) error: %v", err)
+		}
 		bookkeepers = append(bookkeepers, key)
 	}
 	bookkeepers = keypair.SortPublicKeys(bookkeepers)
@@ -1403,7 +1437,10 @@ func encodeHeaderSigData(header *polytypes.Header) []byte {
 	for _, sig := range header.SigData {
 		temp := make([]byte, len(sig))
 		copy(temp, sig)
-		newsig, _ := signature.ConvertToEthCompatible(temp)
+		newsig, err := signature.ConvertToEthCompatible(temp)
+		if err != nil {
+			log.Errorf("encodeHeaderSigData - signature.ConvertToEthCompatible error: %v", err)
+		}
 		sigs = append(sigs, newsig...)
 	}
 	return sigs
