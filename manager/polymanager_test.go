@@ -46,6 +46,7 @@ func TestSetChainId(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
+	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
 	if err != nil {
 		fmt.Print(err)
@@ -67,6 +68,7 @@ func TestInitFeeEventStore(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
+	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
 	if err != nil {
 		fmt.Print(err)
@@ -112,6 +114,7 @@ func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, config *config.
 		fmt.Println(err)
 		t.FailNow()
 	}
+	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*starcoinClient, txHash, time.Second*30)
 	if err != nil {
 		fmt.Print(err)
@@ -166,10 +169,13 @@ func TestBindSTCAssetHash(t *testing.T) {
 func TestBindEthereumSTCAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	//toAssetHash, _ := tools.HexToBytes("0x6527BC0C4724B51c955E7A4654E2c15464C1851a") // OLD eSTC ERC20 contract address on ethereum
+
 	fmt.Println(polyManager)
 	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")          // asset hash on Starcoin
 	toChainId := uint64(2)                                                           // a ethereum network
-	toAssetHash, _ := tools.HexToBytes("0x6527BC0C4724B51c955E7A4654E2c15464C1851a") // ERC20 contract address on ethereum
+	toAssetHash, _ := tools.HexToBytes("0x43e35ba290afe67c295321eeb539ce7756753823") // STC ERC20 contract address on ethereum
+
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, t)
 }
 
@@ -181,6 +187,7 @@ func testBindAssetHash(fromAssetHash []byte, toChainId uint64, toAssetHash []byt
 		fmt.Println(err)
 		t.FailNow()
 	}
+	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*30)
 	if err != nil {
 		fmt.Print(err)
@@ -204,7 +211,7 @@ func TestXEthInit(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println(txHash)
+	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*60)
 	if err != nil {
 		fmt.Println(err)
@@ -228,7 +235,7 @@ func TestXUsdtInit(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Println(txHash)
+	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*60)
 	if err != nil {
 		fmt.Println(err)
