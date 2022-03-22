@@ -394,7 +394,7 @@ func TestHandleDepositEvents(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t)
 	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	var height uint32 = 25298673 //24924223
+	var height uint32 = 25764514 //25298673 //24924223
 	ok := polyManager.handleDepositEvents(height)
 	fmt.Println("---------------- handleDepositEvents result -----------------")
 	fmt.Println(ok)

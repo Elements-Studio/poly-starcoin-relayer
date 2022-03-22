@@ -552,7 +552,9 @@ func (w *MySqlDB) PutPolyTx(tx *PolyTx) (uint64, error) {
 	// 	TxHash:  txHash,
 	// }
 	tx.TxIndex = lastIndex + 1
-	if lastTx.SmtNonMembershipRootHash != "" { // If previouse SmtNonMembershipRootHash is empty, ignore set current proof
+	if lastTx != nil && lastTx.SmtNonMembershipRootHash == "" {
+		// If previouse SmtNonMembershipRootHash is empty, ignore set current proof
+	} else {
 		err = w.setPolyTxNonMembershipProof(tx, lastTx)
 		if err != nil {
 			return 0, err
@@ -708,6 +710,7 @@ func (w *MySqlDB) UpdatePolyTxNonMembershipProofByIndex(idx uint64) error {
 }
 
 // set PolyTx non-membership proof info.
+// preTx can be nil.
 func (w *MySqlDB) setPolyTxNonMembershipProof(tx *PolyTx, preTx *PolyTx) error {
 	nodeStore := NewSmtNodeMapStore(w)
 	valueStore := NewPolyTxMapStore(w, tx)

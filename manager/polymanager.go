@@ -591,14 +591,13 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 						}
 					}
 					if !isTarget {
-						//log.Debug("!isTarget, IGNORE!")
+						//fmt.Printf("!isTarget, IGNORED! proxyOrAssetContract: %s\n", proxyOrAssetContract)
 						continue
 					}
 				}
 				cnt++
-
-				// log.Debug(cnt)
-				// log.Debug(states[0].(string))
+				//fmt.Println(cnt)
+				//fmt.Println(states[0].(string))
 
 				putToRetry := this.config.CheckFee
 				if !putToRetry {

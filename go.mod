@@ -29,5 +29,3 @@ require (
 
 //replace github.com/starcoinorg/starcoin-go => ../../starcoinorg/starcoin-go
 //comment out above line to build docker image
-
-replace github.com/lazyledger/smt => github.com/celestiaorg/smt v0.2.1
