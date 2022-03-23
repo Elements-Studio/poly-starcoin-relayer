@@ -671,13 +671,20 @@ func (this *StarcoinManager) commitProof(height uint32, proof []byte, value []by
 		return "", err
 	}
 	// fmt.Println("--------- parameters of polySdk.Native.Ccm.ImportOuterTransfer ----------")
-	// fmt.Println(this.config.StarcoinConfig.SideChainId)                                      // sourceChainId uint64,
-	// fmt.Println(hex.EncodeToString(value))                                                   // txData []byte, // CrossChainEvent.RawData
-	// fmt.Println(height)                                                                      // height
-	// fmt.Println(string(proof))                                                               // proof []byte,
+	// fmt.Println("--------- sourceChainId ---------")
+	// fmt.Println(this.config.StarcoinConfig.SideChainId) // sourceChainId uint64,
+	// fmt.Println("--------- txData ---------")
+	// fmt.Println(hex.EncodeToString(value)) // txData []byte, // CrossChainEvent.RawData
+	// fmt.Println("--------- height ---------")
+	// fmt.Println(height) // height
+	// fmt.Println("--------- proof ---------")
+	// fmt.Println(string(proof)) // proof []byte
+	// fmt.Println("--------- relayAddr ---------")
 	// fmt.Println(hex.EncodeToString(relayAddr)) // relayAddr
-	// fmt.Println(string(eventMsg))              // headerOrCrossChainMsg
-	// fmt.Println(this.polySigner.Address.ToHexString())                                       // polySigner
+	// fmt.Println("--------- headerOrCrossChainMsg ---------")
+	// fmt.Println(string(eventMsg)) // headerOrCrossChainMsg
+	// fmt.Println("--------- signer ---------")
+	// fmt.Println(this.polySigner.Address.ToHexString()) // polySigner
 	// fmt.Println("------- end of params of polySdk.Native.Ccm.ImportOuterTransfer ---------")
 
 	tx, err := this.polySdk.Native.Ccm.ImportOuterTransfer(
