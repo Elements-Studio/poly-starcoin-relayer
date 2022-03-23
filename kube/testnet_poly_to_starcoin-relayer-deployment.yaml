@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: testnet-poly-to-starcoin-relayer
-        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-c94dbed
+        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-300e72c
         ports:
         - containerPort: 8600
         env:

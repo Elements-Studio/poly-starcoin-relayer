@@ -29,6 +29,24 @@ func TestFindSyncedHeight(t *testing.T) {
 	fmt.Println(h)
 }
 
+func TestHandleNewBlockAndHandleLockDepositEvents(t *testing.T) {
+	height := uint64(3909761)
+	starcoinManager := getTestNetStarcoinManager(t)
+	// //////////// handle a block /////////////////////
+	fmt.Println(starcoinManager)
+	ok := starcoinManager.handleNewBlock(height)
+	if !ok {
+		t.FailNow()
+	}
+	//starcoin cross-chain Tx info should be in DB now
+	// //////////////////////////////////////////////////
+	err := starcoinManager.handleLockDepositEvents(height + 60)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+}
+
 func TestCommitHeader(t *testing.T) {
 	starcoinManager := getDevNetStarcoinManager(t)
 	fmt.Println(starcoinManager)
