@@ -24,7 +24,18 @@
     "BlockConfirmations": 6,
     "HeadersPerBatch": 50,
     "MonitorInterval": 1,
-    "MaxGasAmount": 40000000
+    "MaxGasAmount": 40000000,
+    "GasSubsidyConfig": {
+      "SubsidyAmount": 10000000,
+      "FromChainIds": [
+        2
+      ],
+      "SenderPrivateKeys": [
+        {
+          "0x18351D311d32201149a4DF2A9fC2db8a": "${PRIVATE_KEY_18351d3}"
+        }
+      ]
+    }
   },
   "BridgeURLs": [
     "https://bridge.poly.network/testnet/v1"

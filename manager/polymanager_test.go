@@ -477,6 +477,23 @@ func TestCheckStarcoinStatusByProof(t *testing.T) {
 	fmt.Println(b, s, m)
 }
 
+func TestHandleNotSentGasSubsidy(t *testing.T) {
+	polyManager := getTestNetPolyManager(t)
+	gasSubsidy, err := polyManager.db.GetFirstNotSentGasSubsidy()
+	if err != nil {
+		fmt.Printf("failed to GetFirstNotSentGasSubsidy: %s", err.Error())
+		t.FailNow()
+	}
+	if gasSubsidy == nil {
+		return
+	}
+	err = polyManager.handleNotSentGasSubsidy(gasSubsidy)
+	if err != nil {
+		fmt.Printf("failed to handleNotSentGasSubsidy: %s", err.Error())
+		t.FailNow()
+	}
+}
+
 func getDevNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-devnet.json")
 	p, err := getPolyManager(config, false)

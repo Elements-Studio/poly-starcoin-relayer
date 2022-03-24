@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
+	"github.com/starcoinorg/starcoin-go/types"
 	diemtypes "github.com/starcoinorg/starcoin-go/types"
 )
 
@@ -188,6 +189,26 @@ func EncodeTwoTypeArgsAndFourU128TxPaylaod(module string, function string, t1, t
 	}
 }
 
+func EncodeTransferStcTxPayload(payee types.AccountAddress, amount serde.Uint128) types.TransactionPayload {
+	coinType := types.StructTag{
+		Address: [16]uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		Module:  types.Identifier("STC"),
+		Name:    types.Identifier("STC"),
+	}
+	return EncodePeerToPeerV2ScriptFunction(&types.TypeTag__Struct{Value: coinType}, payee, amount)
+}
+
+func EncodePeerToPeerV2ScriptFunction(currency types.TypeTag, payee types.AccountAddress, amount serde.Uint128) types.TransactionPayload {
+	return &types.TransactionPayload__ScriptFunction{
+		types.ScriptFunction{
+			Module:   types.ModuleId{Address: [16]uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, Name: "TransferScripts"},
+			Function: "peer_to_peer_v2",
+			TyArgs:   []types.TypeTag{currency},
+			Args:     [][]byte{encode_address_argument(payee), encode_u128_argument(amount)},
+		},
+	}
+}
+
 func ParseModuleId(str string) *diemtypes.ModuleId {
 	ss := strings.Split(str, "::")
 	if len(ss) < 2 {
@@ -201,4 +222,13 @@ func ParseModuleId(str string) *diemtypes.ModuleId {
 		Address: *addr,                       //[16]uint8{164, 216, 175, 70, 82, 187, 53, 191, 210, 134, 211, 71, 12, 28, 90, 61},
 		Name:    diemtypes.Identifier(ss[1]), //"CrossChainScript",
 	}
+}
+
+func encode_address_argument(arg types.AccountAddress) []byte {
+	if val, err := arg.BcsSerialize(); err == nil {
+		{
+			return val
+		}
+	}
+	panic("Unable to serialize argument of type address")
 }

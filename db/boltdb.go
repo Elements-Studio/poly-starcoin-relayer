@@ -353,6 +353,26 @@ func (w *BoltDB) GetPolyTxListNotHaveGasSubsidy(fromChainId uint64, updatedAfter
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) PutGasSubsidy(gasSubsidy *GasSubsidy) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) GetFirstNotSentGasSubsidy() (*GasSubsidy, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) SetGasSubsidyStatusProcessed(gasSubsidy *GasSubsidy) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) SetGasSubsidyStatus(gasSubsidy *GasSubsidy, status string) error {
+	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) Close() {
 	w.rwlock.Lock()
 	w.db.Close()

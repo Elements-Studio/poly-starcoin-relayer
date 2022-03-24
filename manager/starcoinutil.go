@@ -50,6 +50,35 @@ func GetStarcoinCrossChainSmtRoot(starcoinClient *stcclient.StarcoinClient, acco
 	return lockRes.Json.Hash, nil
 }
 
+func EncodeAndSignTransferStcTransaction(starcoinClient *stcclient.StarcoinClient, privateKeyConfig map[string]string, payee types.AccountAddress, amount serde.Uint128) (*types.SignedUserTransaction, uint64, error) {
+	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(privateKeyConfig)
+	if err != nil {
+		log.Errorf("EncodeAndSignTransferStcTransaction - Convert string to AccountAddress error:%s", err.Error())
+		return nil, 0, err
+	}
+	seqNum, err := starcoinClient.GetAccountSequenceNumber(context.Background(), tools.EncodeToHex(senderAddress[:]))
+	if err != nil {
+		log.Errorf("EncodeAndSignTransferStcTransaction - GetAccountSequenceNumber error:%s", err.Error())
+		return nil, 0, err
+	}
+	gasPrice, err := starcoinClient.GetGasUnitPrice(context.Background())
+	if err != nil {
+		log.Errorf("EncodeAndSignTransferStcTransaction - GetAccountSequenceNumber error:%s", err.Error())
+		return nil, 0, err
+	}
+	txPayload := stcpoly.EncodeTransferStcTxPayload(payee, amount)
+	userRawTx, err := starcoinClient.BuildRawUserTransaction(context.Background(), *senderAddress, txPayload, gasPrice, stcclient.DEFAULT_MAX_GAS_AMOUNT*4, seqNum)
+	if err != nil {
+		log.Errorf("EncodeAndSignTransferStcTransaction - BuildRawUserTransaction error:%s", err.Error())
+		return nil, 0, err
+	}
+	signedTx, err := stcclient.SignRawUserTransaction(senderPrivateKey, userRawTx)
+	if err != nil {
+		return nil, 0, err
+	}
+	return signedTx, seqNum, nil
+}
+
 func LockStarcoinAsset(starcoinClient *stcclient.StarcoinClient, privateKeyConfig map[string]string, ccScriptModule string, from_asset_hash []byte, to_chain_id uint64, to_address []byte, amount serde.Uint128) (string, error) {
 	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(privateKeyConfig)
 	if err != nil {

@@ -217,6 +217,7 @@ func initPolyServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolySdk, 
 	go mgr.MonitorDeposit()
 	go mgr.MonitorFailedPolyTx()
 	go mgr.MonitorTimedOutPolyTx()
+	go mgr.MonitorPolyTxNotHaveSubsidy()
 }
 
 func main() {

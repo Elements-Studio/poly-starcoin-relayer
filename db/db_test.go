@@ -373,6 +373,16 @@ func TestSetPolyTxStatusProcessing(t *testing.T) {
 	time.Sleep(time.Second * 8)
 }
 
+func TestSetPolyTxStatusProcessing2(t *testing.T) {
+	txHash := "f8f2e4500319fcffb3fdb2b9645703e21c8ee87f7c6df0300804a5749c0d8bca"
+	fromChainId := uint64(318)
+	err := testNetDB().SetPolyTxStatusProcessing(txHash, fromChainId)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+}
+
 func TestConcatFromChainIdAndTxHash(t *testing.T) {
 	var txHash []byte = []byte("hello world") // len(txHash) == 11
 	r := concatFromChainIDAndTxHash(getTestFromChainId(), txHash)

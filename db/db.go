@@ -86,6 +86,16 @@ type DB interface {
 
 	GetPolyTxListNotHaveGasSubsidy(fromChainId uint64, updatedAfter int64) ([]*PolyTx, error)
 
+	PutGasSubsidy(gasSubsidy *GasSubsidy) error
+
+	GetFirstNotSentGasSubsidy() (*GasSubsidy, error)
+
+	SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error
+
+	SetGasSubsidyStatusProcessed(gasSubsidy *GasSubsidy) error
+
+	SetGasSubsidyStatus(gasSubsidy *GasSubsidy, status string) error
+
 	Close()
 }
 

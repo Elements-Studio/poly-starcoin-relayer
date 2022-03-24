@@ -75,6 +75,13 @@ type StarcoinConfig struct {
 	HeadersPerBatch    int
 	MonitorInterval    uint64
 	MaxGasAmount       uint64
+	GasSubsidyConfig   GasSubsidyConfig
+}
+
+type GasSubsidyConfig struct {
+	SubsidyAmount     uint64
+	FromChainIds      []int
+	SenderPrivateKeys []map[string]string
 }
 
 func ReadFile(fileName string) ([]byte, error) {
