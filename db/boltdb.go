@@ -361,6 +361,10 @@ func (w *BoltDB) GetFirstNotSentGasSubsidy() (*GasSubsidy, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) GetFirstTimedOutGasSubsidy() (*GasSubsidy, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }

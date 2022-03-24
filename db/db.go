@@ -90,6 +90,8 @@ type DB interface {
 
 	GetFirstNotSentGasSubsidy() (*GasSubsidy, error)
 
+	GetFirstTimedOutGasSubsidy() (*GasSubsidy, error)
+
 	SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error
 
 	SetGasSubsidyStatusProcessed(gasSubsidy *GasSubsidy) error

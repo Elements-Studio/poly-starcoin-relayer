@@ -868,6 +868,28 @@ func (w *MySqlDB) GetFirstNotSentGasSubsidy() (*GasSubsidy, error) {
 	return &first, nil
 }
 
+func (w *MySqlDB) GetFirstTimedOutGasSubsidy() (*GasSubsidy, error) {
+	var list []GasSubsidy
+	timedOutStatuses := []string{STATUS_TIMEDOUT}
+	err := w.db.Where(map[string]interface{}{"status": timedOutStatuses}).Limit(1).Find(&list).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	first := list[0]
+	if first.UpdatedAt < CurrentTimeMillis()-PolyTxMaxProcessingSeconds*1000 {
+		return &first, nil
+	} else {
+		return nil, nil
+	}
+}
+
 func (w *MySqlDB) SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error {
 	db := w.db.Table("gas_subsidy").Where(
 		"tx_index = ? and from_chain_id = ? and tx_hash = ? and status = ? and (starcoin_tx_hash is null or starcoin_tx_hash = '')",

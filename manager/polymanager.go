@@ -282,6 +282,16 @@ func (this *PolyManager) MonitorPolyTxNotHaveSubsidy() {
 				continue
 			}
 			this.handleNotSentGasSubsidy(gasSubsidy)
+			// ////////////////// handle First timed-out gas subsidy ////////////////
+			gasSubsidy, err = this.db.GetFirstTimedOutGasSubsidy()
+			if err != nil {
+				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to GetFirstTimedOutPolyTx: %s", err.Error())
+				continue
+			}
+			if gasSubsidy != nil {
+				//log.Debugf("Get timed-out gas subsidy Tx. hash: %s", polyTx.TxHash)
+				this.handleTimedOutGasSubsidy(gasSubsidy)
+			}
 			// ///////////////////////////////////////////////////////////
 		case <-this.exitChan:
 			return
@@ -434,7 +444,6 @@ func (this *PolyManager) handleTimedOutOrFailedPolyTxList(list []*db.PolyTx) err
 		log.Errorf("PolyManager.handleTimedOutOrFailedPolyTxList - (poly to starcoin)failed to tools.HexToBytes: %s", err.Error())
 		return err
 	}
-
 	for _, polyTx := range list {
 		s, err := this.setPolyTxProcessedIfOnChainSmtRootMatched(polyTx, onChainSmtRoot, starcoinHeight)
 		if err != nil {
@@ -492,32 +501,51 @@ func (this *PolyManager) handleTimedOutPolyTx(polyTx *db.PolyTx) {
 		this.db.SetPolyTxStatus(polyTx.TxHash, polyTx.FromChainID, db.STATUS_FAILED)
 		return
 	}
-	stcTx, err := this.starcoinClient.GetTransactionInfoByHash(context.Background(), polyTx.StarcoinTxHash)
-	if err != nil {
+	errorCallback := func(err error) {
 		log.Errorf("PolyManager.handleTimedOutPolyTx GetTransactionInfoByHash - failed to GetTransactionInfoByHash: %s", err.Error())
 		return
 	}
-	var isKnownFailure bool = true
-	if stcTx == nil || stcTx.BlockNumber == "" || bytes.Equal(stcTx.Status, []byte{}) {
-		isKnownFailure = false
-	} else {
-		var executed bool
-		executed, isKnownFailure = tools.IsStarcoinTxStatusExecutedOrKnownFailure(stcTx.Status)
-		if executed {
-			this.db.SetPolyTxStatusProcessed(polyTx.TxHash, polyTx.FromChainID, polyTx.StarcoinTxHash)
-			log.Infof("PolyManager.handleTimedOutPolyTx set timed-out Poly(to starcoin)Tx status to EXECUTED. Starcoin hash: %s", polyTx.StarcoinTxHash)
-			return
-		}
+	executedCallback := func() {
+		this.db.SetPolyTxStatusProcessed(polyTx.TxHash, polyTx.FromChainID, polyTx.StarcoinTxHash)
+		log.Infof("PolyManager.handleTimedOutPolyTx set timed-out Poly(to starcoin)Tx status to EXECUTED. Starcoin hash: %s", polyTx.StarcoinTxHash)
 	}
-	if isKnownFailure {
+	knownFailureCallback := func() {
 		this.db.SetPolyTxStatus(polyTx.TxHash, polyTx.FromChainID, db.STATUS_FAILED)
 		log.Infof("PolyManager.handleTimedOutPolyTx set timed-out Poly(to starcoin)Tx status to FAILED. Starcoin hash: %s", polyTx.StarcoinTxHash)
-	} else {
+	}
+	unknownFailureCallback := func() {
 		if polyTx.UpdatedAt < db.CurrentTimeMillis()-MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS*1000 {
 			this.db.SetPolyTxStatus(polyTx.TxHash, polyTx.FromChainID, db.STATUS_FAILED)
 			log.Infof("PolyManager.handleTimedOutPolyTx set timed-out Poly(to starcoin)Tx status to FAILED because exceeded MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS. Starcoin hash: %s", polyTx.StarcoinTxHash)
 		}
 	}
+	checkStarcoinTransaction(this.starcoinClient, polyTx.StarcoinTxHash, errorCallback, executedCallback, knownFailureCallback, unknownFailureCallback)
+}
+
+func (this *PolyManager) handleTimedOutGasSubsidy(gasSubsidy *db.GasSubsidy) {
+	if gasSubsidy.StarcoinTxHash == "" {
+		this.db.SetGasSubsidyStatus(gasSubsidy, db.STATUS_FAILED)
+		return
+	}
+	errorCallback := func(err error) {
+		log.Errorf("PolyManager.handleTimedOutGasSubsidy GetTransactionInfoByHash - failed to GetTransactionInfoByHash: %s", err.Error())
+		return
+	}
+	executedCallback := func() {
+		this.db.SetGasSubsidyStatusProcessed(gasSubsidy)
+		log.Infof("PolyManager.handleTimedOutGasSubsidy set timed-out (to starcoin)Tx status to EXECUTED. Starcoin hash: %s", gasSubsidy.StarcoinTxHash)
+	}
+	knownFailureCallback := func() {
+		this.db.SetGasSubsidyStatus(gasSubsidy, db.STATUS_FAILED)
+		log.Infof("PolyManager.handleTimedOutGasSubsidy set timed-out (to starcoin)Tx status to FAILED. Starcoin hash: %s", gasSubsidy.StarcoinTxHash)
+	}
+	unknownFailureCallback := func() {
+		if gasSubsidy.UpdatedAt < db.CurrentTimeMillis()-MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS*1000 {
+			this.db.SetGasSubsidyStatus(gasSubsidy, db.STATUS_FAILED)
+			log.Infof("PolyManager.handleTimedOutGasSubsidy set timed-out (to starcoin)Tx status to FAILED because exceeded MAX_TIMEDOUT_TO_FAILED_WAITING_SECONDS. Starcoin hash: %s", gasSubsidy.StarcoinTxHash)
+		}
+	}
+	checkStarcoinTransaction(this.starcoinClient, gasSubsidy.StarcoinTxHash, errorCallback, executedCallback, knownFailureCallback, unknownFailureCallback)
 }
 
 func (this *PolyManager) MonitorDeposit() {

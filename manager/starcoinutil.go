@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 
@@ -201,4 +202,38 @@ func getAccountAddressAndPrivateKey(senderpk map[string]string) (*types.AccountA
 		return nil, nil, err
 	}
 	return address, pk, nil
+}
+
+type checkStarcoinTransactionErrorCallback func(error)
+type checkStarcoinTransactionExecutedCallback func()
+type checkStarcoinTransactionKnownFailureCallback func()
+type checkStarcoinTransactionUnknownFailureCallback func()
+
+func checkStarcoinTransaction(starcoinClient *stcclient.StarcoinClient, starcoinTxHash string,
+	errorCallback checkStarcoinTransactionErrorCallback,
+	executedCallback checkStarcoinTransactionExecutedCallback,
+	knownFailureCallback checkStarcoinTransactionKnownFailureCallback,
+	unknownFailureCallback checkStarcoinTransactionUnknownFailureCallback,
+) {
+	stcTx, err := starcoinClient.GetTransactionInfoByHash(context.Background(), starcoinTxHash)
+	if err != nil {
+		errorCallback(err)
+		return
+	}
+	var isKnownFailure bool = true
+	if stcTx == nil || stcTx.BlockNumber == "" || bytes.Equal(stcTx.Status, []byte{}) {
+		isKnownFailure = false
+	} else {
+		var executed bool
+		executed, isKnownFailure = tools.IsStarcoinTxStatusExecutedOrKnownFailure(stcTx.Status)
+		if executed {
+			executedCallback()
+			return
+		}
+	}
+	if isKnownFailure {
+		knownFailureCallback()
+	} else {
+		unknownFailureCallback()
+	}
 }
