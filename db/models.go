@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/hex"
 	"encoding/json"
+	"math/big"
 
 	"github.com/celestiaorg/smt"
 	"github.com/elements-studio/poly-starcoin-relayer/poly/msg"
@@ -338,4 +339,43 @@ func (p *PolyTx) ComputePloyTxInclusionSmtRootHash() ([]byte, error) {
 type SmtNode struct {
 	Hash string `gorm:"primaryKey;size:66"`
 	Data string `gorm:"size:132"`
+}
+
+type GasSubsidy struct {
+	TxIndex              uint64 `gorm:"primaryKey;autoIncrement:false"`
+	FromChainID          uint64 `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"`
+	TxHash               string `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"` // TxHash //TxData   string `gorm:"size:5000"`
+	ToAssetHash          string `gorm:"size:1000"`                                  // Unlock arg.: asset hash(Id.)
+	ToAddress            string `gorm:"size:100"`                                   // Unlock arg.: to Starcoin address
+	UnlockAssetAmount    string `gorm:"size:100"`                                   // Unlock arg.: unlock asset amount
+	SubsidyAmount        uint64 `gorm:"default:0;NOT NULL"`                         // Subsidy amount in STC
+	Status               string `gorm:"size:20;index"`
+	SenderAddress        string `gorm:"size:66"`            // Starcoin gas subsidy sender address
+	SenderSequenceNumber uint64 `gorm:"default:0;NOT NULL"` // Starcoin gas subsidy sender seq. number
+	StarcoinTxHash       string `gorm:"size:66"`            // Starcoin transaction hash
+	RetryCount           int    `gorm:"default:0;NOT NULL"`
+	Version              int64  `gorm:"column:version;default:0;NOT NULL"`
+	CreatedAt            int64  `gorm:"autoCreateTime:milli"`
+	UpdatedAt            int64  `gorm:"autoUpdateTime:milli;index"`
+}
+
+func NewGasSubsidy(
+	txIndex uint64,
+	fromChainID uint64,
+	txHash string,
+	toAssetHash []byte,
+	toAddress []byte,
+	unlockAssetAmount *big.Int,
+	subsidyAmount uint64,
+) *GasSubsidy {
+	return &GasSubsidy{
+		TxIndex:           txIndex,
+		FromChainID:       fromChainID,
+		TxHash:            txHash,
+		ToAssetHash:       hex.EncodeToString(toAssetHash),
+		ToAddress:         hex.EncodeToString(toAddress),
+		UnlockAssetAmount: unlockAssetAmount.String(),
+		SubsidyAmount:     subsidyAmount,
+		Status:            STATUS_CREATED,
+	}
 }

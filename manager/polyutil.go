@@ -1,9 +1,11 @@
 package manager
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/big"
 
+	"github.com/elements-studio/poly-starcoin-relayer/db"
 	polysdk "github.com/polynetwork/poly-go-sdk"
 	pcommon "github.com/polynetwork/poly/common"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
@@ -15,6 +17,32 @@ type UnlockArgs struct {
 	ToAssetHash []byte
 	ToAddress   []byte
 	Amount      big.Int
+}
+
+func PolyTxToGasSubsidy(polyTx *db.PolyTx, subsidyAmount uint64) (*db.GasSubsidy, error) {
+	polyTxProof, err := polyTx.GetPolyTxProof()
+	if err != nil {
+		return nil, err
+	}
+	proof, err := hex.DecodeString(polyTxProof.Proof)
+	if err != nil {
+		return nil, err
+	}
+	param, unlockArgs, err := ParseCrossChainUnlockParamsFromProof(proof)
+	if err != nil {
+		return nil, err
+	}
+	_ = param
+	s := db.NewGasSubsidy(
+		polyTx.TxIndex,
+		polyTx.FromChainID,
+		polyTx.TxHash,
+		unlockArgs.ToAssetHash,
+		unlockArgs.ToAddress,
+		&unlockArgs.Amount,
+		subsidyAmount,
+	)
+	return s, nil
 }
 
 func ParseCrossChainUnlockParamsFromProof(p []byte) (*common2.ToMerkleValue, *UnlockArgs, error) {

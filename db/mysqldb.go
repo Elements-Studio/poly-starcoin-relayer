@@ -9,13 +9,13 @@ import (
 	"strings"
 
 	csmt "github.com/celestiaorg/smt"
-	//optimistic "github.com/crossoverJie/gorm-optimistic"
 	gomysql "github.com/go-sql-driver/mysql"
 	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	//optimistic "github.com/crossoverJie/gorm-optimistic"
 )
 
 var (
@@ -42,7 +42,7 @@ func NewMySqlDB(dsn string) (*MySqlDB, error) {
 	}
 	// Migrate the schema
 	db.AutoMigrate(&ChainHeight{})
-	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{}, &StarcoinTxRetry{}, &StarcoinTxCheck{}, &PolyTxRetry{}, &RemovedPolyTx{})
+	db.Set("gorm:table_options", "CHARSET=latin1").AutoMigrate(&PolyTx{}, &SmtNode{}, &StarcoinTxRetry{}, &StarcoinTxCheck{}, &PolyTxRetry{}, &RemovedPolyTx{}, &GasSubsidy{})
 
 	w := new(MySqlDB)
 	w.db = db
@@ -796,6 +796,29 @@ func (w *MySqlDB) getPolyTxBySmtTxPath(path string) (*PolyTx, error) {
 	return &px, nil
 }
 
+func (w *MySqlDB) GetPolyTxListNotHaveGasSubsidy(chainId uint64, updatedAfter int64) ([]*PolyTx, error) {
+	var list []*PolyTx
+	sql := fmt.Sprintf(`SELECT 
+    p.*
+FROM
+    poly_tx p
+        LEFT JOIN
+    gas_subsidy s ON p.from_chain_id = s.from_chain_id
+        AND p.tx_hash = s.tx_hash
+WHERE
+    (p.status = '%s' OR p.status = '%s')
+        AND p.from_chain_id = ?
+        AND p.updated_at > ?
+        AND (s.from_chain_id IS NULL
+        AND s.tx_hash IS NULL)
+	`,
+		STATUS_PROCESSED, STATUS_CONFIRMED)
+	if err := w.db.Raw(sql, chainId, updatedAfter).Scan(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
 func (w *MySqlDB) Close() {
 	//
 }
@@ -855,7 +878,7 @@ func (m *PolyTxMapStore) Set(key []byte, value []byte) error { // Set updates th
 }
 
 func (m *PolyTxMapStore) Delete(key []byte) error { // Delete deletes a key.
-	return fmt.Errorf("NOT IMPLEMENTED ERROR")
+	return fmt.Errorf("(m *PolyTxMapStore) Delete - NOT IMPLEMENTED ERROR")
 }
 
 type SmtNodeMapStore struct {

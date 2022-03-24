@@ -349,6 +349,10 @@ func (w *BoltDB) GetTimedOutOrFailedPolyTxList() ([]*PolyTx, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) GetPolyTxListNotHaveGasSubsidy(fromChainId uint64, updatedAfter int64) ([]*PolyTx, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) Close() {
 	w.rwlock.Lock()
 	w.db.Close()

@@ -45,9 +45,22 @@ func TestGetMethods(t *testing.T) {
 
 }
 
-func TestGetAllPolyTxRetry(t *testing.T) {
+func TestGetPolyTxListNotHaveGasSubsidy(t *testing.T) {
 	db := testNetDB()
+	fromChainId := uint64(2)
+	updatedAfter := 111111
+	list, err := db.GetPolyTxListNotHaveGasSubsidy(fromChainId, int64(updatedAfter))
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(len(list))
+	// j, _ := json.Marshal(list)
+	// fmt.Println(string(j))
+}
 
+func TestGetAndDeleteAllPolyTxRetry(t *testing.T) {
+	db := testNetDB()
 	// // insert a PolyTxRetry
 	// uuid, _ := uuid.NewUUID()
 	// v, _ := uuid.MarshalBinary()
@@ -59,7 +72,6 @@ func TestGetAllPolyTxRetry(t *testing.T) {
 	// if err != nil {
 	// 	t.FailNow()
 	// }
-
 	list, err := db.GetAllPolyTxRetry()
 	if err != nil {
 		fmt.Println(err)
