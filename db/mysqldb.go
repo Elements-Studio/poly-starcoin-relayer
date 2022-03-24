@@ -58,7 +58,7 @@ func (w *MySqlDB) PutStarcoinTxRetry(k []byte, event client.Event) error {
 	if err != nil {
 		return err
 	}
-	tx := StarcoinTxRetry{
+	tx := &StarcoinTxRetry{
 		CrossTransferDataHash: hex.EncodeToString(hash[:]),
 		CrossTransferData:     hex.EncodeToString(k),
 		StarcoinEvent:         string(j),
@@ -110,7 +110,7 @@ func (w *MySqlDB) PutStarcoinTxCheck(txHash string, v []byte, event client.Event
 	if err != nil {
 		return err
 	}
-	tx := StarcoinTxCheck{
+	tx := &StarcoinTxCheck{
 		TxHash:            txHash,
 		CrossTransferData: hex.EncodeToString(v),
 		StarcoinEvent:     string(j),
@@ -151,7 +151,7 @@ func (w *MySqlDB) GetAllStarcoinTxCheck() (map[string]BytesAndEvent, error) {
 
 // Update poly height synced to Starcoin
 func (w *MySqlDB) UpdatePolyHeight(h uint32) error {
-	ch := ChainHeight{
+	ch := &ChainHeight{
 		Key:    KEY_POLY_HEIGHT,
 		Height: h,
 	}
@@ -230,7 +230,7 @@ func (w *MySqlDB) IncreasePolyTxRetryCheckFeeCount(txHash string, fromChainID ui
 	}
 	px.CheckFeeCount = px.CheckFeeCount + 1
 	px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
-	return w.db.Save(px).Error
+	return w.db.Save(&px).Error
 	// // use optimistic lock here
 	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
 	// 	return model
@@ -247,7 +247,7 @@ func (w *MySqlDB) SetPolyTxRetryFeeStatus(txHash string, fromChainID uint64, sta
 	}
 	px.FeeStatus = status
 	//px.UpdatedAt = currentTimeMillis()
-	return w.db.Save(px).Error
+	return w.db.Save(&px).Error
 }
 
 func (w *MySqlDB) UpdatePolyTxStarcoinStatus(txHash string, fromChainID uint64, status string, msg string) error {
@@ -262,7 +262,7 @@ func (w *MySqlDB) UpdatePolyTxStarcoinStatus(txHash string, fromChainID uint64, 
 	px.CheckStarcoinCount = px.CheckStarcoinCount + 1
 	px.CheckStarcoinMessage = msg
 	//px.UpdatedAt = currentTimeMillis()
-	return w.db.Save(px).Error
+	return w.db.Save(&px).Error
 }
 
 func (w *MySqlDB) GetPolyTx(txHash string, fromChainID uint64) (*PolyTx, error) {
@@ -323,7 +323,7 @@ func (w *MySqlDB) SetPolyTxStatus(txHash string, fromChainID uint64, status stri
 	}
 	px.Status = status
 	//px.UpdatedAt = currentTimeMillis()
-	return w.db.Save(px).Error
+	return w.db.Save(&px).Error
 }
 
 func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) error {
@@ -350,7 +350,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) e
 	//fmt.Println("px.StarcoinTxHash = " + px.StarcoinTxHash)
 	px.RetryCount = px.RetryCount + 1
 	px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
-	return w.db.Save(px).Error
+	return w.db.Save(&px).Error
 	// // use optimistic lock here
 	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
 	// 	return model
@@ -385,7 +385,7 @@ func (w *MySqlDB) SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID u
 	px.Status = STATUS_PROCESSING
 	px.StarcoinTxHash = starcoinTxHash
 	px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
-	return w.db.Save(px).Error
+	return w.db.Save(&px).Error
 	// // use optimistic lock here
 	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
 	// 	return model
@@ -406,7 +406,7 @@ func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, st
 	go func() {
 		w.updatePolyTransactionsToProcessedBeforeIndex(px.TxIndex)
 	}()
-	return w.db.Save(px).Error
+	return w.db.Save(&px).Error
 }
 
 func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
@@ -536,7 +536,7 @@ func (w *MySqlDB) updatePolyTransactionsToProcessedBeforeIndex(index uint64) err
 	}
 	for _, v := range list {
 		v.Status = STATUS_PROCESSED
-		err := w.db.Save(v).Error
+		err := w.db.Save(&v).Error
 		_ = err //ignore error?
 	}
 	return nil
@@ -893,7 +893,7 @@ func (m *SmtNodeMapStore) Get(key []byte) ([]byte, error) { // Get gets the valu
 func (m *SmtNodeMapStore) Set(key []byte, value []byte) error {
 	h := hex.EncodeToString(key)
 	d := hex.EncodeToString(value)
-	n := SmtNode{
+	n := &SmtNode{
 		Hash: h,
 		Data: d,
 	}

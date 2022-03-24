@@ -1135,6 +1135,8 @@ func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 	// }
 
 	k := this.getRouter()
+	// One sender is responsible for multi-router(channel),
+	// create channel if not exists.
 	c, ok := this.cmap[k]
 	if !ok {
 		c = make(chan *StarcoinTxInfo, ChanLen)
@@ -1150,7 +1152,7 @@ func (this *StarcoinSender) sendPolyTxToStarcoin(polyTx *db.PolyTx) bool {
 		}()
 	}
 	// TODO:: could be blocked
-	c <- stcTxInfo
+	c <- stcTxInfo // put Tx. into channel
 	return true
 }
 
