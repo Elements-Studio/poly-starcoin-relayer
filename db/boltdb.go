@@ -313,11 +313,11 @@ func (w *BoltDB) UpdatePolyTxNonMembershipProofByIndex(idx uint64) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetPolyTxStatus(txHash string, fromChainID uint64, status string) error {
+func (w *BoltDB) SetPolyTxStatus(txHash string, fromChainID uint64, oldStatus string, status string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) error {
+func (w *BoltDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64, oldStatus string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
@@ -325,7 +325,7 @@ func (w *BoltDB) SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID ui
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, starcoinTxHash string) error {
+func (w *BoltDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, oldStatus string, starcoinTxHash string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
@@ -365,15 +365,19 @@ func (w *BoltDB) GetFirstTimedOutGasSubsidy() (*GasSubsidy, error) {
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error {
+func (w *BoltDB) GetFirstFailedGasSubsidy() (*GasSubsidy, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
+func (w *BoltDB) SetGasSubsidyStarcoinTxInfo(txHash string, fromChainID uint64, oldStatus string, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetGasSubsidyStatusProcessed(gasSubsidy *GasSubsidy) error {
+func (w *BoltDB) SetGasSubsidyStatusProcessed(txHash string, fromChainID uint64, oldStatus string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
-func (w *BoltDB) SetGasSubsidyStatus(gasSubsidy *GasSubsidy, status string) error {
+func (w *BoltDB) SetGasSubsidyStatus(txHash string, fromChainID uint64, oldStatus string, status string) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 

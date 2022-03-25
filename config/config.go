@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	STARCOIN_MONITOR_INTERVAL = 2 * time.Second
-	POLY_MONITOR_INTERVAL     = 2 * time.Second
+	STARCOIN_MONITOR_INTERVAL    = 2 * time.Second
+	POLY_MONITOR_INTERVAL        = 2 * time.Second
+	GAS_SUBSIDY_MONITOR_INTERVAL = 10 * time.Second
 
 	STARCOIN_USEFUL_BLOCK_NUM    = 9  // eth relayer : 3
 	STARCOIN_PROOF_USERFUL_BLOCK = 36 // eth relayer : 12

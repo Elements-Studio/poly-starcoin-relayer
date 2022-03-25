@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	csmt "github.com/celestiaorg/smt"
+	"github.com/elements-studio/poly-starcoin-relayer/tools"
 	gomysql "github.com/go-sql-driver/mysql"
 	"github.com/starcoinorg/starcoin-go/client"
 	"golang.org/x/crypto/sha3"
@@ -19,11 +21,13 @@ import (
 )
 
 var (
-	PolyTxExistsValue                = []byte{1}
-	PolyTxExistsValueHashHex         = Hash256Hex(PolyTxExistsValue)
-	SmtDefaultValue                  = []byte{} //defaut(empty) value
-	PolyTxMaxProcessingSeconds int64 = 120      // TODO: is this ok?
-	PolyTxMaxRetryCount              = 10       // TODO: is this ok?
+	PolyTxExistsValue                      = []byte{1}
+	PolyTxExistsValueHashHex               = Hash256Hex(PolyTxExistsValue)
+	SmtDefaultValue                        = []byte{} // SMT defaut(empty) value
+	PolyTxMaxProcessingSeconds       int64 = 120      // Poly(to Starcoin) Transaction max processing time in seconds
+	PolyTxMaxRetryCount                    = 10       // Poly(to Starcoin) Transaction max retry count
+	GasSubsidyTxMaxProcessingSeconds int64 = 120      // Gas subsidy (Starcoin)Transaction max processing time in seconds
+	GasSubsidyTxMaxRetryCount              = 10       // Gas subsidy (Starcoin)Transaction max retry count
 )
 
 type MySqlDB struct {
@@ -313,7 +317,7 @@ func (w *MySqlDB) GetPreviousePolyTx(idx uint64) (*PolyTx, error) {
 	return &first, nil
 }
 
-func (w *MySqlDB) SetPolyTxStatus(txHash string, fromChainID uint64, status string) error {
+func (w *MySqlDB) SetPolyTxStatus(txHash string, fromChainID uint64, oldStatus string, status string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
 		TxHash:      txHash,
@@ -321,13 +325,19 @@ func (w *MySqlDB) SetPolyTxStatus(txHash string, fromChainID uint64, status stri
 	}).First(&px).Error; err != nil {
 		return err
 	}
-	px.Status = status
-	//px.UpdatedAt = currentTimeMillis()
-	return w.db.Save(&px).Error
+	// px.Status = status
+	// //px.UpdatedAt = currentTimeMillis()
+	// return w.db.Save(&px).Error
+	fieldMap := map[string]interface{}{
+		"status":     status,
+		"updated_at": CurrentTimeMillis(),
+	}
+	return w.optimisticUpdatePolyTx(&px, oldStatus, fieldMap)
 }
 
-// Set PolyTx status to PROCESSING(and starcoinTxHash to empty).
-func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) error {
+// Set PolyTx status to PROCESSING(and StarcoinTxHash to empty).
+// When re-process a PolyTx, set it's StarcoinTxHash to empty first, then send new Starcoin transaction and set new StarcoinTxHash ot the PolyTx.
+func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64, oldStatus string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
 		TxHash:      txHash,
@@ -339,8 +349,8 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) e
 		return fmt.Errorf("PolyTx status is already '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
 	}
 	if px.Status == STATUS_PROCESSING {
-		// when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
 		if px.StarcoinTxHash == "" {
+			// Only timed-out PROCESSING PolyTx can be re-process
 			if !(px.UpdatedAt < CurrentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
 				return fmt.Errorf("PolyTx.StarcoinTxHash is already empty, TxHash: %s, FromChainID: %d", px.TxHash, px.FromChainID)
 			}
@@ -351,29 +361,13 @@ func (w *MySqlDB) SetPolyTxStatusProcessing(txHash string, fromChainID uint64) e
 	// px.RetryCount = px.RetryCount + 1
 	// px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
 	// return w.db.Save(&px).Error
-	sql := "from_chain_id = ? and tx_hash = ? and status = ?"
-	if px.StarcoinTxHash == "" {
-		sql = sql + " and (starcoin_tx_hash is null or starcoin_tx_hash = '')"
-	} else {
-		sql = sql + " and starcoin_tx_hash = '" + strings.Replace(px.StarcoinTxHash, "'", "", -1) + "'"
-	}
-	db := w.db.Table("poly_tx").Where(
-		sql,
-		fromChainID, txHash, px.Status,
-	).Updates(map[string]interface{}{
+	fieldMap := map[string]interface{}{
 		"starcoin_tx_hash": "",
 		"retry_count":      px.RetryCount + 1,
 		"status":           STATUS_PROCESSING,
 		"updated_at":       CurrentTimeMillis(),
-	})
-	if db.Error != nil {
-		return db.Error
 	}
-	rowsAffected := db.RowsAffected
-	if rowsAffected == 0 {
-		return fmt.Errorf("optimistic lock error. TxIndex: %d, fromChainId: %d, txHash: %s", px.TxIndex, px.FromChainID, px.TxHash)
-	}
-	return nil
+	return w.optimisticUpdatePolyTx(&px, oldStatus, fieldMap)
 }
 
 func (w *MySqlDB) SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID uint64, starcoinTxHash string) error {
@@ -384,34 +378,26 @@ func (w *MySqlDB) SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID u
 	}).First(&px).Error; err != nil {
 		return err
 	}
-	if starcoinTxHash == "" {
-		return fmt.Errorf("Try to set empty starcoinTxHash. PolyTx status is '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
-	}
 	if px.Status == STATUS_CONFIRMED || px.Status == STATUS_PROCESSED {
 		return fmt.Errorf("PolyTx status is already '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
 	}
-	// if px.Status != STATUS_PROCESSING {
-	// 	return fmt.Errorf("PolyTx status is not PROCESSING. Status: '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
-	// }
-	//if px.Status == STATUS_PROCESSING {
-
-	// // when re-process, set StarcoinTxHash to empty first, then send new Starcoin transaction and set new hash
-	// if px.StarcoinTxHash != "" {
-	// 	//if !(px.UpdatedAt < currentTimeMillis()-PolyTxMaxProcessingSeconds*1000) {
-	// 	return fmt.Errorf("PolyTx.StarcoinTxHash is already not empty, TxHash: %s, FromChainID: %d", px.TxHash, px.FromChainID)
-	// 	//}
-	// }
-	px.Status = STATUS_PROCESSING
-	px.StarcoinTxHash = starcoinTxHash
-	px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
-	return w.db.Save(&px).Error
-	// // use optimistic lock here
-	// return optimistic.UpdateWithOptimistic(w.db, &px, func(model optimistic.Lock) optimistic.Lock {
-	// 	return model
-	// }, 1, 1)
+	if starcoinTxHash == "" {
+		return fmt.Errorf("Try to set empty starcoinTxHash. PolyTx status is '%s', TxHash: %s, FromChainID: %d", px.Status, px.TxHash, px.FromChainID)
+	}
+	// /////////// update //////////////
+	// px.Status = STATUS_PROCESSING
+	// px.StarcoinTxHash = starcoinTxHash
+	// px.UpdatedAt = CurrentTimeMillis() // UpdateWithOptimistic need this!
+	// return w.db.Save(&px).Error
+	fieldMap := map[string]interface{}{
+		"starcoin_tx_hash": starcoinTxHash,
+		"status":           STATUS_PROCESSING,
+		"updated_at":       CurrentTimeMillis(),
+	}
+	return w.optimisticUpdatePolyTx(&px, STATUS_PROCESSING, fieldMap)
 }
 
-func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, starcoinTxHash string) error {
+func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, oldStatus string, starcoinTxHash string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{
 		TxHash:      txHash,
@@ -419,19 +405,52 @@ func (w *MySqlDB) SetPolyTxStatusProcessed(txHash string, fromChainID uint64, st
 	}).First(&px).Error; err != nil {
 		return err
 	}
-	px.Status = STATUS_PROCESSED
-	px.StarcoinTxHash = starcoinTxHash
-	//px.UpdatedAt = currentTimeMillis()
+	// ////////// optimistic update ///////////
+	// px.Status = STATUS_PROCESSED
+	// px.StarcoinTxHash = starcoinTxHash
+	fieldMap := map[string]interface{}{
+		"starcoin_tx_hash": starcoinTxHash,
+		"status":           STATUS_PROCESSED,
+		"updated_at":       CurrentTimeMillis(),
+	}
+	err := w.optimisticUpdatePolyTx(&px, oldStatus, fieldMap)
+	// //////////// async update /////////////
 	go func() {
 		w.updatePolyTransactionsToProcessedBeforeIndex(px.TxIndex)
 	}()
-	return w.db.Save(&px).Error
+	// ///////////////////////////////////////
+	return err
+}
+
+func (w MySqlDB) optimisticUpdatePolyTx(px *PolyTx, oldStatus string, fieldMap map[string]interface{}) error {
+	sql := "from_chain_id = ? and tx_hash = ? and status = ?"
+	if px.StarcoinTxHash == "" {
+		sql = sql + " and (starcoin_tx_hash is null or starcoin_tx_hash = '')"
+	} else {
+		sql = sql + " and starcoin_tx_hash = '" + strings.Replace(px.StarcoinTxHash, "'", "", -1) + "'"
+	}
+	if px.UpdatedAt > 0 {
+		sql = sql + " and updated_at = " + strconv.FormatInt(px.UpdatedAt, 10) + " "
+	}
+	db := w.db.Table("poly_tx").Where(
+		sql,
+		px.FromChainID, px.TxHash, oldStatus,
+	).Updates(fieldMap)
+	if db.Error != nil {
+		return db.Error
+	}
+	rowsAffected := db.RowsAffected
+	if rowsAffected == 0 {
+		return fmt.Errorf("optimistic lock error. TxIndex: %d, fromChainId: %d, txHash: %s", px.TxIndex, px.FromChainID, px.TxHash)
+	}
+	return nil
 }
 
 func (w *MySqlDB) GetFirstFailedPolyTx() (*PolyTx, error) {
 	var list []PolyTx
 	//err := w.db.Where("updated_at < ?", currentTimeMillis()-PolyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
 	notFailedStatuses := []string{STATUS_PROCESSED, STATUS_CONFIRMED, STATUS_TIMEDOUT, STATUS_TO_BE_REMOVED}
+	// Ignore PolyTx failed to many times...
 	err := w.db.Where("retry_count < ?", PolyTxMaxRetryCount).Not(map[string]interface{}{"status": notFailedStatuses}).Limit(1).Find(&list).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -883,23 +902,90 @@ func (w *MySqlDB) GetFirstTimedOutGasSubsidy() (*GasSubsidy, error) {
 		return nil, nil
 	}
 	first := list[0]
-	if first.UpdatedAt < CurrentTimeMillis()-PolyTxMaxProcessingSeconds*1000 {
+	if first.UpdatedAt < CurrentTimeMillis()-GasSubsidyTxMaxProcessingSeconds*1000 {
 		return &first, nil
 	} else {
 		return nil, nil
 	}
 }
 
-func (w *MySqlDB) SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error {
-	db := w.db.Table("gas_subsidy").Where(
-		"tx_index = ? and from_chain_id = ? and tx_hash = ? and status = ? and (starcoin_tx_hash is null or starcoin_tx_hash = '')",
-		gasSubsidy.TxIndex, gasSubsidy.FromChainID, gasSubsidy.TxHash, gasSubsidy.Status,
-	).Updates(map[string]interface{}{
-		"starcoin_tx_hash":       hex.EncodeToString(starcoinTxHash),
-		"sender_address":         hex.EncodeToString(senderAddress),
+func (w *MySqlDB) GetFirstFailedGasSubsidy() (*GasSubsidy, error) {
+	var list []GasSubsidy
+	//err := w.db.Where("updated_at < ?", currentTimeMillis()-GasSubsidyTxMaxProcessingSeconds*1000).Not(map[string]interface{}{"status": []string{STATUS_PROCESSED, STATUS_CONFIRMED}}).Limit(1).Find(&list).Error
+	notFailedStatuses := []string{STATUS_PROCESSED, STATUS_CONFIRMED, STATUS_TIMEDOUT, STATUS_TO_BE_REMOVED}
+	err := w.db.Where("retry_count < ?", GasSubsidyTxMaxRetryCount).Not(map[string]interface{}{"status": notFailedStatuses}).Limit(1).Find(&list).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	first := list[0]
+	if first.UpdatedAt < CurrentTimeMillis()-GasSubsidyTxMaxProcessingSeconds*1000 {
+		return &first, nil
+	} else {
+		return nil, nil
+	}
+}
+
+func (w *MySqlDB) SetGasSubsidyStarcoinTxInfo(txHash string, fromChainID uint64, oldStatus string, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error {
+	gasSubsidy := new(GasSubsidy)
+	if err := w.db.Where(&GasSubsidy{TxHash: txHash, FromChainID: fromChainID}).First(gasSubsidy).Error; err != nil {
+		return err
+	}
+	fieldMap := map[string]interface{}{
+		"starcoin_tx_hash":       tools.EncodeToHex(starcoinTxHash),
+		"sender_address":         tools.EncodeToHex(senderAddress),
 		"sender_sequence_number": senderSeqNum,
 		"status":                 STATUS_PROCESSING,
-	})
+		"retry_count":            gasSubsidy.RetryCount + 1,
+		"updated_at":             CurrentTimeMillis(),
+	}
+	return w.optimisticUpdateGasSubsidy(gasSubsidy, oldStatus, fieldMap)
+}
+
+func (w *MySqlDB) SetGasSubsidyStatusProcessed(txHash string, fromChainID uint64, oldStatus string) error {
+	return w.SetGasSubsidyStatus(txHash, fromChainID, oldStatus, STATUS_PROCESSED)
+}
+
+func (w *MySqlDB) SetGasSubsidyStatus(txHash string, fromChainID uint64, oldStatus string, status string) error {
+	// s := GasSubsidy{}
+	// if err := w.db.Where(&GasSubsidy{
+	// 	TxIndex:     gasSubsidy.TxIndex,
+	// 	TxHash:      gasSubsidy.TxHash,
+	// 	FromChainID: gasSubsidy.FromChainID,
+	// }).First(&s).Error; err != nil {
+	// 	return err
+	// }
+	gasSubsidy := new(GasSubsidy)
+	if err := w.db.Where(&GasSubsidy{TxHash: txHash, FromChainID: fromChainID}).First(gasSubsidy).Error; err != nil {
+		return err
+	}
+	// s.Status = status
+	// s.UpdatedAt = CurrentTimeMillis()
+	// return w.db.Save(&s).Error
+	fieldMap := map[string]interface{}{
+		"status":     status,
+		"updated_at": CurrentTimeMillis(),
+	}
+	return w.optimisticUpdateGasSubsidy(gasSubsidy, oldStatus, fieldMap)
+}
+
+func (w *MySqlDB) optimisticUpdateGasSubsidy(gasSubsidy *GasSubsidy, oldStatus string, fieldMap map[string]interface{}) error {
+	sql := "tx_index = ? and from_chain_id = ? and tx_hash = ? and status = ?"
+	if gasSubsidy.StarcoinTxHash == "" {
+		sql = sql + " and (starcoin_tx_hash is null or starcoin_tx_hash = '')"
+	} else {
+		sql = sql + " and starcoin_tx_hash = '" + strings.Replace(gasSubsidy.StarcoinTxHash, "'", "", -1) + "'"
+	}
+	db := w.db.Table("gas_subsidy").Where(
+		sql,
+		gasSubsidy.TxIndex, gasSubsidy.FromChainID, gasSubsidy.TxHash, oldStatus,
+	).Updates(fieldMap)
 	if db.Error != nil {
 		return db.Error
 	}
@@ -908,24 +994,6 @@ func (w *MySqlDB) SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTx
 		return fmt.Errorf("optimistic lock error. TxIndex: %d, fromChainId: %d, txHash: %s", gasSubsidy.TxIndex, gasSubsidy.FromChainID, gasSubsidy.TxHash)
 	}
 	return nil
-}
-
-func (w *MySqlDB) SetGasSubsidyStatusProcessed(gasSubsidy *GasSubsidy) error {
-	return w.SetGasSubsidyStatus(gasSubsidy, STATUS_PROCESSED)
-}
-
-func (w *MySqlDB) SetGasSubsidyStatus(gasSubsidy *GasSubsidy, status string) error {
-	s := GasSubsidy{}
-	if err := w.db.Where(&GasSubsidy{
-		TxIndex:     gasSubsidy.TxIndex,
-		TxHash:      gasSubsidy.TxHash,
-		FromChainID: gasSubsidy.FromChainID,
-	}).First(&s).Error; err != nil {
-		return err
-	}
-	s.Status = status
-	//px.UpdatedAt = currentTimeMillis()
-	return w.db.Save(&s).Error
 }
 
 func (w *MySqlDB) Close() {

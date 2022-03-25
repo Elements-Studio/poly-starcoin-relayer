@@ -33,6 +33,10 @@ func TestGetTokenScalingFactor(t *testing.T) {
 func TestGetStarcoinNodeHeight(t *testing.T) {
 	restclient := NewRestClient()
 	h, err := GetStarcoinNodeHeight("https://barnard-seed.starcoin.org", restclient)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 	fmt.Println(h, err)
 }
 

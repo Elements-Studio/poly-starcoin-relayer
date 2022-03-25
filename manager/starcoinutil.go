@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"strings"
 
 	"github.com/elements-studio/poly-starcoin-relayer/log"
 	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
@@ -215,7 +216,7 @@ func checkStarcoinTransaction(starcoinClient *stcclient.StarcoinClient, starcoin
 	knownFailureCallback checkStarcoinTransactionKnownFailureCallback,
 	unknownFailureCallback checkStarcoinTransactionUnknownFailureCallback,
 ) {
-	stcTx, err := starcoinClient.GetTransactionInfoByHash(context.Background(), starcoinTxHash)
+	stcTx, err := starcoinClient.GetTransactionInfoByHash(context.Background(), formatStarcoinTxHash(starcoinTxHash))
 	if err != nil {
 		errorCallback(err)
 		return
@@ -236,4 +237,12 @@ func checkStarcoinTransaction(starcoinClient *stcclient.StarcoinClient, starcoin
 	} else {
 		unknownFailureCallback()
 	}
+}
+
+func formatStarcoinTxHash(starcoinTxHash string) string {
+	if strings.HasPrefix(starcoinTxHash, "0x") {
+		return starcoinTxHash
+	}
+	bs, _ := tools.HexToBytes(starcoinTxHash)
+	return tools.EncodeToHex(bs)
 }

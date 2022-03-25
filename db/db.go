@@ -20,6 +20,7 @@ const (
 	STATUS_TIMEDOUT           = "T"   //TimedOut(or unknown error)
 	STATUS_TO_BE_REMOVED      = "TBR" //To Be Removed
 	STATTUS_TO_BE_PUSHED_BACK = "TBP" // To Be Pushed-back
+	STATUS_UNKNOWN_ERROR      = "UE"  //Unknown Error
 )
 
 type DB interface {
@@ -66,13 +67,13 @@ type DB interface {
 
 	UpdatePolyTxNonMembershipProofByIndex(idx uint64) error
 
-	SetPolyTxStatus(txHash string, fromChainID uint64, status string) error
+	SetPolyTxStatus(txHash string, fromChainID uint64, oldStatus string, status string) error
 
-	SetPolyTxStatusProcessing(txHash string, fromChainID uint64) error
+	SetPolyTxStatusProcessing(txHash string, fromChainID uint64, oldStatus string) error
 
 	SetProcessingPolyTxStarcoinTxHash(txHash string, fromChainID uint64, starcoinTxHash string) error
 
-	SetPolyTxStatusProcessed(txHash string, fromChainID uint64, starcoinTxHash string) error
+	SetPolyTxStatusProcessed(txHash string, fromChainID uint64, oldStatus string, starcoinTxHash string) error
 
 	GetFirstFailedPolyTx() (*PolyTx, error)
 
@@ -92,11 +93,14 @@ type DB interface {
 
 	GetFirstTimedOutGasSubsidy() (*GasSubsidy, error)
 
-	SetGasSubsidyStarcoinTxInfo(gasSubsidy *GasSubsidy, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error
+	GetFirstFailedGasSubsidy() (*GasSubsidy, error)
 
-	SetGasSubsidyStatusProcessed(gasSubsidy *GasSubsidy) error
+	// Set gas subsidy's Starcoin Txn. info.(and  status to PROCESSING)
+	SetGasSubsidyStarcoinTxInfo(txHash string, fromChainID uint64, oldStatus string, starcoinTxHash []byte, senderAddress []byte, senderSeqNum uint64) error
 
-	SetGasSubsidyStatus(gasSubsidy *GasSubsidy, status string) error
+	SetGasSubsidyStatusProcessed(txHash string, fromChainID uint64, oldStatus string) error
+
+	SetGasSubsidyStatus(txHash string, fromChainID uint64, oldStatus string, status string) error
 
 	Close()
 }

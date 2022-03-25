@@ -494,6 +494,24 @@ func TestHandleNotSentGasSubsidy(t *testing.T) {
 	}
 }
 
+func TestHandleFailedPolyTx(t *testing.T) {
+	polyManager := getTestNetPolyManager(t)
+	polyTx, err := polyManager.db.GetFirstFailedPolyTx()
+	if err != nil {
+		fmt.Printf("failed to GetFirstFailedPolyTx: %s", err.Error())
+		t.FailNow()
+	}
+	if polyTx == nil {
+		fmt.Println("polyTx == nil")
+		return
+	}
+	err = polyManager.handleFailedPolyTx(polyTx)
+	if err != nil {
+		fmt.Printf("failed to HandleFailedPolyTx: %s", err.Error())
+		t.FailNow()
+	}
+}
+
 func getDevNetPolyManager(t *testing.T) *PolyManager {
 	config := config.NewServiceConfig("../config-devnet.json")
 	p, err := getPolyManager(config, false)

@@ -268,14 +268,14 @@ func TestHasher(t *testing.T) {
 
 }
 
-func TestSetPolyTxStatus(t *testing.T) {
-	fromChainID := getTestFromChainId()
-	txHash := "testKey2"
-	err := devNetDB().SetPolyTxStatus(txHash, fromChainID, STATUS_PROCESSED)
-	if err != nil {
-		t.FailNow()
-	}
-}
+// func TestSetPolyTxStatus(t *testing.T) {
+// 	fromChainID := getTestFromChainId()
+// 	txHash := "testKey2"
+// 	err := devNetDB().SetPolyTxStatus(txHash, fromChainID, STATUS_PROCESSED)
+// 	if err != nil {
+// 		t.FailNow()
+// 	}
+// }
 
 func TestGetFirstFailedPolyTx(t *testing.T) {
 	px1, err := devNetDB().GetFirstFailedPolyTx()
@@ -348,22 +348,24 @@ func TestSetPolyTxStatusProcessing(t *testing.T) {
 				return
 			}
 			if tx == nil || tx.Status == STATUS_CONFIRMED || tx.Status == STATUS_PROCESSED {
-				fmt.Println("STATUS_PROCESSED")
+				fmt.Println("Is already STATUS_PROCESSED...")
 				return
 			}
-			err = db.SetPolyTxStatusProcessing(px_TxHash, fromChainId)
+			err = db.SetPolyTxStatusProcessing(px_TxHash, fromChainId, tx.Status)
 			if err != nil { //if errors.Is(err, optimistic.NewOptimisticError()) {
-				fmt.Println("------- SetPolyTxStatusProcessing error -------" + err.Error())
+				fmt.Println("------- SetPolyTxStatusProcessing ERROR! -------")
+				fmt.Println(err.Error())
 			} else {
-				fmt.Println("--------------- SetPolyTxStatusProcessing ok -------------")
+				fmt.Println("--------------- SetPolyTxStatusProcessing ok~ -------------")
 			}
 
-			px_StarcoinTxHash := "0x81cd5df1aff45149129cb21c93956c5e3308329cda1f23c74977d030d5e7d441"
+			px_StarcoinTxHash := "0x09777ddf0db0bc52853fda634cebb89faae707ed6baf2ce742e1a499f0e58088"
 			err = db.SetProcessingPolyTxStarcoinTxHash(px_TxHash, fromChainId, px_StarcoinTxHash)
 			if err != nil {
-				fmt.Println("------- SetProcessingPolyTxStarcoinTxHash error -------" + err.Error())
+				fmt.Println("------- SetProcessingPolyTxStarcoinTxHash ERROR! -------")
+				fmt.Println(err.Error())
 			} else {
-				fmt.Println("--------------- SetProcessingPolyTxStarcoinTxHash ok -------------")
+				fmt.Println("--------------- SetProcessingPolyTxStarcoinTxHash ok~ -------------")
 			}
 
 			time.Sleep(time.Millisecond * 500)
@@ -373,15 +375,15 @@ func TestSetPolyTxStatusProcessing(t *testing.T) {
 	time.Sleep(time.Second * 8)
 }
 
-func TestSetPolyTxStatusProcessing2(t *testing.T) {
-	txHash := "f8f2e4500319fcffb3fdb2b9645703e21c8ee87f7c6df0300804a5749c0d8bca"
-	fromChainId := uint64(318)
-	err := testNetDB().SetPolyTxStatusProcessing(txHash, fromChainId)
-	if err != nil {
-		fmt.Println(err)
-		t.FailNow()
-	}
-}
+// func TestSetPolyTxStatusProcessing2(t *testing.T) {
+// 	txHash := "f8f2e4500319fcffb3fdb2b9645703e21c8ee87f7c6df0300804a5749c0d8bca"
+// 	fromChainId := uint64(318)
+// 	err := testNetDB().SetPolyTxStatusProcessing(txHash, fromChainId)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		t.FailNow()
+// 	}
+// }
 
 func TestConcatFromChainIdAndTxHash(t *testing.T) {
 	var txHash []byte = []byte("hello world") // len(txHash) == 11
