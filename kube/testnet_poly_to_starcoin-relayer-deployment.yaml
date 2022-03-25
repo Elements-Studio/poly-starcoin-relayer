@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: testnet-poly-to-starcoin-relayer
-        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-300e72c
+        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-68217d0
         ports:
         - containerPort: 8600
         env:
@@ -32,6 +32,11 @@ spec:
             secretKeyRef:
               name: poly-starcoin-relayer-testnet-sercets
               key: PRIVATE_KEY_416b320
+        - name: PRIVATE_KEY_18351d3
+          valueFrom:
+            secretKeyRef:
+              name: poly-starcoin-relayer-testnet-sercets
+              key: PRIVATE_KEY_18351d3
         - name: POLY_WALLET_PASSWORD
           value: "123456"
         - name: POLY_WALLET_FILE
