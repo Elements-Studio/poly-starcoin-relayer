@@ -289,17 +289,17 @@ func (this *PolyManager) MonitorGasSubsidy() {
 	for {
 		select {
 		case <-monitorTicker.C:
-			// // ////////////// create gas subsidy ////////////////
-			// this.createGasSubsidies()
-			// // ////////////// handle not-sent gas subsidy ///////////////
-			// notSentGasSubsidy, err := this.db.GetFirstNotSentGasSubsidy()
-			// if err != nil {
-			// 	log.Errorf("PolyManager.MonitorGasSubsidy - failed to GetFirstNotSentGasSubsidy: %s", err.Error())
-			// }
-			// if notSentGasSubsidy == nil {
-			// 	continue
-			// }
-			// this.handleNotSentGasSubsidy(notSentGasSubsidy)
+			// ////////////// create gas subsidy ////////////////
+			this.createGasSubsidies()
+			// ////////////// handle not-sent gas subsidy ///////////////
+			notSentGasSubsidy, err := this.db.GetFirstNotSentGasSubsidy()
+			if err != nil {
+				log.Errorf("PolyManager.MonitorGasSubsidy - failed to GetFirstNotSentGasSubsidy: %s", err.Error())
+			}
+			if notSentGasSubsidy == nil {
+				continue
+			}
+			this.handleNotSentGasSubsidy(notSentGasSubsidy)
 			// ////////////////// handle First timed-out gas subsidy ////////////////
 			timedOutGasSubsidy, err := this.db.GetFirstTimedOutGasSubsidy()
 			if err != nil {
