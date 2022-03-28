@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: testnet-poly-to-starcoin-relayer
-        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-68217d0
+        image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-f77bf8f
         ports:
         - containerPort: 8600
         env:
@@ -27,11 +27,11 @@ spec:
             secretKeyRef:
               name: poly-starcoin-relayer-testnet-sercets
               key: MYSQL_DSN_TESTNET
-        - name: PRIVATE_KEY_416b320
+        - name: PRIVATE_KEY_b6d69dd
           valueFrom:
             secretKeyRef:
               name: poly-starcoin-relayer-testnet-sercets
-              key: PRIVATE_KEY_416b320
+              key: PRIVATE_KEY_b6d69dd
         - name: PRIVATE_KEY_18351d3
           valueFrom:
             secretKeyRef:
