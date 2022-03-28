@@ -341,3 +341,11 @@ func encode_u8_argument(arg uint8) []byte {
 
 	panic("Unable to serialize argument of type u64")
 }
+
+func encode_bool_argument(arg bool) []byte {
+	s := bcs.NewSerializer()
+	if err := s.SerializeBool(arg); err == nil {
+		return s.GetBytes()
+	}
+	panic("Unable to serialize argument of type bool")
+}

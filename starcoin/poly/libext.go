@@ -189,6 +189,28 @@ func EncodeTwoTypeArgsAndFourU128TxPaylaod(module string, function string, t1, t
 	}
 }
 
+func EncodeAccountAddressTxPaylaod(module string, function string, a diemtypes.AccountAddress) diemtypes.TransactionPayload {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: diemtypes.Identifier(function),
+			TyArgs:   []diemtypes.TypeTag{},
+			Args:     [][]byte{encode_address_argument(a)},
+		},
+	}
+}
+
+func EncodeBoolTxPaylaod(module string, function string, b bool) diemtypes.TransactionPayload {
+	return &diemtypes.TransactionPayload__ScriptFunction{
+		diemtypes.ScriptFunction{
+			Module:   *ParseModuleId(module),
+			Function: diemtypes.Identifier(function),
+			TyArgs:   []diemtypes.TypeTag{},
+			Args:     [][]byte{encode_bool_argument(b)},
+		},
+	}
+}
+
 func EncodeTransferStcTxPayload(payee types.AccountAddress, amount serde.Uint128) types.TransactionPayload {
 	coinType := types.StructTag{
 		Address: [16]uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},

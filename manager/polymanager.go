@@ -1035,7 +1035,7 @@ func (this *PolyManager) IsEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 	return true, publickeys, nil
 }
 
-func (this *PolyManager) InitStarcoinGenesis(height *uint32) error {
+func (this *PolyManager) InitStarcoinGenesis(privateKeyConfig map[string]string, height *uint32) error {
 	var (
 		cfgBlockNum uint32
 		err         error
@@ -1059,8 +1059,8 @@ func (this *PolyManager) InitStarcoinGenesis(height *uint32) error {
 		return err
 	}
 	//fmt.Println(publickeys)
-	senderAndPK := this.config.StarcoinConfig.PrivateKeys[0]
-	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(senderAndPK)
+	//privateKeyConfig := this.config.StarcoinConfig.PrivateKeys[0]
+	senderAddress, senderPrivateKey, err := getAccountAddressAndPrivateKey(privateKeyConfig)
 	if err != nil {
 		log.Errorf("InitGenesis - Convert string to AccountAddress error:%s", err.Error())
 		return err

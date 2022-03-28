@@ -18,7 +18,7 @@
     "GenesisAccountAddress": "0x416b32009fe49fcab1d5f2ba0153838f",
     "PrivateKeys": [
       {
-        "0x416b32009fe49fcab1d5f2ba0153838f": "${PRIVATE_KEY_416b320}"
+        "0xb6D69DD935EDf7f2054acF12eb884df8": "${PRIVATE_KEY_b6d69dd}"
       }
     ],
     "BlockConfirmations": 6,

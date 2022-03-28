@@ -187,13 +187,13 @@ func submitStarcoinTransaction(starcoinClient *stcclient.StarcoinClient, private
 	return txHash, nil
 }
 
-func getAccountAddressAndPrivateKey(senderpk map[string]string) (*types.AccountAddress, types.Ed25519PrivateKey, error) {
+func getAccountAddressAndPrivateKey(privateKeyConfig map[string]string) (*types.AccountAddress, types.Ed25519PrivateKey, error) {
 	var addressHex string
-	for k := range senderpk {
+	for k := range privateKeyConfig {
 		addressHex = k
 		break
 	}
-	pk, err := tools.HexToBytes(senderpk[addressHex])
+	pk, err := tools.HexToBytes(privateKeyConfig[addressHex])
 	if err != nil {
 		log.Errorf("getAccountAddressAndPrivateKey - Convert hex to bytes error:%s", err.Error())
 		return nil, nil, err
