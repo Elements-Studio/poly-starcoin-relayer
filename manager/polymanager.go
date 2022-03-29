@@ -337,7 +337,8 @@ func (this *PolyManager) createGasSubsidies() {
 			continue
 		}
 		for _, polyTx := range polyTxList {
-			gasSubsidy, err := PolyTxToGasSubsidy(polyTx, this.config.StarcoinConfig.GasSubsidyConfig.SubsidyAmount)
+			fromChainKey := strconv.FormatInt(int64(fromChainId), 10)
+			gasSubsidy, err := PolyTxToGasSubsidy(polyTx, this.config.StarcoinConfig.GasSubsidyConfig.FromChains[fromChainKey].SubsidyAmount)
 			if err != nil {
 				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to PolyTxToGasSubsidy: %s", err.Error())
 				continue

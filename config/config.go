@@ -80,9 +80,13 @@ type StarcoinConfig struct {
 }
 
 type GasSubsidyConfig struct {
-	SubsidyAmount     uint64
-	FromChainIds      []int
+	FromChainIds      []int                                // active from(source) chain IDs.
+	FromChains        map[string]GasSubsidyFromChainConfig // from(source) chain configs, key is source chain ID
 	SenderPrivateKeys []map[string]string
+}
+
+type GasSubsidyFromChainConfig struct {
+	SubsidyAmount uint64
 }
 
 func ReadFile(fileName string) ([]byte, error) {
