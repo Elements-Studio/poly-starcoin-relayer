@@ -178,7 +178,8 @@ func (this *StarcoinManager) MonitorChain() {
 						break
 					}
 				}
-			}
+			} // end for this.currentHeight < height-config.STARCOIN_USEFUL_BLOCK_NUM {
+
 			// fmt.Println("----------------- blockHandleResult -----------------")
 			// fmt.Println(blockHandleResult)
 			// fmt.Println("----------------- len(header4sync) -----------------")

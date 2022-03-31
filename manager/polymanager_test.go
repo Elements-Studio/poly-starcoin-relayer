@@ -59,11 +59,11 @@ func TestLockSTC_to_eSTC_WithSTCFee(t *testing.T) {
 	to_address, _ := tools.HexToBytes("0x71DFDD2BF49E8Af5226E0078efA31ecf258bC44E") // an ethereum address
 	amount := serde.Uint128{
 		High: 0,
-		Low:  110000000000,
+		Low:  1000000000,
 	}
 	fee := serde.Uint128{
 		High: 0,
-		Low:  2000000000,
+		Low:  1000000000,
 	}
 	id := serde.Uint128{
 		High: 0,

@@ -876,9 +876,14 @@ func (this *PolyManager) handleDepositEvents(height uint32) bool {
 						// continue
 					}
 				} // end if
+			} //end if notify.ContractAddress == this.config.PolyConfig.EntranceContractAddress {
+			//----------- break ------------
+			if !heightProcessed {
+				break
 			}
-		}
-	}
+			//----------- break ------------
+		} // end for _, notify := range event.Notify {
+	} //for _, event := range events {
 
 	if !heightProcessed {
 		return false
