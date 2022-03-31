@@ -90,8 +90,9 @@ func TestBindEthereumProxyHash(t *testing.T) {
 	fmt.Println(polyManager)
 	starcoinClient := polyManager.starcoinClient
 	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
-	chainId := uint64(2)                                                             // 2 is ethereum ropsten chain id on poly TestNet
-	proxyHash, err := tools.HexToBytes("0xD8aE73e06552E270340b63A8bcAbf9277a1aac99") // LockProxy Contract Address
+	chainId := uint64(2) // 2 is ethereum ropsten chain id on poly TestNet
+	//proxyHash, err := tools.HexToBytes("0xD8aE73e06552E270340b63A8bcAbf9277a1aac99") // LockProxy Contract Address
+	proxyHash, err := tools.HexToBytes("0xfd40451429251a6dd535c4bb86a7d894409e900f") // LockProxy Contract Address
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -109,6 +110,12 @@ func TestBindStarcoinProxyHash(t *testing.T) {
 	chainId := uint64(318) //318
 	proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript")
 	testBindProxyHash(starcoinClient, privateKeyConfig, polyManager.config, chainId, proxyHash, t)
+}
+
+func TestPrintStarcoinProxyHashHex(t *testing.T) {
+	// https://codebeautify.org/string-hex-converter
+	proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript")
+	fmt.Println(tools.EncodeToHex(proxyHash))
 }
 
 func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, privateKeyConfig map[string]string, config *config.ServiceConfig, chainId uint64, proxyHash []byte, t *testing.T) {
@@ -146,6 +153,11 @@ func TestBindXETHAssetHash(t *testing.T) {
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
 }
 
+func TestPrintXETHAssetHashHex(t *testing.T) {
+	assetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH")
+	fmt.Println(tools.EncodeToHex(assetHash))
+}
+
 func TestBindXUSDTAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
@@ -162,6 +174,11 @@ func TestBindXUSDTAssetHash(t *testing.T) {
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
 }
 
+func TestPrintXUSDTAssetHashHex(t *testing.T) {
+	assetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT")
+	fmt.Println(tools.EncodeToHex(assetHash))
+}
+
 func TestBindSTCAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
@@ -173,15 +190,21 @@ func TestBindSTCAssetHash(t *testing.T) {
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
 }
 
+func TestPrintSTCAssetHashHex(t *testing.T) {
+	assetHash := []byte("0x00000000000000000000000000000001::STC::STC")
+	fmt.Println(tools.EncodeToHex(assetHash))
+}
+
 func TestBindEthereumSTCAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	//toAssetHash, _ := tools.HexToBytes("0x6527BC0C4724B51c955E7A4654E2c15464C1851a") // OLD eSTC ERC20 contract address on ethereum
+	//toAssetHash, _ := tools.HexToBytes("0x43e35ba290afe67c295321eeb539ce7756753823") // STC ERC20 contract address on ethereum
 	fmt.Println(polyManager)
 	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
 	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")          // asset hash on Starcoin
 	toChainId := uint64(2)                                                           // a ethereum network
-	toAssetHash, _ := tools.HexToBytes("0x43e35ba290afe67c295321eeb539ce7756753823") // STC ERC20 contract address on ethereum
+	toAssetHash, _ := tools.HexToBytes("0x2e269dcdebdc5f2068dfb23972ed81ad1b0f9585") // STC ERC20 contract address on ethereum
 
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
 }
