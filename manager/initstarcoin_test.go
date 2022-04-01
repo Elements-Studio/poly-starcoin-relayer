@@ -102,19 +102,20 @@ func TestBindEthereumProxyHash(t *testing.T) {
 
 // Test bind or update starcoin LockProxy hash(contract ID).
 func TestBindStarcoinProxyHash(t *testing.T) {
-	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
 	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
 	starcoinClient := polyManager.starcoinClient
 	chainId := uint64(318) //318
-	proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript")
+	//proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript") // devnet
+	proxyHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::CrossChainScript")
 	testBindProxyHash(starcoinClient, privateKeyConfig, polyManager.config, chainId, proxyHash, t)
 }
 
 func TestPrintStarcoinProxyHashHex(t *testing.T) {
 	// https://codebeautify.org/string-hex-converter
-	proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript")
+	proxyHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::CrossChainScript")
 	fmt.Println(tools.EncodeToHex(proxyHash))
 }
 
