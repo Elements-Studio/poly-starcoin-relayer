@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -274,6 +275,14 @@ func TestHandleFailedPolyTx(t *testing.T) {
 		fmt.Printf("failed to HandleFailedPolyTx: %s", err.Error())
 		t.FailNow()
 	}
+}
+
+func TestPrintConfig(t *testing.T) {
+	config := config.NewServiceConfig("../config-testnet.json")
+	//fmt.Println(string(config.TreasuriesConfig.Treasuries["Starcoin"].Tokens["USDT"].OpeningBalance))
+	fmt.Println(config)
+	j, _ := json.Marshal(config.TreasuriesConfig)
+	fmt.Println(string(j))
 }
 
 func getDevNetPolyManager(t *testing.T) *PolyManager {

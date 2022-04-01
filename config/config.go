@@ -49,6 +49,7 @@ type ServiceConfig struct {
 	RoutineNum            int64
 	CheckFee              bool
 	ProxyOrAssetContracts []map[string]map[string][]uint64
+	TreasuriesConfig      TreasuriesConfig
 }
 
 type PolyConfig struct {
@@ -77,6 +78,34 @@ type StarcoinConfig struct {
 	MonitorInterval    uint64
 	MaxGasAmount       uint64
 	GasSubsidyConfig   GasSubsidyConfig
+}
+
+type TreasuriesConfig struct {
+	TokenBasicIds []string                  // token basic Id., 'ETH', 'USDT', 'STC'...
+	Treasuries    map[string]TreasuryConfig // treasury Id. to config object mappings
+}
+
+type TreasuryConfig struct {
+	TreasuryType   string // Starcoin or Ethereum
+	StarcoinConfig *TreasuryStarcoinConfig
+	EthereumConfig *EthereumTreasuryConfig
+	Tokens         map[string]TreasuryTokenConfig // token basic Id. to specific chain token mappings
+}
+
+type EthereumTreasuryConfig struct {
+	LockProxyContractAddress string
+	EthereumClientURL        string
+}
+
+type TreasuryStarcoinConfig struct {
+	AccountAddress  string // Treasury account address
+	TreasuryTypeTag string // Treasury resource type tag
+}
+
+type TreasuryTokenConfig struct {
+	TokenId        string // specific chain token
+	OpeningBalance string
+	ScalingFactor  string
 }
 
 type GasSubsidyConfig struct {
