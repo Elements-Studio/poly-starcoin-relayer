@@ -3,6 +3,7 @@ module github.com/elements-studio/poly-starcoin-relayer
 go 1.16
 
 require (
+	github.com/KSlashh/poly-abi v0.0.0-20210929022231-3cc16375f128
 	github.com/antihax/optional v1.0.0
 	github.com/boltdb/bolt v1.3.1
 	github.com/btcsuite/btcd v0.21.0-beta

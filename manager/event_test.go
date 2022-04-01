@@ -4,25 +4,25 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"testing"
 
 	stcpolyevts "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly/events"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
+	"github.com/elements-studio/poly-starcoin-relayer/treasury"
 	pcommon "github.com/polynetwork/poly/common"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
-//{"raw":"0x80969800000000000000000000000000","json":{"token":{"value":10000000}}}
-type LockTreasuryResource struct {
-	Raw  string `json:"raw"`
-	Json struct {
-		Token struct {
-			Value big.Int `json:"value"`
-		} `json:"token"`
-	} `json:"json"`
-}
+// //{"raw":"0x80969800000000000000000000000000","json":{"token":{"value":10000000}}}
+// type LockTreasuryResource struct {
+// 	Raw  string `json:"raw"`
+// 	Json struct {
+// 		Token struct {
+// 			Value big.Int `json:"value"`
+// 		} `json:"token"`
+// 	} `json:"json"`
+// }
 
 func TestGetAssetLockedAmount(t *testing.T) {
 	starcoinClient := stcclient.NewStarcoinClient("https://barnard-seed.starcoin.org")
@@ -34,14 +34,14 @@ func TestGetAssetLockedAmount(t *testing.T) {
 	getResOption := stcclient.GetResourceOption{
 		Decode: true,
 	}
-	lockRes := new(LockTreasuryResource) //new(map[string]interface{})
+	lockRes := new(treasury.LockTreasuryResource) //new(map[string]interface{})
 	r, err := starcoinClient.GetResource(context.Background(), genesisAccountAddress, resType, getResOption, lockRes)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
 	//fmt.Println(r)
-	lockRes = r.(*LockTreasuryResource)
+	lockRes = r.(*treasury.LockTreasuryResource)
 	fmt.Println("=============== Locked amount ===============")
 	fmt.Println(lockRes.Json.Token.Value.String())
 	//13611294676837538537534417817260828458 ETH
