@@ -39,12 +39,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
 
 type RestClient struct {
-	Addr       string
+	//Addr       string
 	httpClient *http.Client
 }
 
@@ -63,18 +64,31 @@ func NewRestClient() *RestClient {
 	}
 }
 
-func (self *RestClient) SetAddr(addr string) *RestClient {
-	self.Addr = addr
-	return self
+func (self *RestClient) SetProxy(proxyUrl string) error {
+	httpT, ok := self.httpClient.Transport.(*http.Transport)
+	if !ok {
+		return nil
+	}
+	u, err := url.Parse(proxyUrl)
+	if err != nil {
+		return err
+	}
+	httpT.Proxy = http.ProxyURL(u)
+	return nil
 }
+
+// func (self *RestClient) SetAddr(addr string) *RestClient {
+// 	self.Addr = addr
+// 	return self
+// }
 
 func (self *RestClient) SetHttpClient(httpClient *http.Client) *RestClient {
 	self.httpClient = httpClient
 	return self
 }
 
-func (self *RestClient) SendPostRequest(addr string, data []byte) ([]byte, error) {
-	resp, err := self.httpClient.Post(addr, "application/json", strings.NewReader(string(data)))
+func (self *RestClient) SendPostRequest(url string, data []byte) ([]byte, error) {
+	resp, err := self.httpClient.Post(url, "application/json", strings.NewReader(string(data)))
 	if err != nil {
 		return nil, fmt.Errorf("http post request:%s error:%s", data, err.Error())
 	}

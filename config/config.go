@@ -27,9 +27,10 @@ import (
 )
 
 const (
-	STARCOIN_MONITOR_INTERVAL    = 2 * time.Second
-	POLY_MONITOR_INTERVAL        = 2 * time.Second
-	GAS_SUBSIDY_MONITOR_INTERVAL = 10 * time.Second
+	STARCOIN_MONITOR_INTERVAL              = 2 * time.Second
+	POLY_MONITOR_INTERVAL                  = 2 * time.Second
+	GAS_SUBSIDY_MONITOR_INTERVAL           = 10 * time.Second
+	TREASURY_TOKEN_STATES_MONITOR_INTERVAL = 2 * time.Minute
 
 	STARCOIN_USEFUL_BLOCK_NUM    = 9  // eth relayer : 3
 	STARCOIN_PROOF_USERFUL_BLOCK = 36 // eth relayer : 12
@@ -81,9 +82,11 @@ type StarcoinConfig struct {
 }
 
 type TreasuriesConfig struct {
-	TokenBasicIds          []string                  // token basic Id., 'ETH', 'USDT', 'STC'...
-	Treasuries             map[string]TreasuryConfig // treasury Id. to config object mappings
-	AlertDiscordWebhookUrl string
+	TokenBasicIds            []string                  // token basic Id., 'ETH', 'USDT', 'STC'...
+	Treasuries               map[string]TreasuryConfig // treasury Id. to config object mappings
+	AlertDiscordWebhookUrl   string
+	AlertNotificationHeading string
+	AlertAlarmHeading        string
 }
 
 type TreasuryConfig struct {

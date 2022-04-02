@@ -8,15 +8,24 @@ import (
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
-func TestPrintTokenStates(t *testing.T) {
+func TestPrintTreasuryTokenStates(t *testing.T) {
 	m := getTestTreasuryManager(t)
+	//
+	// err := m.doMonitorTokenStates()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	t.FailNow()
+	// }
+	// return
 	//fmt.Println(m)
-	s, err := m.SprintTokenStates()
+	s, tokenStates, err := m.SprintTokenStates()
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
 	fmt.Println(s)
+	fmt.Println(tokenStates)
+	// fmt.Println(areThereAbnormalTreasuryTokenStates(tokenStates))
 }
 
 func getTestTreasuryManager(t *testing.T) *TreasuryManager {

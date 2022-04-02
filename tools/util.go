@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -41,6 +42,10 @@ func HexToBytes(str string) ([]byte, error) {
 		return hex.DecodeString(str[:])
 	}
 	return hex.DecodeString(str[2:])
+}
+
+func CurrentTimeMillis() int64 {
+	return time.Now().UnixNano() / 1000000
 }
 
 const (

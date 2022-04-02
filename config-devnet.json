@@ -121,6 +121,8 @@
         }
       }
     },
-    "AlertDiscordWebhookUrl": "${ALERT_DISCORD_WEBHOOK_URL}"
+    "AlertDiscordWebhookUrl": "${ALERT_DISCORD_WEBHOOK_URL}",
+    "AlertAlarmHeading": "# TEST Poly Bridge ALARM",
+    "AlertNotificationHeading": "# TEST Poly Bridge Notification"
   }
 }

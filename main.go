@@ -169,6 +169,11 @@ func startServer(ctx *cli.Context) {
 	} else {
 		log.Info("main - Starcoin-to-Poly is disabled!")
 	}
+
+	// ////////////////////////
+	initTreasuryManager(servConfig, &stcclient)
+	// ///////////////////////
+
 	waitToExit()
 }
 
@@ -218,6 +223,15 @@ func initPolyServer(servConfig *config.ServiceConfig, polysdk *polysdk.PolySdk, 
 	go mgr.MonitorFailedPolyTx()
 	go mgr.MonitorTimedOutPolyTx()
 	go mgr.MonitorGasSubsidy()
+}
+
+func initTreasuryManager(servConfig *config.ServiceConfig, starconClient *stcclient.StarcoinClient) {
+	m, err := manager.NewTreasuryManager(servConfig.TreasuriesConfig, starconClient)
+	if err != nil {
+		log.Errorf("initTreasuryManager - TreasuryManager service start failed: %v", err)
+		return
+	}
+	go m.MonitorTokenStates()
 }
 
 func main() {
