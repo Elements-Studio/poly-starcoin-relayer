@@ -64,5 +64,62 @@
         ]
       }
     }
-  ]
+  ],
+  "TreasuriesConfig": {
+    "TokenBasicIds": [
+      "STC",
+      "ETH",
+      "USDT"
+    ],
+    "Treasuries": {
+      "Starcoin": {
+        "TreasuryType": "STARCOIN",
+        "StarcoinConfig": {
+          "AccountAddress": "0x416b32009fe49fcab1d5f2ba0153838f",
+          "TreasuryTypeTag": "0x416b32009fe49fcab1d5f2ba0153838f::LockProxy::LockTreasury"
+        },
+        "Tokens": {
+          "STC": {
+            "TokenId": "0x00000000000000000000000000000001::STC::STC",
+            "ScalingFactor": "1000000000",
+            "OpeningBalance": "0"
+          },
+          "ETH": {
+            "TokenId": "0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH",
+            "ScalingFactor": "1000000000000000000",
+            "OpeningBalance": "13611294676837538538534984"
+          },
+          "USDT": {
+            "TokenId": "0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT",
+            "ScalingFactor": "1000000",
+            "OpeningBalance": "13611294676837538538534984"
+          }
+        }
+      },
+      "Ethereum": {
+        "TreasuryType": "ETHEREUM",
+        "EthereumConfig": {
+          "LockProxyContractAddress": "0xfd40451429251a6dd535c4bb86a7d894409e900f",
+          "EthereumClientURL": "${ETHEREUM_CLIENT_URL}"
+        },
+        "Tokens": {
+          "STC": {
+            "TokenId": "0x2e269dcdebdc5f2068dfb23972ed81ad1b0f9585",
+            "ScalingFactor": "1000000000",
+            "OpeningBalance": "5000000000000000000"
+          },
+          "ETH": {
+            "TokenId": "0x0000000000000000000000000000000000000000",
+            "ScalingFactor": "1000000000000000000",
+            "OpeningBalance": "0"
+          },
+          "USDT": {
+            "TokenId": "0x74E9a2447De2e31C3D8c1f6BAeFBD09ed1162891",
+            "ScalingFactor": "1000000",
+            "OpeningBalance": "0"
+          }
+        }
+      }
+    }
+  }
 }

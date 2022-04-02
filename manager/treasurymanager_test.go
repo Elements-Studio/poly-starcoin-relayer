@@ -11,11 +11,12 @@ import (
 func TestPrintTokenStates(t *testing.T) {
 	m := getTestTreasuryManager(t)
 	//fmt.Println(m)
-	err := m.PrintTokenStates()
+	s, err := m.SprintTokenStates()
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
 	}
+	fmt.Println(s)
 }
 
 func getTestTreasuryManager(t *testing.T) *TreasuryManager {

@@ -3,6 +3,7 @@ package manager
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	"github.com/elements-studio/poly-starcoin-relayer/treasury"
@@ -70,32 +71,45 @@ func NewTreasuryManager(config config.TreasuriesConfig, starcoinClient *stcclien
 	return m, nil
 }
 
-func (m *TreasuryManager) PrintTokenStates() error {
+const (
+	PRINT_FORMAT_TOKEN_STATE_START                           = "------------ Token: %s ------------\n"
+	PRINT_FORMAT_TREASURY_ID                                 = "Treasury Id.: %s \n"
+	PRINT_FORMAT_TOKEN_ID_IN_TREASURY                        = "Token Id. in treasury: %s \n"
+	PRINT_FORMAT_OPENING_BALANCE_IN_TREASURY                 = "Opening balance in treasury: %d \n"
+	PRINT_FORMAT_CURRENT_BALANCE_IN_TREASURY                 = "Current balance in treasury: %d \n"
+	PRINT_FORMAT_LOCKED_OR_UNLOCKED_AMOUNT_AND_SCALED_AMOUNT = "Locked(positive)/unlocked(negative): %d, scaled amount: %f(%s) \n"
+	PRINT_FORMAT_TREASURY_STATE_END                          = "--- above is %s state in %s treasury ---\n"
+	PRINT_FORMAT_TOKEN_ON_TRANSIT_AMOUNT                     = "## %s on-transit amount(should be 0 or positive): %f(%s) \n"
+)
+
+func (m *TreasuryManager) SprintTokenStates() (string, error) {
+	var msg strings.Builder
 	for _, tbId := range m.treasuriesConfig.TokenBasicIds {
-		fmt.Printf("------------ %s ------------\n", tbId)
+		msg.WriteString(fmt.Sprintf(PRINT_FORMAT_TOKEN_STATE_START, tbId))
 		var tokenLockSum *big.Float = big.NewFloat(0)
 		for treasuryId, tr := range m.treasuries {
-			fmt.Printf("Treasury Id.: %s \n", treasuryId)
+			msg.WriteString(fmt.Sprintf(PRINT_FORMAT_TREASURY_ID, treasuryId))
 			tokenId := m.treasuryTokenMaps[treasuryId][tbId]
-			fmt.Printf("Token Id. in treasury: %s \n", tokenId)
+			msg.WriteString(fmt.Sprintf(PRINT_FORMAT_TOKEN_ID_IN_TREASURY, tokenId))
 			openingBalance := tr.GetOpeningBalanceFor(tokenId)
-			fmt.Printf("Opening balance in treasury: %d \n", openingBalance)
+			msg.WriteString(fmt.Sprintf(PRINT_FORMAT_OPENING_BALANCE_IN_TREASURY, openingBalance))
 			balance, err := tr.GetBalanceFor(tokenId)
 			if err != nil {
-				return err
+				return "", err
 			}
-			fmt.Printf("Current balance in treasury: %d \n", balance)
+			msg.WriteString(fmt.Sprintf(PRINT_FORMAT_CURRENT_BALANCE_IN_TREASURY, balance))
 			lockAmount, err := treasury.GetLockAmountFor(tr, tokenId)
 			if err != nil {
-				return err
+				return "", err
 			}
 			scalingFactor := tr.GetScalingFactorFor(tokenId)
 			scaledLockAmount := treasury.ScaleAmount(lockAmount, scalingFactor)
-			fmt.Printf("Locked(positive)/unlocked(negative) amount: %d, scaled amount: %f \n", lockAmount, scaledLockAmount)
-			fmt.Println("---") //fmt.Printf("--- %s. \n", treasuryId)
+			msg.WriteString(fmt.Sprintf(PRINT_FORMAT_LOCKED_OR_UNLOCKED_AMOUNT_AND_SCALED_AMOUNT, lockAmount, scaledLockAmount, tbId))
+			msg.WriteString(fmt.Sprintf(PRINT_FORMAT_TREASURY_STATE_END, tbId, treasuryId))
 			tokenLockSum = new(big.Float).Add(tokenLockSum, scaledLockAmount)
 		}
-		fmt.Printf("## On-transit amount: %f(%s) \n", tokenLockSum, tbId)
+		msg.WriteString(fmt.Sprintf(PRINT_FORMAT_TOKEN_ON_TRANSIT_AMOUNT, tbId, tokenLockSum, tbId))
 	}
-	return nil
+
+	return msg.String(), nil
 }
