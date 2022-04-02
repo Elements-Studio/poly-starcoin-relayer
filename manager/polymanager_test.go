@@ -280,7 +280,8 @@ func TestHandleFailedPolyTx(t *testing.T) {
 func TestPrintConfig(t *testing.T) {
 	config := config.NewServiceConfig("../config-testnet.json")
 	//fmt.Println(string(config.TreasuriesConfig.Treasuries["Starcoin"].Tokens["USDT"].OpeningBalance))
-	fmt.Println(config)
+	//fmt.Println(config)
+	//fmt.Println(config.TreasuriesConfig.AlertDiscordWebhookUrl)
 	j, _ := json.Marshal(config.TreasuriesConfig)
 	fmt.Println(string(j))
 }

@@ -120,6 +120,7 @@
           }
         }
       }
-    }
+    },
+    "AlertDiscordWebhookUrl": "${ALERT_DISCORD_WEBHOOK_URL}"
   }
 }

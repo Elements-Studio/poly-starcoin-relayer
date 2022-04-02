@@ -81,8 +81,9 @@ type StarcoinConfig struct {
 }
 
 type TreasuriesConfig struct {
-	TokenBasicIds []string                  // token basic Id., 'ETH', 'USDT', 'STC'...
-	Treasuries    map[string]TreasuryConfig // treasury Id. to config object mappings
+	TokenBasicIds          []string                  // token basic Id., 'ETH', 'USDT', 'STC'...
+	Treasuries             map[string]TreasuryConfig // treasury Id. to config object mappings
+	AlertDiscordWebhookUrl string
 }
 
 type TreasuryConfig struct {
