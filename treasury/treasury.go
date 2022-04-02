@@ -88,6 +88,10 @@ func GetLockAmountFor(tr Treasury, token string) (*big.Int, error) {
 
 func ScaleAmountFor(tr Treasury, token string, amount *big.Int) *big.Float {
 	sf := tr.GetScalingFactorFor(token)
+	return ScaleAmount(amount, sf)
+}
+
+func ScaleAmount(amount *big.Int, sf *big.Int) *big.Float {
 	if sf == nil {
 		return new(big.Float).SetInt(amount)
 	}

@@ -8,9 +8,14 @@ import (
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 )
 
-func TestNewTreasuryManager(t *testing.T) {
+func TestPrintTokenStates(t *testing.T) {
 	m := getTestTreasuryManager(t)
-	fmt.Println(m)
+	//fmt.Println(m)
+	err := m.PrintTokenStates()
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
 }
 
 func getTestTreasuryManager(t *testing.T) *TreasuryManager {

@@ -69,3 +69,33 @@ func NewTreasuryManager(config config.TreasuriesConfig, starcoinClient *stcclien
 	}
 	return m, nil
 }
+
+func (m *TreasuryManager) PrintTokenStates() error {
+	for _, tbId := range m.treasuriesConfig.TokenBasicIds {
+		fmt.Printf("------------ %s ------------\n", tbId)
+		var tokenLockSum *big.Float = big.NewFloat(0)
+		for treasuryId, tr := range m.treasuries {
+			fmt.Printf("Treasury Id.: %s \n", treasuryId)
+			tokenId := m.treasuryTokenMaps[treasuryId][tbId]
+			fmt.Printf("Token Id. in treasury: %s \n", tokenId)
+			openingBalance := tr.GetOpeningBalanceFor(tokenId)
+			fmt.Printf("Opening balance in treasury: %d \n", openingBalance)
+			balance, err := tr.GetBalanceFor(tokenId)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Current balance in treasury: %d \n", balance)
+			lockAmount, err := treasury.GetLockAmountFor(tr, tokenId)
+			if err != nil {
+				return err
+			}
+			scalingFactor := tr.GetScalingFactorFor(tokenId)
+			scaledLockAmount := treasury.ScaleAmount(lockAmount, scalingFactor)
+			fmt.Printf("Locked(positive)/unlocked(negative) amount: %d, scaled amount: %f \n", lockAmount, scaledLockAmount)
+			fmt.Println("---") //fmt.Printf("--- %s. \n", treasuryId)
+			tokenLockSum = new(big.Float).Add(tokenLockSum, scaledLockAmount)
+		}
+		fmt.Printf("## On-transit amount: %f(%s) \n", tokenLockSum, tbId)
+	}
+	return nil
+}
