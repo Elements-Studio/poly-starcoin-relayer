@@ -25,9 +25,7 @@ func NewEthereumTreasury(ethClient *ethclient.Client, lockProxyContractAddress s
 		lockProxyContractAddress: lockProxyContractAddress,
 		ethClient:                ethClient,
 		lockProxyInstance:        lockProxyInstance,
-		BaseTreasury: BaseTreasury{
-			openingBalanceMap: make(map[string]*big.Int),
-		},
+		BaseTreasury:             NewBaseTreasury(),
 	}
 
 	return t, nil

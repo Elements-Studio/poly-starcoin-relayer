@@ -21,9 +21,7 @@ func NewStarcoinStarcoinTreasury(accountAddress string, treasuryTypeTag string, 
 		accountAddress:  accountAddress,
 		treasuryTypeTag: treasuryTypeTag,
 		starcoinClient:  starcoinClient,
-		BaseTreasury: BaseTreasury{
-			openingBalanceMap: make(map[string]*big.Int),
-		},
+		BaseTreasury:    NewBaseTreasury(),
 	}
 	return s
 }

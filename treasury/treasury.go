@@ -28,11 +28,28 @@ type Treasury interface {
 	SetOpeningBalanceFor(token string, balance *big.Int)
 	GetOpeningBalanceFor(token string) *big.Int
 	GetScalingFactorFor(token string) *big.Int
+	SetScalingFactorFor(token string, balance *big.Int)
+	GetTokenList() []string
 }
 
 type BaseTreasury struct {
 	openingBalanceMap map[string]*big.Int
 	scalingFactorMap  map[string]*big.Int
+}
+
+func NewBaseTreasury() BaseTreasury {
+	return BaseTreasury{
+		openingBalanceMap: make(map[string]*big.Int),
+		scalingFactorMap:  make(map[string]*big.Int),
+	}
+}
+
+func (t *BaseTreasury) GetTokenList() []string {
+	tl := make([]string, 0, len(t.openingBalanceMap))
+	for k := range t.openingBalanceMap {
+		tl = append(tl, k)
+	}
+	return tl
 }
 
 func (t *BaseTreasury) SetOpeningBalanceMap(m map[string]*big.Int) {
@@ -49,6 +66,10 @@ func (t *BaseTreasury) SetOpeningBalanceFor(token string, balance *big.Int) {
 
 func (t *BaseTreasury) GetOpeningBalanceFor(token string) *big.Int {
 	return tokenAmountMapGet(t.openingBalanceMap, token)
+}
+
+func (t *BaseTreasury) SetScalingFactorFor(token string, f *big.Int) {
+	tokenAmountMapSet(t.scalingFactorMap, token, f)
 }
 
 func (t *BaseTreasury) GetScalingFactorFor(token string) *big.Int {
