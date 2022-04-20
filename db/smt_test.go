@@ -169,108 +169,6 @@ func TestDBMapStores(t *testing.T) {
 	}
 
 	//return
-
-	// Initialise two new key-value store to store the nodes and values of the tree
-	//nodeStore := smt.NewSimpleMap()
-	nodeStore := NewSmtNodeMapStore(db.(*MySqlDB))
-	valueStore := NewPolyTxMapStore(db.(*MySqlDB), nil)
-	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
-	var value []byte
-	var has bool
-	//var err error
-
-	// Test getting an empty key.
-	value, err = smt.Get([]byte("testKey"))
-	if err != nil {
-		t.Errorf("returned error when getting empty key: %v", err)
-	}
-	if !bytes.Equal(SmtDefaultValue, value) {
-		t.Error("did not get default value when getting empty key")
-	}
-	has, err = smt.Has([]byte("testKey"))
-	if err != nil {
-		t.Errorf("returned error when checking presence of empty key: %v", err)
-	}
-	if has {
-		t.Error("did not get 'false' when checking presence of empty key")
-	}
-
-	// Test updating the empty key.
-	_, err = smt.Update([]byte("testKey"), PolyTxExistsValue)
-	if err != nil {
-		t.Errorf("returned error when updating empty key: %v", err)
-	}
-	value, err = smt.Get([]byte("testKey"))
-	if err != nil {
-		t.Errorf("returned error when getting non-empty key: %v", err)
-	}
-	if !bytes.Equal(PolyTxExistsValue, value) {
-		t.Error("did not get correct value when getting non-empty key")
-	}
-	has, err = smt.Has([]byte("testKey"))
-	if err != nil {
-		t.Errorf("returned error when checking presence of non-empty key: %v", err)
-	}
-	if !has {
-		t.Error("did not get 'true' when checking presence of non-empty key")
-	}
-
-	// Test updating the non-empty key.
-	_, err = smt.Update([]byte("testKey"), PolyTxExistsValue)
-	if err != nil {
-		t.Errorf("returned error when updating non-empty key: %v", err)
-	}
-	value, err = smt.Get([]byte("testKey"))
-	if err != nil {
-		t.Errorf("returned error when getting non-empty key: %v", err)
-	}
-	if !bytes.Equal(PolyTxExistsValue, value) {
-		t.Error("did not get correct value when getting non-empty key")
-	}
-
-	// Test updating a second empty key where the path for both keys share the
-	// first 2 bits (when using SHA256).
-	_, err = smt.Update([]byte("foo"), PolyTxExistsValue)
-	if err != nil {
-		t.Errorf("returned error when updating empty second key: %v", err)
-	}
-	value, err = smt.Get([]byte("foo"))
-	if err != nil {
-		t.Errorf("returned error when getting non-empty second key: %v", err)
-	}
-	if !bytes.Equal(PolyTxExistsValue, value) {
-		t.Error("did not get correct value when getting non-empty second key")
-	}
-
-	// Test updating a third empty key.
-	_, err = smt.Update([]byte("testKey2"), PolyTxExistsValue)
-	if err != nil {
-		t.Errorf("returned error when updating empty third key: %v", err)
-	}
-	value, err = smt.Get([]byte("testKey2"))
-	if err != nil {
-		t.Errorf("returned error when getting non-empty third key: %v", err)
-	}
-	if !bytes.Equal(PolyTxExistsValue, value) {
-		t.Error("did not get correct value when getting non-empty third key")
-	}
-	value, err = smt.Get([]byte("testKey"))
-	if err != nil {
-		t.Errorf("returned error when getting non-empty key: %v", err)
-	}
-	if !bytes.Equal(PolyTxExistsValue, value) {
-		t.Error("did not get correct value when getting non-empty key")
-	}
-
-	// // Test that a tree can be imported from a MapStore.
-	// smt2 := ImportSparseMerkleTree(smn, smv, sha3.New256(), smt.Root())
-	// value, err = smt2.Get([]byte("testKey"))
-	// if err != nil {
-	// 	t.Error("returned error when getting non-empty key")
-	// }
-	// if !bytes.Equal([]byte("testValue2"), value) {
-	// 	t.Error("did not get correct value when getting non-empty key")
-	// }
 }
 
 func addTestPolyTx(db DB, key string) {
@@ -297,7 +195,7 @@ func TestUpdateRoot_1(t *testing.T) {
 	}
 	oldLeafData, _ := hex.DecodeString("0080be6638e99f15d7942bd0130b9118125010293dcc2054fdbf26bf997d0173f42767f15c8af2f2c7225d5273fdd683edc714110a987d1054697c348aed4e6cc7")
 
-	r, err := rsmt.UpdateRoot(path, value, sideNodes, oldLeafData)
+	r, err := rsmt.UpdateRootByPath(path, value, sideNodes, oldLeafData)
 	if err != nil {
 		t.FailNow()
 	}
@@ -316,7 +214,7 @@ func TestUpdateRoot_2(t *testing.T) {
 	}
 	oldLeafData, _ := hex.DecodeString("00c0359bc303b37a066ce3a91aa14628accb3eb5dd6ed2c49c93f7bc60d29c797e2767f15c8af2f2c7225d5273fdd683edc714110a987d1054697c348aed4e6cc7")
 
-	r, err := rsmt.UpdateRoot(path, value, sideNodes, oldLeafData)
+	r, err := rsmt.UpdateRootByPath(path, value, sideNodes, oldLeafData)
 	if err != nil {
 		t.FailNow()
 	}
@@ -339,7 +237,7 @@ func TestUpdateRoot_3(t *testing.T) {
 	// smt_proof_non_membership_leaf_data
 	oldLeafData, _ := hex.DecodeString("00fc5211253bbe9d6e01ce802efe89a7f5521ef8a783d32d8a8affbeecefdfceac2767f15c8af2f2c7225d5273fdd683edc714110a987d1054697c348aed4e6cc7")
 
-	r, err := rsmt.UpdateRoot(path, value, sideNodes, oldLeafData)
+	r, err := rsmt.UpdateRootByPath(path, value, sideNodes, oldLeafData)
 	if err != nil {
 		t.FailNow()
 	}
@@ -350,4 +248,130 @@ func TestEncodeToHexString(t *testing.T) {
 	bs := []byte{231, 247, 209, 177, 47, 153, 243, 39, 95, 238, 82, 26, 174, 189, 241, 177, 204, 7, 220, 127, 151, 241, 17, 232, 76, 249, 26, 100, 158, 208, 195, 210}
 	fmt.Println(hex.EncodeToString(bs))
 	// e7f7d1b12f99f3275fee521aaebdf1b1cc07dc7f97f111e84cf91a649ed0c3d2
+}
+
+func TestSmtBasic(t *testing.T) {
+	var err error
+	// Initialise two new key-value store to store the nodes and values of the tree
+	//nodeStore := smt.NewSimpleMap()
+	nodeStore := smt.NewSimpleMap()  //NewSmtNodeMapStore(db.(*MySqlDB))
+	valueStore := smt.NewSimpleMap() //NewPolyTxMapStore(db.(*MySqlDB), nil)
+	smt := smt.NewSparseMerkleTree(nodeStore, valueStore, New256Hasher())
+	var value []byte
+	var has bool
+	//var err error
+
+	// Test getting an empty key.
+	value, err = smt.Get([]byte("testKey"))
+	if err != nil {
+		t.Errorf("returned error when getting empty key: %v", err)
+	}
+	if !bytes.Equal(SmtDefaultValue, value) {
+		t.Error("did not get default value when getting empty key")
+	}
+	has, err = smt.Has([]byte("testKey"))
+	if err != nil {
+		t.Errorf("returned error when checking presence of empty key: %v", err)
+	}
+	if has {
+		t.Error("did not get 'false' when checking presence of empty key")
+	}
+
+	// Test updating the empty key.
+	_, err = smt.Update([]byte("testKey"), PolyTxExistsValue)
+	if err != nil {
+		t.Errorf("returned error when updating empty key: %v", err)
+	}
+	fmt.Println(hex.EncodeToString(smt.Root()))
+	value, err = smt.Get([]byte("testKey"))
+	if err != nil {
+		t.Errorf("returned error when getting non-empty key: %v", err)
+	}
+	if !bytes.Equal(PolyTxExistsValue, value) {
+		t.Error("did not get correct value when getting non-empty key")
+	}
+	has, err = smt.Has([]byte("testKey"))
+	if err != nil {
+		t.Errorf("returned error when checking presence of non-empty key: %v", err)
+	}
+	if !has {
+		t.Error("did not get 'true' when checking presence of non-empty key")
+	}
+
+	// Test updating the non-empty key.
+	_, err = smt.Update([]byte("testKey"), PolyTxExistsValue)
+	if err != nil {
+		t.Errorf("returned error when updating non-empty key: %v", err)
+	}
+	fmt.Println(hex.EncodeToString(smt.Root()))
+	value, err = smt.Get([]byte("testKey"))
+	if err != nil {
+		t.Errorf("returned error when getting non-empty key: %v", err)
+	}
+	if !bytes.Equal(PolyTxExistsValue, value) {
+		t.Error("did not get correct value when getting non-empty key")
+	}
+
+	// Test updating a second empty key where the path for both keys share the
+	// first 2 bits (when using SHA256).
+	_, err = smt.Update([]byte("foo"), PolyTxExistsValue)
+	fmt.Println(hex.EncodeToString(smt.Root()))
+	if err != nil {
+		t.Errorf("returned error when updating empty second key: %v", err)
+	}
+	value, err = smt.Get([]byte("foo"))
+	if err != nil {
+		t.Errorf("returned error when getting non-empty second key: %v", err)
+	}
+	if !bytes.Equal(PolyTxExistsValue, value) {
+		t.Error("did not get correct value when getting non-empty second key")
+	}
+
+	// Test updating a third empty key.
+	_, err = smt.Update([]byte("testKey2"), PolyTxExistsValue)
+	if err != nil {
+		t.Errorf("returned error when updating empty third key: %v", err)
+	}
+	fmt.Println(hex.EncodeToString(smt.Root()))
+	value, err = smt.Get([]byte("testKey2"))
+	if err != nil {
+		t.Errorf("returned error when getting non-empty third key: %v", err)
+	}
+	if !bytes.Equal(PolyTxExistsValue, value) {
+		t.Error("did not get correct value when getting non-empty third key")
+	}
+	value, err = smt.Get([]byte("testKey"))
+	if err != nil {
+		t.Errorf("returned error when getting non-empty key: %v", err)
+	}
+	if !bytes.Equal(PolyTxExistsValue, value) {
+		t.Error("did not get correct value when getting non-empty key")
+	}
+
+	// // Test that a tree can be imported from a MapStore.
+	// smt2 := ImportSparseMerkleTree(smn, smv, sha3.New256(), smt.Root())
+	// value, err = smt2.Get([]byte("testKey"))
+	// if err != nil {
+	// 	t.Error("returned error when getting non-empty key")
+	// }
+	// if !bytes.Equal([]byte("testValue2"), value) {
+	// 	t.Error("did not get correct value when getting non-empty key")
+	// }
+	_, err = smt.Update([]byte("testKey3"), PolyTxExistsValue)
+	if err != nil {
+		t.Errorf("returned error when updating empty third key: %v", err)
+	}
+	fmt.Println(hex.EncodeToString(smt.Root()))
+
+	_, err = smt.Update([]byte("testKey4"), PolyTxExistsValue)
+	if err != nil {
+		t.Errorf("returned error when updating empty third key: %v", err)
+	}
+	fmt.Println(hex.EncodeToString(smt.Root()))
+
+	_, err = smt.Update([]byte("testKey5"), PolyTxExistsValue)
+	if err != nil {
+		t.Errorf("returned error when updating empty third key: %v", err)
+	}
+	fmt.Println(hex.EncodeToString(smt.Root()))
 }

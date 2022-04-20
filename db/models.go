@@ -329,7 +329,7 @@ func (p *PolyTx) ComputePloyTxInclusionSmtRootHash() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	r, err := rsmt.UpdateRoot(path, value, sideNodes, oldLeafData)
+	r, err := rsmt.UpdateRootByPath(path, value, sideNodes, oldLeafData)
 	if err != nil {
 		return nil, err
 	}
