@@ -1,6 +1,6 @@
 {
   "PolyConfig": {
-    "RestURL": "http://beta1.poly.network:20336",
+    "RestURL": "http://seed1.poly.network:20336",
     "EntranceContractAddress": "0300000000000000000000000000000000000000",
     "WalletFile": "${POLY_WALLET_FILE}",
     "WalletPwd": "${POLY_WALLET_PASSWORD}"
@@ -42,7 +42,7 @@
     }
   },
   "BridgeURLs": [
-    "https://bridge.poly.network/testnet/v1"
+    "https://bridge.poly.network/v1"
   ],
   "BoltDbPath": "${BOLTDB_PATH}",
   "MySqlDSN": "${MYSQL_DSN_TESTNET}",

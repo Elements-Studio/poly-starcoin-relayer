@@ -1097,9 +1097,11 @@ func (this *PolyManager) InitStarcoinGenesis(privateKeyConfig map[string]string,
 	txHash, err := this.starcoinClient.SubmitTransaction(context.Background(), senderPrivateKey, userTx)
 	if err != nil {
 		log.Errorf("InitGenesis - SubmitTransaction error:%s", err.Error())
+		fmt.Printf("InitGenesis - SubmitTransaction error:%s\n", err.Error())
 		return err
 	}
 	log.Debugf("InitGenesis - SubmitTransaction, get hash: %s", txHash)
+	fmt.Printf("InitGenesis - SubmitTransaction, get hash: %s\n", txHash)
 	// wait transaction confirmed?
 	ok, err := tools.WaitTransactionConfirm(*this.starcoinClient, txHash, WAIT_STARCOIN_TRANSACTION_CONFIRM_TIME)
 	if err != nil {
@@ -1134,8 +1136,8 @@ func (this *PolyManager) getPolyLastConfigBlockNumAtHeight(height uint32) (uint3
 	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
 		return 0, fmt.Errorf("readBookKeeperPublicKeyBytes - unmarshal blockInfo error: %s", err.Error())
 	}
-	// fmt.Printf("---------------- LastConfigBlockNum at %d -----------------\n", height)
-	// fmt.Println(blkInfo.LastConfigBlockNum)
+	fmt.Printf("---------------- LastConfigBlockNum at %d -----------------\n", height)
+	fmt.Println(blkInfo.LastConfigBlockNum)
 	return blkInfo.LastConfigBlockNum, nil
 }
 
