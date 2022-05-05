@@ -52,7 +52,7 @@ func TestSetChainId(t *testing.T) {
 	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		t.FailNow()
 	}
 	if !ok {
@@ -75,7 +75,7 @@ func TestInitFeeEventStore(t *testing.T) {
 	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		t.FailNow()
 	}
 	if !ok {
@@ -88,13 +88,16 @@ func TestInitFeeEventStore(t *testing.T) {
 // Before cross from/to ethereum, bind the LockProxy hash first.
 func TestBindEthereumProxyHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManager(t)
 	fmt.Println(polyManager)
 	starcoinClient := polyManager.starcoinClient
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	//privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
 	chainId := uint64(2) // 2 is ethereum ropsten chain id on poly TestNet
 	//proxyHash, err := tools.HexToBytes("0xD8aE73e06552E270340b63A8bcAbf9277a1aac99") // LockProxy Contract Address
-	proxyHash, err := tools.HexToBytes("0xfd40451429251a6dd535c4bb86a7d894409e900f") // LockProxy Contract Address
+	//proxyHash, err := tools.HexToBytes("0xfd40451429251a6dd535c4bb86a7d894409e900f") // LockProxy Contract Address
+	proxyHash, err := tools.HexToBytes("0x3Ee764C95e9d2264DE3717a4CB45BCd3c5F00035") // LockProxy Contract Address
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -105,13 +108,17 @@ func TestBindEthereumProxyHash(t *testing.T) {
 // Test bind or update starcoin LockProxy hash(contract ID).
 func TestBindStarcoinProxyHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManager(t)
 	fmt.Println(polyManager)
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	//privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
 	starcoinClient := polyManager.starcoinClient
-	chainId := uint64(318) //318
+	//chainId := uint64(318) //318
+	chainId := uint64(31) //Mainnet Chain ID!
 	//proxyHash := []byte("0x6c3bc3a6c651e88f5af8a570e661c6af::CrossChainScript") // devnet
-	proxyHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::CrossChainScript")
+	//proxyHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::CrossChainScript") // testnet
+	proxyHash := []byte("0xe52552637c5897a2d499fbf08216f73e::CrossChainScript") // mainnet
 	testBindProxyHash(starcoinClient, privateKeyConfig, polyManager.config, chainId, proxyHash, t)
 }
 
@@ -131,7 +138,7 @@ func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, privateKeyConfi
 	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*starcoinClient, txHash, time.Second*120)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		t.FailNow()
 	}
 	if !ok {
@@ -143,10 +150,12 @@ func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, privateKeyConfi
 
 func TestBindXETHAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	//polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
-	fromAssetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH")          // asset hash on Starcoin
+	//privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
+	fromAssetHash := []byte("0xe52552637c5897a2d499fbf08216f73e::XETH::XETH")          // asset hash on Starcoin
 	toChainId := uint64(2)                                                             // ethereum network
 	toAssetHash, err := tools.HexToBytes("0x0000000000000000000000000000000000000000") // ETH Asset Hash on Ethereum Contract
 	if err != nil {
@@ -163,10 +172,13 @@ func TestPrintXETHAssetHashHex(t *testing.T) {
 
 func TestBindXUSDTAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	//polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManagerIgnoreError()
 	fmt.Println(polyManager)
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
-	fromAssetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT") // asset hash on Starcoin
+	//privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
+	//fromAssetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT") // asset hash on Starcoin
+	fromAssetHash := []byte("0xe52552637c5897a2d499fbf08216f73e::XUSDT::XUSDT") // asset hash on Starcoin
 	toChainId := uint64(2)                                                      // ethereum network
 	//toAssetHash, err := tools.HexToBytes("0xad3f96ae966ad60347f31845b7e4b333104c52fb") // USDT Asset Hash on Ethereum Contract
 	//toAssetHash, err := tools.HexToBytes("0x74E9a2447De2e31C3D8c1f6BAeFBD09ed1162891") // USDT Asset Hash on Ethereum Contract(Ropsten)
@@ -185,12 +197,13 @@ func TestPrintXUSDTAssetHashHex(t *testing.T) {
 
 func TestBindSTCAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	//polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManagerIgnoreError() // Mainnet
 	fmt.Println(polyManager)
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
 	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC") // asset hash on Starcoin
-	toChainId := uint64(318)                                                // a starcoin network
-	toAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")   //support cross-to-self transfer
+	toChainId := uint64(31)                                                 // a starcoin network
+	toAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")   // support cross-to-self transfer
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
 }
 
@@ -201,11 +214,11 @@ func TestPrintSTCAssetHashHex(t *testing.T) {
 
 func TestBindEthereumSTCAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
 	//toAssetHash, _ := tools.HexToBytes("0x6527BC0C4724B51c955E7A4654E2c15464C1851a") // OLD eSTC ERC20 contract address on ethereum
 	//toAssetHash, _ := tools.HexToBytes("0x43e35ba290afe67c295321eeb539ce7756753823") // STC ERC20 contract address on ethereum
 	fmt.Println(polyManager)
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
 	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC") // asset hash on Starcoin
 	toChainId := uint64(2)                                                  // a ethereum network
 	//toAssetHash, _ := tools.HexToBytes("0x2e269dcdebdc5f2068dfb23972ed81ad1b0f9585") // STC ERC20 contract address on ethereum ropsten
@@ -225,7 +238,7 @@ func testBindAssetHash(fromAssetHash []byte, toChainId uint64, toAssetHash []byt
 	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		t.FailNow()
 	}
 	if !ok {
@@ -285,6 +298,8 @@ func TestXUsdtInit(t *testing.T) {
 	}
 }
 
+// //////////////////////////////////
+// todo on Main net!
 func TestSetAdminAccount(t *testing.T) {
 	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
@@ -303,7 +318,7 @@ func TestSetAdminAccount(t *testing.T) {
 	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		t.FailNow()
 	}
 	if !ok {
@@ -331,7 +346,7 @@ func TestSetFeeCollectionAccount(t *testing.T) {
 	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		t.FailNow()
 	}
 	if !ok {
@@ -355,7 +370,7 @@ func TestSetFreeze(t *testing.T) {
 	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		t.FailNow()
 	}
 	if !ok {
