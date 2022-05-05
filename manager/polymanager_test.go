@@ -319,6 +319,30 @@ func getTestNetPolyManagerIgnoreError() *PolyManager {
 	return p
 }
 
+func getMainNetPolyManager(t *testing.T) *PolyManager {
+	config := config.NewServiceConfig("../config-mainnet.json")
+	p, err := getPolyManager(config, false)
+	if err != nil {
+		t.FailNow()
+	}
+	return p
+}
+
+func getMainNetPolyManagerIgnoreError() *PolyManager {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		fmt.Println("Load .env file failed...")
+	}
+	config := config.NewServiceConfig("../config-mainnet.json")
+	//fmt.Println(config.StarcoinConfig.PrivateKeys)
+	p, err := getPolyManager(config, true)
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("============= Ignored above errors ===============")
+	}
+	return p
+}
+
 func getPolyManager(config *config.ServiceConfig, ignoreErr bool) (*PolyManager, error) {
 	fmt.Println(config)
 	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)

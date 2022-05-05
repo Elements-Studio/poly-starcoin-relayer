@@ -20,8 +20,10 @@ func TestInitGenersis(t *testing.T) {
 	// Poly devnet:
 	// http://138.91.6.226:40336
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	polyManager := getMainNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
 	fmt.Println(polyManager)
 	err := polyManager.InitStarcoinGenesis(privateKeyConfig, nil)
 	// var height uint32 = 1319999
@@ -167,7 +169,8 @@ func TestBindXUSDTAssetHash(t *testing.T) {
 	fromAssetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT") // asset hash on Starcoin
 	toChainId := uint64(2)                                                      // ethereum network
 	//toAssetHash, err := tools.HexToBytes("0xad3f96ae966ad60347f31845b7e4b333104c52fb") // USDT Asset Hash on Ethereum Contract
-	toAssetHash, err := tools.HexToBytes("0x74E9a2447De2e31C3D8c1f6BAeFBD09ed1162891") // USDT Asset Hash on Ethereum Contract
+	//toAssetHash, err := tools.HexToBytes("0x74E9a2447De2e31C3D8c1f6BAeFBD09ed1162891") // USDT Asset Hash on Ethereum Contract(Ropsten)
+	toAssetHash, err := tools.HexToBytes("0xdAC17F958D2ee523a2206206994597C13D831ec7") // USDT Asset Hash on Ethereum Contract(Mainnet)
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -203,9 +206,10 @@ func TestBindEthereumSTCAssetHash(t *testing.T) {
 	//toAssetHash, _ := tools.HexToBytes("0x43e35ba290afe67c295321eeb539ce7756753823") // STC ERC20 contract address on ethereum
 	fmt.Println(polyManager)
 	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
-	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")          // asset hash on Starcoin
-	toChainId := uint64(2)                                                           // a ethereum network
-	toAssetHash, _ := tools.HexToBytes("0x2e269dcdebdc5f2068dfb23972ed81ad1b0f9585") // STC ERC20 contract address on ethereum
+	fromAssetHash := []byte("0x00000000000000000000000000000001::STC::STC") // asset hash on Starcoin
+	toChainId := uint64(2)                                                  // a ethereum network
+	//toAssetHash, _ := tools.HexToBytes("0x2e269dcdebdc5f2068dfb23972ed81ad1b0f9585") // STC ERC20 contract address on ethereum ropsten
+	toAssetHash, _ := tools.HexToBytes("0xec8614B0a68786Dc7b452e088a75Cba4F68755b8") // STC ERC20 contract address on ethereum
 
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
 }
@@ -379,6 +383,28 @@ func barnardGenesisAccountAddressAndPrivateKey() (string, string, error) {
 		return "", "", errors.New("Plz. provide account address.")
 	}
 	privateKey := os.Getenv("PRIVATE_KEY_416b320")
+	if privateKey == "" {
+		return "", "", errors.New("Plz. privide private key.")
+	}
+	return account, privateKey, nil
+}
+
+func mainGenesisPrivateKeyConfig() (map[string]string, error) {
+	privateKeyConfig := make(map[string]string)
+	account, privateKey, err := mainGenesisAccountAddressAndPrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	privateKeyConfig[account] = privateKey
+	return privateKeyConfig, nil
+}
+
+func mainGenesisAccountAddressAndPrivateKey() (string, string, error) {
+	account := "0xe52552637c5897a2d499fbf08216f73e"
+	if account == "" {
+		return "", "", errors.New("Plz. provide account address.")
+	}
+	privateKey := os.Getenv("PRIVATE_KEY_e525526")
 	if privateKey == "" {
 		return "", "", errors.New("Plz. privide private key.")
 	}

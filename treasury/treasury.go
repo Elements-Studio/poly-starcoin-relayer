@@ -10,15 +10,19 @@ var (
 func init() {
 	e := map[string]*big.Int{
 		"0x0000000000000000000000000000000000000000": big.NewInt(1_000_000_000_000_000_000), // ETH
-		"0x2e269dcdebdc5f2068dfb23972ed81ad1b0f9585": big.NewInt(1_000_000_000),             // pSTC
-		"0x74E9a2447De2e31C3D8c1f6BAeFBD09ed1162891": big.NewInt(1_000_000),                 // USDT
+		"0x2e269dcdebdc5f2068dfb23972ed81ad1b0f9585": big.NewInt(1_000_000_000),             // pSTC on Ropsten
+		"0xec8614B0a68786Dc7b452e088a75Cba4F68755b8": big.NewInt(1_000_000_000),             // pSTC on Mainnet
+		"0x74E9a2447De2e31C3D8c1f6BAeFBD09ed1162891": big.NewInt(1_000_000),                 // USDT on Ropsten
+		"0xdAC17F958D2ee523a2206206994597C13D831ec7": big.NewInt(1_000_000),                 // USDT on Mainnet
 	}
 	EthereumTokenScalingFactorMap = e
 
 	s := map[string]*big.Int{
-		"0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH":   big.NewInt(1_000_000_000_000_000_000),
 		"0x00000000000000000000000000000001::STC::STC":     big.NewInt(1_000_000_000),
-		"0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT": big.NewInt(1_000_000),
+		"0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH":   big.NewInt(1_000_000_000_000_000_000), // ETH on Barnard
+		"0xe52552637c5897a2d499fbf08216f73e::XETH::XETH":   big.NewInt(1_000_000_000_000_000_000), // ETH on Barnard
+		"0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT": big.NewInt(1_000_000),                 // USDT on Barnard
+		"0xe52552637c5897a2d499fbf08216f73e::XUSDT::XUSDT": big.NewInt(1_000_000),                 // USDT on Barnard
 	}
 	StarcoinTokenScalingFactorMap = s
 }

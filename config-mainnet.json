@@ -1,0 +1,126 @@
+{
+  "PolyConfig": {
+    "RestURL": "http://beta1.poly.network:20336",
+    "EntranceContractAddress": "0300000000000000000000000000000000000000",
+    "WalletFile": "${POLY_WALLET_FILE}",
+    "WalletPwd": "${POLY_WALLET_PASSWORD}"
+  },
+  "StarcoinConfig": {
+    "SideChainId": 31,
+    "RestURL": "https://main-seed.starcoin.org",
+    "ChainId": 1,
+    "CCScriptModule": "0xe52552637c5897a2d499fbf08216f73e::CrossChainScript",
+    "CCMModule": "0xe52552637c5897a2d499fbf08216f73e::CrossChainScript",
+    "CCDModule": "0xe52552637c5897a2d499fbf08216f73e::CrossChainScript",
+    "CrossChainEventAddress": "0xe52552637c5897a2d499fbf08216f73e",
+    "CrossChainEventTypeTag": "0xe52552637c5897a2d499fbf08216f73e::CrossChainManager::CrossChainEvent",
+    "CCSMTRootResourceType": "0xe52552637c5897a2d499fbf08216f73e::CrossChainData::SparseMerkleTreeRoot",
+    "GenesisAccountAddress": "0xe52552637c5897a2d499fbf08216f73e",
+    "PrivateKeys": [
+      {
+        "0xb6D69DD935EDf7f2054acF12eb884df8": "${PRIVATE_KEY_b6d69dd}"
+      }
+    ],
+    "BlockConfirmations": 6,
+    "HeadersPerBatch": 50,
+    "MonitorInterval": 1,
+    "MaxGasAmount": 40000000,
+    "GasSubsidyConfig": {
+      "FromChainIds": [
+        2
+      ],
+      "FromChains": {
+        "2": {
+          "SubsidyAmount": 10000000
+        }
+      },
+      "SenderPrivateKeys": [
+        {
+          "0x18351D311d32201149a4DF2A9fC2db8a": "${PRIVATE_KEY_18351d3}"
+        }
+      ]
+    }
+  },
+  "BridgeURLs": [
+    "https://bridge.poly.network/testnet/v1"
+  ],
+  "BoltDbPath": "${BOLTDB_PATH}",
+  "MySqlDSN": "${MYSQL_DSN_TESTNET}",
+  "RoutineNum": 64,
+  "CheckFee": true,
+  "ProxyOrAssetContracts": [
+    {
+      "0xe52552637c5897a2d499fbf08216f73e::CrossChainScript": {
+        "outbound": [
+          1,
+          2,
+          31
+        ],
+        "inbound": [
+          2,
+          31
+        ]
+      }
+    }
+  ],
+  "TreasuriesConfig": {
+    "TokenBasicIds": [
+      "STC",
+      "ETH",
+      "USDT"
+    ],
+    "Treasuries": {
+      "Starcoin": {
+        "TreasuryType": "STARCOIN",
+        "StarcoinConfig": {
+          "AccountAddress": "0xe52552637c5897a2d499fbf08216f73e",
+          "TreasuryTypeTag": "0xe52552637c5897a2d499fbf08216f73e::LockProxy::LockTreasury"
+        },
+        "Tokens": {
+          "STC": {
+            "TokenId": "0x00000000000000000000000000000001::STC::STC",
+            "ScalingFactor": "1000000000",
+            "OpeningBalance": "0"
+          },
+          "ETH": {
+            "TokenId": "0xe52552637c5897a2d499fbf08216f73e::XETH::XETH",
+            "ScalingFactor": "1000000000000000000",
+            "OpeningBalance": "13611294676837538538534984"
+          },
+          "USDT": {
+            "TokenId": "0xe52552637c5897a2d499fbf08216f73e::XUSDT::XUSDT",
+            "ScalingFactor": "1000000",
+            "OpeningBalance": "13611294676837538538534984"
+          }
+        }
+      },
+      "Ethereum": {
+        "TreasuryType": "ETHEREUM",
+        "EthereumConfig": {
+          "LockProxyContractAddress": "0xfd40451429251a6dd535c4bb86a7d894409e900f",
+          "EthereumClientURL": "${ETHEREUM_CLIENT_URL}"
+        },
+        "Tokens": {
+          "STC": {
+            "TokenId": "0xec8614B0a68786Dc7b452e088a75Cba4F68755b8",
+            "ScalingFactor": "1000000000",
+            "OpeningBalance": "5000000000000000000"
+          },
+          "ETH": {
+            "TokenId": "0x0000000000000000000000000000000000000000",
+            "ScalingFactor": "1000000000000000000",
+            "OpeningBalance": "0"
+          },
+          "USDT": {
+            "TokenId": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+            "ScalingFactor": "1000000",
+            "OpeningBalance": "0"
+          }
+        }
+      }
+    },
+    "AlertDiscordWebhookUrl": "${ALERT_DISCORD_WEBHOOK_URL}",
+    "AlertAlarmHeading": "# TEST Poly Bridge ALARM",
+    "AlertNotificationHeading": "# TEST Poly Bridge Notification"
+  }
+}
