@@ -298,13 +298,13 @@ func TestXUsdtInit(t *testing.T) {
 	}
 }
 
-// //////////////////////////////////
-// todo on Main net!
 func TestSetAdminAccount(t *testing.T) {
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
-	fmt.Println(polyManager)
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
-	accountAddress, err := types.ToAccountAddress("0xb6D69DD935EDf7f2054acF12eb884df8")
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManagerIgnoreError()
+	//fmt.Println(polyManager)
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
+	//accountAddress, err := types.ToAccountAddress("0xb6D69DD935EDf7f2054acF12eb884df8")
+	accountAddress, err := types.ToAccountAddress("0xa7cdbbd23a489acac81b07fdecbacc25") // mainnet relaying account
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()

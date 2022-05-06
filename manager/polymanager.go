@@ -131,29 +131,32 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 		bridgeSdk:      bridgeSdk,
 	}
 
-	ok := mgr.init()
+	ok, err := mgr.init()
 	if !ok {
 		log.Errorf("NewPolyManager - init failed\n")
 		return nil, fmt.Errorf("NewPolyManager - init failed")
+	} else if err != nil {
+		log.Errorf("NewPolyManager - init ok, but something error: %v\n", err)
 	}
 	return mgr, nil
 }
 
-func (this *PolyManager) init() bool {
+func (this *PolyManager) init() (bool, error) {
+	var err error
 	if this.currentHeight > 0 {
 		log.Infof("PolyManager init - start height from flag: %d", this.currentHeight)
-		return true
+		return true, nil
 	}
-	this.currentHeight, _ = this.db.GetPolyHeight() // TODO: ignore db error???
+	this.currentHeight, err = this.db.GetPolyHeight() // TODO: ignore DB error?
 	curEpochStart := this.findCurEpochStartHeight()
 	if curEpochStart > this.currentHeight {
 		this.currentHeight = curEpochStart
 		log.Infof("PolyManager init - latest height from CCD: %d", this.currentHeight)
-		return true
+		return true, err
 	}
 	log.Infof("PolyManager init - latest height from DB: %d", this.currentHeight)
 
-	return true
+	return true, err
 }
 
 func (this *PolyManager) MonitorChain() {
