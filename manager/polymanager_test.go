@@ -366,7 +366,7 @@ func getPolyManager(config *config.ServiceConfig, ignoreErr bool) (*PolyManager,
 		if db != nil {
 			polyManager, err = NewPolyManager(config, 0, polySdk, &starcoinClient, db)
 		} else {
-			fmt.Println("DB is null, ignored.")
+			fmt.Println("DB is nil, ignored.")
 		}
 	}
 

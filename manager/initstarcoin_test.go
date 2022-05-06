@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -328,11 +329,15 @@ func TestSetAdminAccount(t *testing.T) {
 	}
 }
 
+// //////////////////////////////////
+// todo on MainNet!
 func TestSetFeeCollectionAccount(t *testing.T) {
-	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManager(t)
 	fmt.Println(polyManager)
-	privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
-	accountAddress, err := types.ToAccountAddress("0x7F7C0C04E447CaFfc7a526Ef1bF8D549")
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
+	//accountAddress, err := types.ToAccountAddress("0x7F7C0C04E447CaFfc7a526Ef1bF8D549")
+	accountAddress, err := types.ToAccountAddress("0x7F7C0C04E447CaFfc7a526Ef1bF8D549") // mainnet account
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -424,4 +429,26 @@ func mainGenesisAccountAddressAndPrivateKey() (string, string, error) {
 		return "", "", errors.New("Plz. privide private key.")
 	}
 	return account, privateKey, nil
+}
+
+func TestPrintArgs(t *testing.T) {
+	a := "0xe52552637c5897a2d499fbf08216f73e::CrossChainScript"
+	b := hex.EncodeToString([]byte(a))
+	fmt.Println("Starcoin LockProxy:")
+	fmt.Println("0x" + b)
+
+	a = "0x00000000000000000000000000000001::STC::STC"
+	b = hex.EncodeToString([]byte(a))
+	fmt.Println("Starcoin token STC:")
+	fmt.Println("0x" + b)
+
+	a = "0xe52552637c5897a2d499fbf08216f73e::XETH::XETH"
+	b = hex.EncodeToString([]byte(a))
+	fmt.Println("Starcoin token XETH:")
+	fmt.Println("0x" + b)
+
+	a = "0xe52552637c5897a2d499fbf08216f73e::XUSDT::XUSDT"
+	b = hex.EncodeToString([]byte(a))
+	fmt.Println("Starcoin token XUSDT:")
+	fmt.Println("0x" + b)
 }
