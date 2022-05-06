@@ -100,7 +100,7 @@
         "TreasuryType": "ETHEREUM",
         "EthereumConfig": {
           "LockProxyContractAddress": "0xfd40451429251a6dd535c4bb86a7d894409e900f",
-          "EthereumClientURL": "${ETHEREUM_CLIENT_URL}"
+          "EthereumClientURL": "${ETHEREUM_CLIENT_URL_ROPSTEN}"
         },
         "Tokens": {
           "STC": {

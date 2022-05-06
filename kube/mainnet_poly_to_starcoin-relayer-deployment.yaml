@@ -1,55 +1,55 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: testnet-poly-to-starcoin-relayer-deployment
+  name: mainnet-poly-to-starcoin-relayer-deployment
   labels:
-    app: testnet-poly-to-starcoin-relayer
+    app: mainnet-poly-to-starcoin-relayer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: testnet-poly-to-starcoin-relayer
+      app: mainnet-poly-to-starcoin-relayer
   template:
     metadata:
       labels:
-        app: testnet-poly-to-starcoin-relayer
+        app: mainnet-poly-to-starcoin-relayer
     spec:
       containers:
-        - name: testnet-poly-to-starcoin-relayer
+        - name: mainnet-poly-to-starcoin-relayer
           image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-4b61560
           ports:
             - containerPort: 8600
           env:
             - name: TO_POLY_DISABLED
               value: "true"
-            - name: MYSQL_DSN_TESTNET
+            - name: MYSQL_DSN_MAINNET
               valueFrom:
                 secretKeyRef:
-                  name: poly-starcoin-relayer-testnet-sercets
-                  key: MYSQL_DSN_TESTNET
+                  name: poly-starcoin-relayer-mainnet-sercets
+                  key: MYSQL_DSN_MAINNET
             - name: PRIVATE_KEY_b6d69dd
               valueFrom:
                 secretKeyRef:
-                  name: poly-starcoin-relayer-testnet-sercets
+                  name: poly-starcoin-relayer-mainnet-sercets
                   key: PRIVATE_KEY_b6d69dd
             - name: PRIVATE_KEY_18351d3
               valueFrom:
                 secretKeyRef:
-                  name: poly-starcoin-relayer-testnet-sercets
+                  name: poly-starcoin-relayer-mainnet-sercets
                   key: PRIVATE_KEY_18351d3
             - name: POLY_WALLET_PASSWORD
               value: "123456"
             - name: POLY_WALLET_FILE
               value: "/etc/polynetwork/poly/wallet.dat"
-            - name: ETHEREUM_CLIENT_URL_ROPSTEN
+            - name: ETHEREUM_CLIENT_URL_MAINNET
               valueFrom:
                 secretKeyRef:
-                  name: poly-starcoin-relayer-testnet-sercets
+                  name: poly-starcoin-relayer-mainnet-sercets
                   key: ETHEREUM_CLIENT_URL
             - name: ALERT_DISCORD_WEBHOOK_URL
               valueFrom:
                 secretKeyRef:
-                  name: poly-starcoin-relayer-testnet-sercets
+                  name: poly-starcoin-relayer-mainnet-sercets
                   key: ALERT_DISCORD_WEBHOOK_URL
           volumeMounts:
             - name: poly-wallet-file
@@ -59,7 +59,7 @@ spec:
       volumes:
         - name: poly-wallet-file
           secret:
-            secretName: poly-starcoin-relayer-testnet-sercets
+            secretName: poly-starcoin-relayer-mainnet-sercets
             items:
               - key: POLY_WALLET_JSON
                 path: "poly/wallet.dat"
