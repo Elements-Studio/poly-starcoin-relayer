@@ -450,8 +450,9 @@ func TestGetBlockHeaderAndBlockInfoByNumber(t *testing.T) {
 	//starcoinManager := getTestStarcoinManager(t)
 	//var height uint64 = 291946
 	//starcoinClient := getDevNetStarcoinClient() // Poly DevNet / Starcoin Halley
-	starcoinClient := getTestNetStarcoinClient() // Poly TestNet / Starcoin Barnard
-	height := getStarcoinHeight(t, &starcoinClient)
+	//starcoinClient := getTestNetStarcoinClient() // Poly TestNet / Starcoin Barnard
+	starcoinClient := getMainNetStarcoinClient() // Poly MainNet / Starcoin Main
+	height := getStarcoinHeight(t, &starcoinClient) - 72
 	h, err := starcoinClient.GetBlockHeaderAndBlockInfoByNumber(context.Background(), height)
 	if err != nil {
 		fmt.Println(err)
@@ -555,6 +556,13 @@ func getDevNetStarcoinClient() stcclient.StarcoinClient {
 
 func getTestNetStarcoinClient() stcclient.StarcoinClient {
 	config := config.NewServiceConfig("../config-testnet.json")
+	fmt.Println(config)
+	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
+	return starcoinClient
+}
+
+func getMainNetStarcoinClient() stcclient.StarcoinClient {
+	config := config.NewServiceConfig("../config-mainnet.json")
 	fmt.Println(config)
 	starcoinClient := stcclient.NewStarcoinClient(config.StarcoinConfig.RestURL)
 	return starcoinClient
