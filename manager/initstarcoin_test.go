@@ -329,15 +329,13 @@ func TestSetAdminAccount(t *testing.T) {
 	}
 }
 
-// //////////////////////////////////
-// todo on MainNet!
 func TestSetFeeCollectionAccount(t *testing.T) {
 	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	polyManager := getMainNetPolyManager(t)
 	fmt.Println(polyManager)
 	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
 	//accountAddress, err := types.ToAccountAddress("0x7F7C0C04E447CaFfc7a526Ef1bF8D549")
-	accountAddress, err := types.ToAccountAddress("0x7F7C0C04E447CaFfc7a526Ef1bF8D549") // mainnet account
+	accountAddress, err := types.ToAccountAddress("0x2d2E2B9AE7954EeC4672e34Fcb5d283a") // mainnet account
 	if err != nil {
 		fmt.Println(err)
 		t.FailNow()
@@ -361,6 +359,10 @@ func TestSetFeeCollectionAccount(t *testing.T) {
 	}
 }
 
+// ///////////////////////// Test Init Starcoin Contracts END ///////////////////////////
+
+// //////////////////////////////////
+//  carefully do on MainNet!
 func TestSetFreeze(t *testing.T) {
 	polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 	fmt.Println(polyManager)
@@ -385,7 +387,7 @@ func TestSetFreeze(t *testing.T) {
 	}
 }
 
-// ///////////////////////// Test Init Starcoin Contracts END ///////////////////////////
+// ///////////////////////// config ///////////////////////////
 
 func barnardGenesisPrivateKeyConfig() (map[string]string, error) {
 	privateKeyConfig := make(map[string]string)
