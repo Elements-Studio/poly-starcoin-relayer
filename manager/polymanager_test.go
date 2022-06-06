@@ -31,18 +31,20 @@ func TestLockSTC(t *testing.T) {
 
 func TestLockSTCWithSTCFee(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	//polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	polyManager := getMainNetPolyManagerIgnoreError() // Poly Mainnet / Starcoin Main
 	fmt.Println(polyManager)
+	//var to_chain_id uint64 = 318                                            // 318 is Starcoin ChainId in Poly TestNet
 	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
-	var to_chain_id uint64 = 318                                              // 318
-	to_address, _ := tools.HexToBytes("0x4afb6a3ED1e2ff212586fc6BcDb8DdAF")   //("0x416b32009fe49fcab1d5f2ba0153838f")
+	var to_chain_id uint64 = 31                                               // 318 is Starcoin ChainId in Poly MainNet
+	to_address, _ := tools.HexToBytes("0x07fa08a855753f0Ff7292fdCbE871216")   // a test To-Address //("0x416b32009fe49fcab1d5f2ba0153838f")
 	amount := serde.Uint128{
 		High: 0,
-		Low:  10000000,
+		Low:  500000000,
 	}
 	fee := serde.Uint128{
 		High: 0,
-		Low:  5000000,
+		Low:  50000000,
 	}
 	id := serde.Uint128{
 		High: 0,
