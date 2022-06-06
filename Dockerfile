@@ -42,4 +42,4 @@ RUN mkdir /data/poly-starcoin-relayer/db-mainnet
 RUN ls -la /data/poly-starcoin-relayer
 
 # ENTRYPOINT ["/data/poly-starcoin-relayer/entrypoint.sh"]
-ENTRYPOINT ["/data/poly-starcoin-relayer/poly-starcoin-relayer_linux_amd64", "--cliconfig", "/data/poly-starcoin-relayer/config-mainnet.json"]
+ENTRYPOINT ["/data/poly-starcoin-relayer/poly-starcoin-relayer_linux_amd64", "--cliconfig", "/data/poly-starcoin-relayer/config-mainnet.json", "--poly", "20263945"]
