@@ -43,6 +43,8 @@ type BoltDB struct {
 	filePath string
 }
 
+var _ DB = &BoltDB{}
+
 func NewBoltDB(filePath string) (*BoltDB, error) {
 	if !strings.Contains(filePath, ".bin") {
 		filePath = path.Join(filePath, "bolt.bin")

@@ -214,7 +214,7 @@ func TestSendPolyTxToStarcoin(t *testing.T) {
 	}
 }
 
-func TestGetPolyCurrentBlockHeight(t *testing.T) {
+func TestGetDevNetPolyCurrentBlockHeight(t *testing.T) {
 	polyManager := getDevNetPolyManager(t)
 	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
 

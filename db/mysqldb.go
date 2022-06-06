@@ -35,6 +35,8 @@ type MySqlDB struct {
 	db *gorm.DB
 }
 
+var _ DB = &MySqlDB{}
+
 func NewMySqlDB(dsn string) (*MySqlDB, error) {
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{

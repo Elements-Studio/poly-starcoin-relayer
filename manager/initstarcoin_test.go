@@ -412,6 +412,17 @@ func mainGenesisAccountAddressAndPrivateKey() (string, string, error) {
 	return account, privateKey, nil
 }
 
+// ////////////////// Print Arguments ////////////////////
+
+func TestGetMainNetPolyCurrentBlockHeight(t *testing.T) {
+	polyManager := getMainNetPolyManagerIgnoreError()
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+
+	fmt.Println(polyManager)
+	h, err := polyManager.polySdk.GetCurrentBlockHeight()
+	fmt.Println(h, err)
+}
+
 func TestPrintArgs(t *testing.T) {
 	a := "0xe52552637c5897a2d499fbf08216f73e::CrossChainScript"
 	b := hex.EncodeToString([]byte(a))
