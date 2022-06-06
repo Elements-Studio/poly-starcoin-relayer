@@ -123,12 +123,6 @@ func TestBindStarcoinProxyHash(t *testing.T) {
 	testBindProxyHash(starcoinClient, privateKeyConfig, polyManager.config, chainId, proxyHash, t)
 }
 
-func TestPrintStarcoinProxyHashHex(t *testing.T) {
-	// https://codebeautify.org/string-hex-converter
-	proxyHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::CrossChainScript")
-	fmt.Println(tools.EncodeToHex(proxyHash))
-}
-
 func testBindProxyHash(starcoinClient *stcclient.StarcoinClient, privateKeyConfig map[string]string, config *config.ServiceConfig, chainId uint64, proxyHash []byte, t *testing.T) {
 	txPayload := stcpoly.EncodeBindProxyHashTxPayload(config.StarcoinConfig.CCScriptModule, chainId, proxyHash)
 	txHash, err := submitStarcoinTransaction(starcoinClient, privateKeyConfig, &txPayload)
@@ -166,11 +160,6 @@ func TestBindXETHAssetHash(t *testing.T) {
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
 }
 
-func TestPrintXETHAssetHashHex(t *testing.T) {
-	assetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH")
-	fmt.Println(tools.EncodeToHex(assetHash))
-}
-
 func TestBindXUSDTAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	//polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
@@ -191,11 +180,6 @@ func TestBindXUSDTAssetHash(t *testing.T) {
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
 }
 
-func TestPrintXUSDTAssetHashHex(t *testing.T) {
-	assetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT")
-	fmt.Println(tools.EncodeToHex(assetHash))
-}
-
 func TestBindSTCAssetHash(t *testing.T) {
 	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
 	//polyManager := getTestNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
@@ -206,11 +190,6 @@ func TestBindSTCAssetHash(t *testing.T) {
 	toChainId := uint64(31)                                                 // a starcoin network
 	toAssetHash := []byte("0x00000000000000000000000000000001::STC::STC")   // support cross-to-self transfer
 	testBindAssetHash(fromAssetHash, toChainId, toAssetHash, polyManager, privateKeyConfig, t)
-}
-
-func TestPrintSTCAssetHashHex(t *testing.T) {
-	assetHash := []byte("0x00000000000000000000000000000001::STC::STC")
-	fmt.Println(tools.EncodeToHex(assetHash))
 }
 
 func TestBindEthereumSTCAssetHash(t *testing.T) {
@@ -438,19 +417,43 @@ func TestPrintArgs(t *testing.T) {
 	b := hex.EncodeToString([]byte(a))
 	fmt.Println("Starcoin LockProxy:")
 	fmt.Println("0x" + b)
+	fmt.Println("- hex of string bytes: " + a)
 
 	a = "0x00000000000000000000000000000001::STC::STC"
 	b = hex.EncodeToString([]byte(a))
 	fmt.Println("Starcoin token STC:")
 	fmt.Println("0x" + b)
+	fmt.Println("- hex of string bytes: " + a)
 
 	a = "0xe52552637c5897a2d499fbf08216f73e::XETH::XETH"
 	b = hex.EncodeToString([]byte(a))
 	fmt.Println("Starcoin token XETH:")
 	fmt.Println("0x" + b)
+	fmt.Println("- hex of string bytes: " + a)
 
 	a = "0xe52552637c5897a2d499fbf08216f73e::XUSDT::XUSDT"
 	b = hex.EncodeToString([]byte(a))
 	fmt.Println("Starcoin token XUSDT:")
 	fmt.Println("0x" + b)
+	fmt.Println("- hex of string bytes: " + a)
+}
+
+func TestPrintStarcoinProxyHashHex(t *testing.T) {
+	// https://codebeautify.org/string-hex-converter
+	proxyHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::CrossChainScript")
+	fmt.Println(tools.EncodeToHex(proxyHash))
+}
+
+func TestPrintXETHAssetHashHex(t *testing.T) {
+	assetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH")
+	fmt.Println(tools.EncodeToHex(assetHash))
+}
+func TestPrintXUSDTAssetHashHex(t *testing.T) {
+	assetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT")
+	fmt.Println(tools.EncodeToHex(assetHash))
+}
+
+func TestPrintSTCAssetHashHex(t *testing.T) {
+	assetHash := []byte("0x00000000000000000000000000000001::STC::STC")
+	fmt.Println(tools.EncodeToHex(assetHash))
 }
