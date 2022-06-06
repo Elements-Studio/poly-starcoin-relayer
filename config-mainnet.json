@@ -45,7 +45,7 @@
     "https://bridge.poly.network/v1"
   ],
   "BoltDbPath": "${BOLTDB_PATH}",
-  "MySqlDSN": "${MYSQL_DSN_TESTNET}",
+  "MySqlDSN": "${MYSQL_DSN_MAINNET}",
   "RoutineNum": 64,
   "CheckFee": true,
   "ProxyOrAssetContracts": [
