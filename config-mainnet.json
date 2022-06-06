@@ -85,7 +85,7 @@
           "ETH": {
             "TokenId": "0xe52552637c5897a2d499fbf08216f73e::XETH::XETH",
             "ScalingFactor": "1000000000000000000",
-            "OpeningBalance": "2013611294676837538538534984"
+            "OpeningBalance": "3013611294676837538538534984"
           },
           "USDT": {
             "TokenId": "0xe52552637c5897a2d499fbf08216f73e::XUSDT::XUSDT",
