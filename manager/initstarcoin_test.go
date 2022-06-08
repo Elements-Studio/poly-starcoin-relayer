@@ -11,6 +11,7 @@ import (
 	"github.com/elements-studio/poly-starcoin-relayer/config"
 	stcpoly "github.com/elements-studio/poly-starcoin-relayer/starcoin/poly"
 	"github.com/elements-studio/poly-starcoin-relayer/tools"
+	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
 	"github.com/starcoinorg/starcoin-go/types"
 )
@@ -34,6 +35,39 @@ func TestInitGenersis(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println("Init poly genesis ok.")
+}
+
+func TestMove_STC_balance_to_lock_treasury(t *testing.T) {
+	// Poly devnet:
+	// http://138.91.6.226:40336
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	polyManager := getMainNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
+	fmt.Println(polyManager)
+	function := "move_stc_balance_to_lock_treasury"
+	amount := serde.Uint128{
+		High: 0,
+		Low:  500000000,
+	}
+	txPayload := stcpoly.EncodeU128TxPaylaod(polyManager.config.StarcoinConfig.CCScriptModule, function, amount)
+	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, privateKeyConfig, &txPayload)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
 }
 
 // Test set or update ChainID on poly network.

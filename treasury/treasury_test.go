@@ -34,7 +34,7 @@ func TestEthereumTreasuryGetBalanceFor(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Print(token)
+	fmt.Println(token)
 	fmt.Println(b.String())
 
 	tr.SetOpeningBalanceFor(token, openingBalance)
@@ -47,6 +47,25 @@ func TestEthereumTreasuryGetBalanceFor(t *testing.T) {
 	fmt.Println("Locked(negative means Unlocked) amount:")
 	fmt.Println(lockAmount)
 	fmt.Println(ScaleAmountFor(tr, token, lockAmount))
+}
+
+func TestMainNetStarcoinTreasuryGetBalanceForSTC(t *testing.T) {
+	var tr Treasury = getMainStarcoinTreasury(t)
+	stcToken := "0x00000000000000000000000000000001::STC::STC"
+	//xethToken := "0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH"
+	//xusdtToken := "0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT"
+	//openingBalance := big.NewInt(0)
+	//openingBalance := test_xeth_mint_amount
+	//openingBalance := test_xusdt_mint_amount
+	token := stcToken
+	//token := xusdtToken
+	b, err := tr.GetBalanceFor(token)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(token)
+	fmt.Println(b.String())
 }
 
 func TestStarcoinTreasuryGetBalanceFor(t *testing.T) {
@@ -64,7 +83,7 @@ func TestStarcoinTreasuryGetBalanceFor(t *testing.T) {
 		fmt.Println(err)
 		t.FailNow()
 	}
-	fmt.Print(token)
+	fmt.Println(token)
 	fmt.Println(b.String())
 
 	tr.SetOpeningBalanceFor(token, openingBalance)
@@ -87,6 +106,19 @@ func getTestStarcoinTreasury(t *testing.T) *StarcoinTreasury {
 	tr := NewStarcoinStarcoinTreasury(
 		accountAddress,
 		"0x416b32009fe49fcab1d5f2ba0153838f::LockProxy::LockTreasury",
+		&starcoinClient,
+	)
+	tr.SetScalingFactorMap(StarcoinTokenScalingFactorMap)
+	return tr
+}
+
+func getMainStarcoinTreasury(t *testing.T) *StarcoinTreasury {
+	clientUrl := "https://main-seed.starcoin.org"
+	starcoinClient := stcclient.NewStarcoinClient(clientUrl)
+	accountAddress := "0xe52552637c5897a2d499fbf08216f73e"
+	tr := NewStarcoinStarcoinTreasury(
+		accountAddress,
+		"0xe52552637c5897a2d499fbf08216f73e::LockProxy::LockTreasury",
 		&starcoinClient,
 	)
 	tr.SetScalingFactorMap(StarcoinTokenScalingFactorMap)
