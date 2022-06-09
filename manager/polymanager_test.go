@@ -37,7 +37,7 @@ func TestLockSTCWithSTCFee(t *testing.T) {
 	//var to_chain_id uint64 = 318                                            // 318 is Starcoin ChainId in Poly TestNet
 	from_asset_hash := []byte("0x00000000000000000000000000000001::STC::STC") // STC
 	var to_chain_id uint64 = 31                                               // 318 is Starcoin ChainId in Poly MainNet
-	to_address, _ := tools.HexToBytes("0x07fa08a855753f0Ff7292fdCbE871216")   // a test To-Address //("0x416b32009fe49fcab1d5f2ba0153838f")
+	to_address, _ := tools.HexToBytes("0xcCF1ADEdf0Ba6f9BdB9A6905173A5d72")   // a test To-Address //("0x416b32009fe49fcab1d5f2ba0153838f")
 	amount := serde.Uint128{
 		High: 0,
 		Low:  500000000,

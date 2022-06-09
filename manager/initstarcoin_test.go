@@ -37,39 +37,6 @@ func TestInitGenersis(t *testing.T) {
 	fmt.Println("Init poly genesis ok.")
 }
 
-func TestMove_STC_balance_to_lock_treasury(t *testing.T) {
-	// Poly devnet:
-	// http://138.91.6.226:40336
-	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
-	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
-	//privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
-	polyManager := getMainNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
-	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
-	fmt.Println(polyManager)
-	function := "move_stc_balance_to_lock_treasury"
-	amount := serde.Uint128{
-		High: 0,
-		Low:  500000000,
-	}
-	txPayload := stcpoly.EncodeU128TxPaylaod(polyManager.config.StarcoinConfig.CCScriptModule, function, amount)
-	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, privateKeyConfig, &txPayload)
-	if err != nil {
-		fmt.Println(err)
-		t.FailNow()
-	}
-	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
-	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
-	if err != nil {
-		fmt.Println(err)
-		t.FailNow()
-	}
-	if !ok {
-		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
-	} else {
-		fmt.Println("WaitTransactionConfirm return OK.")
-	}
-}
-
 // Test set or update ChainID on poly network.
 func TestSetChainId(t *testing.T) {
 	polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
@@ -372,6 +339,70 @@ func TestSetFeeCollectionAccount(t *testing.T) {
 	}
 }
 
+// ////////////////// bugs fix methods! /////////////////////
+
+func TestMove_STC_balance_to_lock_treasury(t *testing.T) {
+	// Poly devnet:
+	// http://138.91.6.226:40336
+	//polyManager := getDevNetPolyManager(t) // Poly DevNet / Starcoin Halley
+	//polyManager := getTestNetPolyManager(t) // Poly TestNet / Starcoin Barnard
+	//privateKeyConfig, _ := barnardGenesisPrivateKeyConfig()
+	polyManager := getMainNetPolyManagerIgnoreError() // Poly TestNet / Starcoin Barnard
+	privateKeyConfig, _ := mainGenesisPrivateKeyConfig()
+	fmt.Println(polyManager)
+	function := "move_stc_balance_to_lock_treasury"
+	amount := serde.Uint128{
+		High: 0,
+		Low:  500000000,
+	}
+	txPayload := stcpoly.EncodeU128TxPaylaod(polyManager.config.StarcoinConfig.CCScriptModule, function, amount)
+	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, privateKeyConfig, &txPayload)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
+	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	if !ok {
+		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+	} else {
+		fmt.Println("WaitTransactionConfirm return OK.")
+	}
+}
+
+// func TestWithdraw_from_lock_treasury(t *testing.T) {
+// 	polyManager := getMainNetPolyManagerIgnoreError()                    // Poly TestNet / Starcoin Barnard
+// 	privateKeyConfig := polyManager.config.StarcoinConfig.PrivateKeys[0] // mainGenesisPrivateKeyConfig()
+// 	fmt.Println(polyManager)
+// 	function := "withdraw_from_lock_treasury"
+// 	amount := serde.Uint128{
+// 		High: 0,
+// 		Low:  500000000,
+// 	}
+// 	tokenT, _ := tools.ParseStructTypeTag("0x00000000000000000000000000000001::STC::STC")
+// 	txPayload := stcpoly.EncodeOneTypeArgAndU128TxPaylaod(polyManager.config.StarcoinConfig.CCScriptModule, function, tokenT, amount)
+// 	txHash, err := submitStarcoinTransaction(polyManager.starcoinClient, privateKeyConfig, &txPayload)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		t.FailNow()
+// 	}
+// 	fmt.Println("Waiting Transaction Confirm, transaction hash: " + txHash)
+// 	ok, err := tools.WaitTransactionConfirm(*polyManager.starcoinClient, txHash, time.Second*120)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		t.FailNow()
+// 	}
+// 	if !ok {
+// 		fmt.Printf("WaitTransactionConfirm return, isAllOK?: %v, or else got error?: %v\n", ok, err)
+// 	} else {
+// 		fmt.Println("WaitTransactionConfirm return OK.")
+// 	}
+// }
+
 // ///////////////////////// Test Init Starcoin Contracts END ///////////////////////////
 
 // //////////////////////////////////
@@ -492,7 +523,12 @@ func TestPrintStarcoinProxyHashHex(t *testing.T) {
 func TestPrintXETHAssetHashHex(t *testing.T) {
 	assetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XETH::XETH")
 	fmt.Println(tools.EncodeToHex(assetHash))
+	//bs, _ := tools.HexToBytes("0x2e307865353235353236333763353839376132643439396662663038323136663733653a3a584554483a3a58455448")
+	//fmt.Println(string(bs))
+	//0x2e307865353235353236333763353839376132643439396662663038323136663733653a3a584554483a3a58455448
+	//0x  307865353235353236333763353839376132643439396662663038323136663733653a3a584554483a3a58455448
 }
+
 func TestPrintXUSDTAssetHashHex(t *testing.T) {
 	assetHash := []byte("0x416b32009fe49fcab1d5f2ba0153838f::XUSDT::XUSDT")
 	fmt.Println(tools.EncodeToHex(assetHash))
