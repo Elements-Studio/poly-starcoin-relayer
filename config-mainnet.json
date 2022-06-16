@@ -31,7 +31,7 @@
       ],
       "FromChains": {
         "2": {
-          "SubsidyAmount": 10000000
+          "SubsidyAmount": 150000000000
         }
       },
       "SenderPrivateKeys": [
