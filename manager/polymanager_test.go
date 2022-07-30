@@ -400,3 +400,9 @@ func setUpPoly(poly *polysdk.PolySdk, RpcAddr string) error {
 // 	fmt.Println(s)
 // 	fmt.Println(ok)
 // }
+
+func TestIsToAddressInGasSubsidyBlacklist(t *testing.T) {
+	polyManager := getMainNetPolyManagerIgnoreError()
+	b := polyManager.isToAddressInGasSubsidyBlacklist("a15a7fb5b0fde9b5277a1a5497535b12")
+	fmt.Println("isToAddressInGasSubsidyBlacklist: ", b)
+}

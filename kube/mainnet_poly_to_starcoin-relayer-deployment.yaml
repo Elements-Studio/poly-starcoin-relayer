@@ -51,6 +51,8 @@ spec:
                 secretKeyRef:
                   name: poly-starcoin-relayer-mainnet-sercets
                   key: ALERT_DISCORD_WEBHOOK_URL
+            - name: GAS_SUBSIDY_TO_ADDRESS_BLACKLIST
+              value: "2370df831df9220a9814f484893c97fe,a15a7fb5b0fde9b5277a1a5497535b12"
           volumeMounts:
             - name: poly-wallet-file
               mountPath: "/etc/polynetwork"

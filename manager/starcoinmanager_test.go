@@ -273,6 +273,7 @@ func TestDeserializeCrossChainEvent(t *testing.T) {
 		t.FailNow()
 	}
 	fmt.Println(evt)
+
 	var ev0 types.ContractEventV0
 	switch evt.(type) {
 	case *types.ContractEvent__V0:
@@ -284,6 +285,9 @@ func TestDeserializeCrossChainEvent(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
+	// TypeTagBcs, _ := ev0.TypeTag.BcsSerialize()
+	// println("------------- TypeTag BCS -------------")
+	// println(hex.EncodeToString(TypeTagBcs))
 	fmt.Println(evtData)
 	rawDataSrc := pcommon.NewZeroCopySource(evtData.RawData)
 	txParam := new(common2.MakeTxParam)
@@ -406,8 +410,8 @@ func TestGetBlockHeaderInPolyByHash(t *testing.T) {
 }
 
 func TestGetBlockHeaders(t *testing.T) {
-	//client := getTestStarcoinClient()
-	client := getLocalNodeStarcoinClient()
+	client := getTestNetStarcoinClient()
+	//client := getLocalNodeStarcoinClient()
 	node, err := client.GetNodeInfo(context.Background())
 	if err != nil {
 		t.FailNow()
@@ -417,10 +421,10 @@ func TestGetBlockHeaders(t *testing.T) {
 	//return
 
 	// -------- //222625 ---------
-	var height uint64 = 461665 //461660
+	var height uint64 = 6543075 //5061623 //461665 //461660
 	// "number": "461635", --enable-seed
 	// "number": "461643", --disable-seed
-	blockCount := 30
+	blockCount := 1 //5061622 - 5 = 5061617
 	var hdrs = make([]*stcclient.BlockHeaderWithDifficultyInfo, 0, blockCount)
 	for i := 0; i < blockCount; i++ {
 		h := height - uint64(i)

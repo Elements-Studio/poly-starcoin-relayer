@@ -38,7 +38,8 @@
         {
           "0xda8671ce41ef1cca60a5f67c7bdd2e50": "${PRIVATE_KEY_da8671c}"
         }
-      ]
+      ],
+      "ToAddressBlacklist": "${GAS_SUBSIDY_TO_ADDRESS_BLACKLIST}"
     }
   },
   "BridgeURLs": [

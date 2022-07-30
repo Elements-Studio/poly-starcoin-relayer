@@ -346,6 +346,9 @@ func (this *PolyManager) createGasSubsidies() {
 				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to PolyTxToGasSubsidy: %s", err.Error())
 				continue
 			}
+			if this.isToAddressInGasSubsidyBlacklist(gasSubsidy.ToAddress) {
+				gasSubsidy.SubsidyAmount = 0
+			}
 			err = this.db.PutGasSubsidy(gasSubsidy)
 			if err != nil {
 				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to PutGasSubsidy: %s", err.Error())
@@ -353,6 +356,16 @@ func (this *PolyManager) createGasSubsidies() {
 			}
 		}
 	}
+}
+
+func (this *PolyManager) isToAddressInGasSubsidyBlacklist(addr string) bool {
+	a := strings.Split(this.config.StarcoinConfig.GasSubsidyConfig.ToAddressBlacklist, ",")
+	for _, b := range a {
+		if strings.EqualFold(b, addr) {
+			return true
+		}
+	}
+	return false
 }
 
 func (this *PolyManager) handleFailedGasSubsidy(gasSubsidy *db.GasSubsidy) error {

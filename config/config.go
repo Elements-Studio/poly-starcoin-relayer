@@ -113,9 +113,10 @@ type TreasuryTokenConfig struct {
 }
 
 type GasSubsidyConfig struct {
-	FromChainIds      []int                                // active from(source) chain IDs.
-	FromChains        map[string]GasSubsidyFromChainConfig // from(source) chain configs, key is source chain ID
-	SenderPrivateKeys []map[string]string
+	FromChainIds       []int                                // active from(source) chain IDs.
+	FromChains         map[string]GasSubsidyFromChainConfig // from(source) chain configs, key is source chain ID
+	SenderPrivateKeys  []map[string]string
+	ToAddressBlacklist string
 }
 
 type GasSubsidyFromChainConfig struct {
