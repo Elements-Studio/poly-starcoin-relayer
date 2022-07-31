@@ -299,10 +299,9 @@ func (this *PolyManager) MonitorGasSubsidy() {
 			if err != nil {
 				log.Errorf("PolyManager.MonitorGasSubsidy - failed to GetFirstNotSentGasSubsidy: %s", err.Error())
 			}
-			if notSentGasSubsidy == nil {
-				continue
+			if notSentGasSubsidy != nil {
+				this.handleNotSentGasSubsidy(notSentGasSubsidy) //continue
 			}
-			this.handleNotSentGasSubsidy(notSentGasSubsidy)
 			// ////////////////// handle First timed-out gas subsidy ////////////////
 			timedOutGasSubsidy, err := this.db.GetFirstTimedOutGasSubsidy()
 			if err != nil {
@@ -346,9 +345,20 @@ func (this *PolyManager) createGasSubsidies() {
 				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to PolyTxToGasSubsidy: %s", err.Error())
 				continue
 			}
+			// //////////////////////////////
 			if this.isToAddressInGasSubsidyBlacklist(gasSubsidy.ToAddress) {
 				gasSubsidy.SubsidyAmount = 0
 			}
+			// //////////////////////////////
+			gtOrEqMinAmount, err := this.isGtOrEqSubsidizableMinAssetAmount(gasSubsidy.ToAssetHash, gasSubsidy.UnlockAssetAmount)
+			if err != nil {
+				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to invoke isGtOrEqSubsidizableMinAssetAmount: %s", err.Error())
+				continue
+			}
+			if !gtOrEqMinAmount {
+				gasSubsidy.SubsidyAmount = 0
+			}
+			// //////////////////////////////
 			tooMuch, err := this.isToAddressTooMuchGasSubsidy(gasSubsidy.ToAddress)
 			if err != nil {
 				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to invoke isToAddressTooMuchGasSubsidy: %s", err.Error())
@@ -357,6 +367,7 @@ func (this *PolyManager) createGasSubsidies() {
 			if tooMuch {
 				gasSubsidy.SubsidyAmount = 0
 			}
+			// //////////////////////////////
 			err = this.db.PutGasSubsidy(gasSubsidy)
 			if err != nil {
 				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to PutGasSubsidy: %s", err.Error())
@@ -382,6 +393,14 @@ func (this *PolyManager) isToAddressInGasSubsidyBlacklist(addr string) bool {
 		}
 	}
 	return false
+}
+
+func (this *PolyManager) isGtOrEqSubsidizableMinAssetAmount(assetHash string, amount string) (bool, error) {
+	a, err := strconv.ParseUint(amount, 10, 64)
+	if err != nil {
+		return false, err
+	}
+	return a >= this.config.StarcoinConfig.GasSubsidyConfig.SubsidizableMinAssetAmounts[assetHash], nil
 }
 
 func (this *PolyManager) handleFailedGasSubsidy(gasSubsidy *db.GasSubsidy) error {

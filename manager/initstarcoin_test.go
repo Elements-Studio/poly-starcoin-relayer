@@ -498,19 +498,19 @@ func TestPrintArgs(t *testing.T) {
 	a = "0x00000000000000000000000000000001::STC::STC"
 	b = hex.EncodeToString([]byte(a))
 	fmt.Println("Starcoin token STC:")
-	fmt.Println("0x" + b)
+	fmt.Println("0x" + b) //307830303030303030303030303030303030303030303030303030303030303030313a3a5354433a3a535443
 	fmt.Println("- hex of string bytes: " + a)
 
 	a = "0xe52552637c5897a2d499fbf08216f73e::XETH::XETH"
 	b = hex.EncodeToString([]byte(a))
 	fmt.Println("Starcoin token XETH:")
-	fmt.Println("0x" + b)
+	fmt.Println("0x" + b) //307865353235353236333763353839376132643439396662663038323136663733653a3a584554483a3a58455448
 	fmt.Println("- hex of string bytes: " + a)
 
 	a = "0xe52552637c5897a2d499fbf08216f73e::XUSDT::XUSDT"
 	b = hex.EncodeToString([]byte(a))
 	fmt.Println("Starcoin token XUSDT:")
-	fmt.Println("0x" + b)
+	fmt.Println("0x" + b) //307865353235353236333763353839376132643439396662663038323136663733653a3a58555344543a3a5855534454
 	fmt.Println("- hex of string bytes: " + a)
 }
 

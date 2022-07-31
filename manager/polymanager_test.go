@@ -406,3 +406,10 @@ func TestIsToAddressInGasSubsidyBlacklist(t *testing.T) {
 	b := polyManager.isToAddressInGasSubsidyBlacklist("a15a7fb5b0fde9b5277a1a5497535b12")
 	fmt.Println("isToAddressInGasSubsidyBlacklist: ", b)
 }
+
+func TestIsGtOrEqSubsidizableMinAssetAmount(t *testing.T) {
+	polyManager := getMainNetPolyManagerIgnoreError()
+	//polyManager := getTestNetPolyManagerIgnoreError()
+	b, err := polyManager.isGtOrEqSubsidizableMinAssetAmount("307865353235353236333763353839376132643439396662663038323136663733653a3a584554483a3a58455448", "10000000000000000")
+	fmt.Println(b, err)
+}
