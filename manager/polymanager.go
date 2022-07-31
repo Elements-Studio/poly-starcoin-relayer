@@ -349,6 +349,14 @@ func (this *PolyManager) createGasSubsidies() {
 			if this.isToAddressInGasSubsidyBlacklist(gasSubsidy.ToAddress) {
 				gasSubsidy.SubsidyAmount = 0
 			}
+			tooMuch, err := this.isToAddressTooMuchGasSubsidy(gasSubsidy.ToAddress)
+			if err != nil {
+				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to invoke isToAddressTooMuchGasSubsidy: %s", err.Error())
+				continue
+			}
+			if tooMuch {
+				gasSubsidy.SubsidyAmount = 0
+			}
 			err = this.db.PutGasSubsidy(gasSubsidy)
 			if err != nil {
 				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to PutGasSubsidy: %s", err.Error())
@@ -356,6 +364,14 @@ func (this *PolyManager) createGasSubsidies() {
 			}
 		}
 	}
+}
+
+func (this *PolyManager) isToAddressTooMuchGasSubsidy(addr string) (bool, error) {
+	count, err := this.db.GetGasSubsidyCountByToAddress(addr)
+	if err != nil {
+		return false, err
+	}
+	return count >= 3, nil //this.config.StarcoinConfig.GasSubsidyConfig.MaxGasSubsidyCount, nil
 }
 
 func (this *PolyManager) isToAddressInGasSubsidyBlacklist(addr string) bool {

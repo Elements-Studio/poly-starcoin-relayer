@@ -411,6 +411,16 @@ func TestConcatFromChainIdAndTxHash(t *testing.T) {
 // 	testDB = db
 // }
 
+func TestGetGasSubsidyCountByToAddress(t *testing.T) {
+	db := testNetDB()
+	count, err := db.GetGasSubsidyCountByToAddress("b9f6852f78c3ea433342fc314ebe477e")
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(count)
+}
+
 func devNetDB() DB {
 	config := config.NewServiceConfig("../config-devnet.json")
 	fmt.Println(config)

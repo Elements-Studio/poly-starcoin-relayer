@@ -383,6 +383,10 @@ func (w *BoltDB) SetGasSubsidyStatus(txHash string, fromChainID uint64, oldStatu
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) GetGasSubsidyCountByToAddress(toAddress string) (int64, error) {
+	return -1, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) Close() {
 	w.rwlock.Lock()
 	w.db.Close()

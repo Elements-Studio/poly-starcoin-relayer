@@ -977,6 +977,14 @@ func (w *MySqlDB) SetGasSubsidyStatus(txHash string, fromChainID uint64, oldStat
 	return w.optimisticUpdateGasSubsidy(gasSubsidy, oldStatus, fieldMap)
 }
 
+func (w *MySqlDB) GetGasSubsidyCountByToAddress(toAddress string) (int64, error) {
+	var count int64
+	if err := w.db.Model(&GasSubsidy{}).Where("to_address = ?", toAddress).Count(&count).Error; err != nil {
+		return -1, err
+	}
+	return count, nil
+}
+
 func (w *MySqlDB) optimisticUpdateGasSubsidy(gasSubsidy *GasSubsidy, oldStatus string, fieldMap map[string]interface{}) error {
 	sql := "tx_index = ? and from_chain_id = ? and tx_hash = ? and status = ?"
 	if gasSubsidy.StarcoinTxHash == "" {

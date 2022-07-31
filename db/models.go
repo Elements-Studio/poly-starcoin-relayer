@@ -346,7 +346,7 @@ type GasSubsidy struct {
 	FromChainID          uint64 `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"`
 	TxHash               string `gorm:"size:66;uniqueIndex:uni_fromchainid_txhash"` // TxHash //TxData   string `gorm:"size:5000"`
 	ToAssetHash          string `gorm:"size:1000"`                                  // Unlock arg.: asset hash(Id.)
-	ToAddress            string `gorm:"size:100"`                                   // Unlock arg.: to Starcoin address
+	ToAddress            string `gorm:"size:100;index"`                             // Unlock arg.: to Starcoin address
 	UnlockAssetAmount    string `gorm:"size:100"`                                   // Unlock arg.: unlock asset amount
 	SubsidyAmount        uint64 `gorm:"default:0;NOT NULL"`                         // Subsidy amount in STC
 	Status               string `gorm:"size:20;index"`

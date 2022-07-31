@@ -102,6 +102,8 @@ type DB interface {
 
 	SetGasSubsidyStatus(txHash string, fromChainID uint64, oldStatus string, status string) error
 
+	GetGasSubsidyCountByToAddress(toAddress string) (int64, error)
+
 	Close()
 }
 
