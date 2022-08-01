@@ -413,3 +413,10 @@ func TestIsGtOrEqSubsidizableMinAssetAmount(t *testing.T) {
 	b, err := polyManager.isGtOrEqSubsidizableMinAssetAmount("307865353235353236333763353839376132643439396662663038323136663733653a3a584554483a3a58455448", "10000000000000000")
 	fmt.Println(b, err)
 }
+
+func TestRandomizeSubsidyAmount(t *testing.T) {
+	polyManager := getMainNetPolyManagerIgnoreError()
+	for i := 0; i < 100; i++ {
+		fmt.Println(polyManager.randomizeSubsidyAmount("2") / 1000000000)
+	}
+}

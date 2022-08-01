@@ -340,7 +340,7 @@ func (this *PolyManager) createGasSubsidies() {
 		}
 		for _, polyTx := range polyTxList {
 			fromChainKey := strconv.FormatInt(int64(fromChainId), 10)
-			gasSubsidy, err := PolyTxToGasSubsidy(polyTx, this.config.StarcoinConfig.GasSubsidyConfig.FromChains[fromChainKey].SubsidyAmount)
+			gasSubsidy, err := PolyTxToGasSubsidy(polyTx, this.randomizeSubsidyAmount(fromChainKey))
 			if err != nil {
 				log.Errorf("PolyManager.MonitorPolyTxNotHaveSubsidy - failed to PolyTxToGasSubsidy: %s", err.Error())
 				continue
@@ -375,6 +375,12 @@ func (this *PolyManager) createGasSubsidies() {
 			}
 		}
 	}
+}
+
+func (this *PolyManager) randomizeSubsidyAmount(fromChain string) uint64 {
+	a := this.config.StarcoinConfig.GasSubsidyConfig.FromChains[fromChain].SubsidyAmount
+	rand.Seed(time.Now().UnixNano())
+	return uint64(rand.Int63n(int64(a)/10*9) + int64(a)/10)
 }
 
 func (this *PolyManager) isToAddressTooMuchGasSubsidy(addr string) (bool, error) {
