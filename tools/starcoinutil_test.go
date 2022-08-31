@@ -2,6 +2,8 @@ package tools
 
 import (
 	"context"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/big"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/novifinancial/serde-reflection/serde-generate/runtime/golang/serde"
 	stcclient "github.com/starcoinorg/starcoin-go/client"
+	"github.com/starcoinorg/starcoin-go/types"
 )
 
 func TestWaitTransactionConfirm(t *testing.T) {
@@ -41,15 +44,143 @@ func TestGetStarcoinNodeHeight(t *testing.T) {
 }
 
 func TestGetTransactionProof(t *testing.T) {
+	/*
+		curl --location --request POST 'https://main-seed.starcoin.org' \
+		--header 'Content-Type: application/json' \
+		--data-raw '{
+			"id":101,
+			"jsonrpc":"2.0",
+			"method":"chain.get_transaction_info",
+			"params":["0xa3cac3fc94d4e68de66812b3bb638e82211c26ed0e879eb368196bd849eea86a"]
+		}'
+
+		curl --location --request POST 'https://main-seed.starcoin.org/' \
+		--header 'Content-Type: application/json' \
+		--data-raw '{
+		 "id":101,
+		 "jsonrpc":"2.0",
+		 "method":"chain.get_events_by_txn_hash",
+		 "params":["0xa3cac3fc94d4e68de66812b3bb638e82211c26ed0e879eb368196bd849eea86a"]
+		}'
+
+		curl --location --request POST 'https://main-seed.starcoin.org/' \
+		--header 'Content-Type: application/json' \
+		--data-raw '{
+		 "id":101,
+		 "jsonrpc":"2.0",
+		 "method":"chain.get_transaction_proof",
+		 "params":["0x6e1412d4c8d88ae138760ec4caf2d2a8d875db9014485138833b0b785a4300d0", 8369404, 1]
+		}'
+	*/
+	//"transaction_global_index":"8369404"
 	restclient := NewRestClient()
 	var eventIndex int = 1
-	p, err := GetTransactionProof("https://halley-seed.starcoin.org", restclient,
-		"0x815764e45c2f300cfd90e9a693207c0d4f8f2ad1e3e9774f489534f1ab74e3d5", 69937, &eventIndex)
+	var txGlobalIndex uint64 = 8369404
+	var blockHash = "0x6e1412d4c8d88ae138760ec4caf2d2a8d875db9014485138833b0b785a4300d0"
+	p, err := GetTransactionProof("https://main-seed.starcoin.org", restclient, blockHash, txGlobalIndex, &eventIndex)
 	if err != nil {
 		t.FailNow()
 	}
 	fmt.Println("--------------- transaction proof -----------------")
 	fmt.Println(p)
+
+	transactionInfoProof := new(TransactionInfoProof)
+	if err = json.Unmarshal([]byte(p), transactionInfoProof); err != nil {
+		t.Errorf("unmarshal proof error:%s", err)
+	}
+	typesTransactionInfo, err := transactionInfoProof.TransactionInfo.ToTypesTransactionInfo()
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println("----------- types.TransactionInfo BCS Serialized data ------------")
+	typesTxInfoBcsData, _ := typesTransactionInfo.BcsSerialize()
+	fmt.Println(hex.EncodeToString(typesTxInfoBcsData))
+	// ------------------------------------------------------------
+	// print transaction info for create verify-accumulator unit test...
+	/*
+		curl --location --request POST 'https://main-seed.starcoin.org/' \
+		--header 'Content-Type: application/json' \
+		--data-raw '{
+		"id":101,
+		"jsonrpc":"2.0",
+		"method":"chain.get_block_by_hash",
+		"params":["0x6e1412d4c8d88ae138760ec4caf2d2a8d875db9014485138833b0b785a4300d0"]
+		}'
+	*/
+	fmt.Println("------------ txn_accumulator_root ----------------")
+	txn_accumulator_root := "0x9e9dc633087fcdeec84f6306900c76298e6667b53a743e953dbb333c74994243"
+	fmt.Println(txn_accumulator_root)
+	fmt.Println("------------- transaction info hash -----------------")
+	txInfoHash, _ := typesTransactionInfo.CryptoHash()
+	fmt.Println(hex.EncodeToString(*txInfoHash))
+	fmt.Println("------------- transaction global index -----------------")
+	fmt.Println(txGlobalIndex)
+	fmt.Println("----------------- transaction info proof ----------------")
+	for _, s := range transactionInfoProof.Proof.Siblings {
+		fmt.Println(s)
+	}
+
+	// print event info for create verify-accumulator unit test...
+	fmt.Println("----------------- event root hash ----------------")
+	eventRootHash := hex.EncodeToString(typesTransactionInfo.EventRootHash)
+	fmt.Println(eventRootHash)
+	fmt.Println("----------------- event hash ----------------")
+	eventData, _ := HexToBytes(transactionInfoProof.EventWithProof.Event)
+	contractEventV0, _ := stcclient.EventToContractEventV0(eventData)
+	contractEvent := types.ContractEvent__V0{
+		Value: *contractEventV0,
+	}
+	eventHash, _ := contractEvent.CryptoHash()
+	fmt.Println(hex.EncodeToString(*eventHash))
+	fmt.Println("----------------- event index ----------------")
+	fmt.Println(eventIndex)
+	fmt.Println("----------------- event proof ----------------")
+	for _, s := range transactionInfoProof.EventWithProof.Proof.Siblings {
+		fmt.Println(s)
+	}
+	fmt.Println("----------------- contract event BCS data ----------------")
+	contractEventBcsData, _ := contractEvent.BcsSerialize()
+	fmt.Println(hex.EncodeToString(contractEventBcsData))
+	eventTypeTag, _ := contractEvent.Value.TypeTag.BcsSerialize()
+	fmt.Println(hex.EncodeToString(contractEvent.Value.Key))
+	fmt.Println(contractEvent.Value.SequenceNumber)
+	fmt.Println(hex.EncodeToString(eventTypeTag))
+	fmt.Println(hex.EncodeToString(contractEvent.Value.EventData))
+}
+
+type TransactionInfoProof struct {
+	TransactionInfo stcclient.TransactionInfo `json:"transaction_info"`
+	Proof           AccumulatorProof          `json:"proof"`
+	EventWithProof  EventWithProof            `json:"event_proof"`
+	StateWithProof  StateWithProofJson        `json:"state_proof"`
+	AccessPath      *string                   `json:"access_path,omitempty"`
+	EventIndex      *int                      `json:"event_index,omitempty"`
+}
+
+type EventWithProof struct {
+	Event string           `json:"event"`
+	Proof AccumulatorProof `json:"proof"`
+}
+
+type AccumulatorProof struct {
+	Siblings []string `json:"siblings"`
+}
+
+type StateProofJson struct {
+	AccountState      []byte                `json:"account_state"`
+	AccountProof      SparseMerkleProofJson `json:"account_proof"`
+	AccountStateProof SparseMerkleProofJson `json:"account_state_proof"`
+}
+
+type StateWithProofJson struct {
+	State []byte         `json:"state"`
+	Proof StateProofJson `json:"proof"`
+}
+
+type SparseMerkleProofJson struct {
+	Leaf     []string `json:"leaf"`
+	Siblings []string `json:"siblings"`
 }
 
 func TestGetTransactionInfoByHash(t *testing.T) {
