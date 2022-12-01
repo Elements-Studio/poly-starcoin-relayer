@@ -231,6 +231,7 @@ func areThereAbnormalTreasuryTokenStates(tokenStates map[string]*big.Float) (boo
 	for id, sum := range tokenStates {
 		if sum.Cmp(big.NewFloat(0)) < 0 {
 			abnormalStates[id] = sum
+			log.Errorf("areThereAbnormalTreasuryTokenStates, abnormal token found, Id: %s, locked/unlocked amount: %f", id, sum)
 			isAbnormal = true
 		}
 	}
