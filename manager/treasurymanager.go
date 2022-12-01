@@ -205,11 +205,13 @@ func (m *TreasuryManager) SprintTokenStates() (string, map[string]*big.Float, er
 			msg.WriteString(fmt.Sprintf(PRINT_FORMAT_OPENING_BALANCE_IN_TREASURY, openingBalance))
 			balance, err := tr.GetBalanceFor(tokenId)
 			if err != nil {
+				log.Errorf("TreasuryManager.SprintTokenStates - tr.GetBalanceFor error, tokenId: %s", tokenId)
 				return "", nil, err
 			}
 			msg.WriteString(fmt.Sprintf(PRINT_FORMAT_CURRENT_BALANCE_IN_TREASURY, balance))
 			lockAmount, err := treasury.GetLockAmountFor(tr, tokenId)
 			if err != nil {
+				log.Errorf("TreasuryManager.SprintTokenStates - treasury.GetLockAmountFor error, tokenId: %s", tokenId)
 				return "", nil, err
 			}
 			scalingFactor := tr.GetScalingFactorFor(tokenId)
