@@ -83,6 +83,8 @@ type DB interface {
 
 	GetFirstRemovedPolyTxToBePushedBack() (*RemovedPolyTx, error)
 
+	GetLastProcessedPolyTx() (*PolyTx, error)
+
 	GetTimedOutOrFailedPolyTxList() ([]*PolyTx, error)
 
 	GetPolyTxListNotHaveGasSubsidy(fromChainId uint64, updatedAfter int64) ([]*PolyTx, error)

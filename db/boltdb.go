@@ -355,6 +355,10 @@ func (w *BoltDB) GetPolyTxListNotHaveGasSubsidy(fromChainId uint64, updatedAfter
 	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
 }
 
+func (w *BoltDB) GetLastProcessedPolyTx() (*PolyTx, error) {
+	return nil, fmt.Errorf("NOT IMPLEMENTED ERROR")
+}
+
 func (w *BoltDB) PutGasSubsidy(gasSubsidy *GasSubsidy) error {
 	return fmt.Errorf("NOT IMPLEMENTED ERROR")
 }

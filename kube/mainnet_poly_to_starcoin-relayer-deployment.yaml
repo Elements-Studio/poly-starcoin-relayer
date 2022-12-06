@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: mainnet-poly-to-starcoin-relayer
-          image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-ac8f2d3
+          image: ghcr.io/elements-studio/poly_starcoin_relayer:sha-1bc9b8d
           ports:
             - containerPort: 8600
           env:

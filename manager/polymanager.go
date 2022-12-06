@@ -138,7 +138,42 @@ func NewPolyManager(servCfg *config.ServiceConfig, startblockHeight uint32, poly
 	} else if err != nil {
 		log.Errorf("NewPolyManager - init ok, but something error: %v\n", err)
 	}
+
+	// //////////////////////////
+	mgr.CheckSmtRoot()
+	// //////////////////////////
 	return mgr, nil
+}
+
+func (this *PolyManager) CheckSmtRoot() error {
+	smtRootStr, err := this.getStarcoinCrossChainSmtRoot()
+	if err != nil {
+		log.Errorf("PolyManager.CheckSmtRoot - failed to getStarcoinCrossChainSmtRoot: %s", err.Error())
+		return err
+	}
+	onChainSmtRoot, err := tools.HexToBytes(smtRootStr)
+	if err != nil {
+		log.Errorf("PolyManager.CheckSmtRoot - tools.HexToBytes error: %s", err.Error())
+		return err
+	}
+	polyTx, err := this.db.GetLastProcessedPolyTx()
+	if err != nil {
+		log.Errorf("PolyManager.CheckSmtRoot - failed to db.GetLastProcessedPolyTx: %s", err.Error())
+		return err
+	}
+	computedSmtRoot, err := polyTx.ComputePloyTxInclusionSmtRootHash()
+	if err != nil {
+		log.Errorf("PolyManager.CheckSmtRoot - failed to polyTx.ComputePloyTxInclusionSmtRootHash: %s", err.Error())
+		return err
+	}
+	if bytes.Equal(onChainSmtRoot, computedSmtRoot) {
+		log.Infof("PolyManager CheckSmtRoot - ok: %s", onChainSmtRoot)
+		return nil
+	} else {
+		errCheck := fmt.Errorf("SMT root mismatched. On-chain SMT root: %s, off-chain computed: %s", onChainSmtRoot, computedSmtRoot)
+		log.Errorf("PolyManager.CheckSmtRoot - error. %s", errCheck.Error())
+		return errCheck
+	}
 }
 
 func (this *PolyManager) init() (bool, error) {

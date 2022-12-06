@@ -319,6 +319,24 @@ func (w *MySqlDB) GetPreviousePolyTx(idx uint64) (*PolyTx, error) {
 	return &first, nil
 }
 
+func (w *MySqlDB) GetLastProcessedPolyTx() (*PolyTx, error) {
+	var list []PolyTx
+	processedStatuses := []string{STATUS_PROCESSED, STATUS_CONFIRMED}
+	err := w.db.Where("status in ?", processedStatuses).Order("tx_index desc").Limit(1).Find(&list).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	first := list[0]
+	return &first, nil
+}
+
 func (w *MySqlDB) SetPolyTxStatus(txHash string, fromChainID uint64, oldStatus string, status string) error {
 	px := PolyTx{}
 	if err := w.db.Where(&PolyTx{

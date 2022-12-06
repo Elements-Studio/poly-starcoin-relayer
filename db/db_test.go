@@ -299,6 +299,18 @@ func TestGetFirstFailedPolyTx(t *testing.T) {
 	// }
 }
 
+func TestGetLastProcessedPolyTx(t *testing.T) {
+	px1, err := testNetDB().GetLastProcessedPolyTx()
+	if err != nil {
+		t.FailNow()
+	}
+	if px1 != nil {
+		fmt.Printf("GetLastProcessedPolyTx: %v\n", px1.TxIndex)
+	} else {
+		fmt.Println(px1)
+	}
+}
+
 func TestGetFirstTimedOutPolyTx(t *testing.T) {
 	px1, err := testNetDB().GetFirstTimedOutPolyTx()
 	if err != nil {
