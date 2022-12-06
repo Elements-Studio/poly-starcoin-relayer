@@ -167,10 +167,10 @@ func (this *PolyManager) CheckSmtRoot() error {
 		return err
 	}
 	if bytes.Equal(onChainSmtRoot, computedSmtRoot) {
-		log.Infof("PolyManager CheckSmtRoot - ok: %s", onChainSmtRoot)
+		log.Infof("PolyManager CheckSmtRoot - ok: %s", smtRootStr)
 		return nil
 	} else {
-		errCheck := fmt.Errorf("SMT root mismatched. On-chain SMT root: %s, off-chain computed: %s", onChainSmtRoot, computedSmtRoot)
+		errCheck := fmt.Errorf("SMT root mismatched. On-chain SMT root: %s, off-chain computed: %s", smtRootStr, tools.EncodeToHex(computedSmtRoot))
 		log.Errorf("PolyManager.CheckSmtRoot - error. %s", errCheck.Error())
 		return errCheck
 	}
