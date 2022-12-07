@@ -141,3 +141,33 @@ func getTestEthereumTreasury(t *testing.T) *EthereumTreasury {
 	tr.SetScalingFactorMap(EthereumTokenScalingFactorMap)
 	return tr
 }
+
+func TestEthereumTreasuryGetBalanceForSTC(t *testing.T) {
+	var tr Treasury = getMainnetEthereumTreasury(t)
+	pStcToken := "0xec8614B0a68786Dc7b452e088a75Cba4F68755b8"
+	token := pStcToken
+	b, err := tr.GetBalanceFor(token)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	fmt.Println(token)
+	fmt.Println(b.String())
+}
+
+func getMainnetEthereumTreasury(t *testing.T) *EthereumTreasury {
+	ethClientUrl := "https://mainnet.infura.io/v3/9d5da119377e4547ad0aa8e30482a089"
+	ethClient, err := ethclient.Dial(ethClientUrl)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	contractAddr := "0x3Ee764C95e9d2264DE3717a4CB45BCd3c5F00035"
+	tr, err := NewEthereumTreasury(ethClient, contractAddr)
+	if err != nil {
+		fmt.Println(err)
+		t.FailNow()
+	}
+	tr.SetScalingFactorMap(EthereumTokenScalingFactorMap)
+	return tr
+}
